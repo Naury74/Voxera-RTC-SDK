@@ -5,6 +5,12 @@ import kotlinx.coroutines.flow.Flow
 /** 엔진이 실제 통화인지 데모 시뮬레이션인지. UI는 [SIMULATED]일 때 항상 DEMO를 표시한다. */
 public enum class RtcEngineKind { LIVE, SIMULATED }
 
+/**
+ * 화면 공유 승인 결과를 가리키는 불투명 값. Android `MediaProjection` 결과 Intent 같은 플랫폼 값은 provider 모듈의 구현이 담는다.
+ * 한 번 승인한 값은 한 번의 공유에만 쓴다(Android 14+는 공유할 때마다 새 승인이 필요하다).
+ */
+public interface ScreenShareConsent
+
 /** 연결 옵션. */
 public data class ConnectOptions(
     val roomId: String,
@@ -63,6 +69,14 @@ public interface RtcEngine {
     public suspend fun switchCamera(): MediaActionResult
 
     public suspend fun selectAudioRoute(routeId: String): MediaActionResult
+
+    /**
+     * 화면 공유를 시작한다. [consent]는 사용자가 시스템 화면 공유 승인 대화상자에서 허락한 결과다(provider 모듈이 정의).
+     * 시스템이 공유를 멈추면(사용자가 알림에서 중지, 화면 잠금 등) [RtcEngineEvent.LocalMediaChanged]로 알린다.
+     */
+    public suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult = MediaActionResult.Unsupported
+
+    public suspend fun stopScreenShare(): MediaActionResult = MediaActionResult.Unsupported
 
     /** 연결·트랙·리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
     public suspend fun release()

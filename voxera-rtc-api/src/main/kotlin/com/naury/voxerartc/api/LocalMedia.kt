@@ -34,6 +34,8 @@ public enum class CameraFacing { FRONT, BACK, EXTERNAL }
 public data class LocalMediaState(
     val microphone: MediaToggle = MediaToggle.Off,
     val camera: MediaToggle = MediaToggle.Off,
+    /** 내 화면 공유. 끄는 것은 언제든 가능하지만 켜려면 매번 새 [ScreenShareConsent]가 필요하다. */
+    val screenShare: MediaToggle = MediaToggle.Off,
     val cameraFacing: CameraFacing = CameraFacing.FRONT,
     val canSwitchCamera: Boolean = false,
     val audioRoutes: List<AudioRoute> = emptyList(),

@@ -376,4 +376,30 @@ class DefaultVoxeraSessionTest {
         assertThat(failing.created).hasSize(2)
         assertThat(failing.created.first().isReleased).isTrue()
     }
+
+    @Test
+    fun `화면 공유는 엔진 ack 뒤 켜지고 시스템이 멈추면 꺼진다`() = runTest {
+        val factory = FakeRtcEngineFactory()
+        val session = sdk(factory).createSession(config())
+        session.join("room", CallMode.VIDEO)
+        val consent = object : com.naury.voxerartc.api.ScreenShareConsent {}
+
+        assertThat(session.startScreenShare(consent)).isEqualTo(MediaActionResult.Applied)
+        advanceUntilIdle()
+        assertThat(session.localMedia.value.screenShare.actual).isTrue()
+        assertThat(session.participants.value.first { it.isLocal }.screenShare).isNotNull()
+
+        factory.last.simulateScreenShareStopped()
+        advanceUntilIdle()
+        assertThat(session.localMedia.value.screenShare.actual).isFalse()
+        assertThat(session.localMedia.value.screenShare.isPending).isFalse()
+        assertThat(session.participants.value.first { it.isLocal }.screenShare).isNull()
+    }
+
+    @Test
+    fun `연결 전 화면 공유는 NotConnected`() = runTest {
+        val session = sdk().createSession(config())
+        assertThat(session.startScreenShare(object : com.naury.voxerartc.api.ScreenShareConsent {}))
+            .isEqualTo(MediaActionResult.Failed(VoxeraError.NotConnected))
+    }
 }

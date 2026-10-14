@@ -22,6 +22,7 @@ import com.naury.voxerartc.api.RtcEngine
 import com.naury.voxerartc.api.RtcEngineEvent
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
+import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.ServerUrlCheck
 import com.naury.voxerartc.api.SessionState
 import com.naury.voxerartc.api.VoxeraError
@@ -268,6 +269,7 @@ internal class DefaultVoxeraSession(
                 event.state.copy(
                     microphone = current.microphone.settle(event.state.microphone.actual),
                     camera = current.camera.settle(event.state.camera.actual),
+                    screenShare = current.screenShare.settle(event.state.screenShare.actual),
                 )
             }
             is RtcEngineEvent.QualitySampled -> _diagnostics.tryEmit(event.snapshot)
@@ -396,6 +398,31 @@ internal class DefaultVoxeraSession(
     override suspend fun switchCamera(): MediaActionResult {
         val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
         return mediaMutex.withLock { engine.switchCamera() }
+    }
+
+    override suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult {
+        val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        _localMedia.update { it.copy(screenShare = it.screenShare.copy(desired = true, lastError = null)) }
+        return mediaMutex.withLock { engine.startScreenShare(consent) }.also { settleScreenShare(it, target = true) }
+    }
+
+    override suspend fun stopScreenShare(): MediaActionResult {
+        val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        _localMedia.update { it.copy(screenShare = it.screenShare.copy(desired = false, lastError = null)) }
+        return mediaMutex.withLock { engine.stopScreenShare() }.also { settleScreenShare(it, target = false) }
+    }
+
+    private fun settleScreenShare(result: MediaActionResult, target: Boolean) {
+        _localMedia.update { media ->
+            val current = media.screenShare
+            media.copy(
+                screenShare = when (result) {
+                    MediaActionResult.Applied -> current.copy(actual = target)
+                    is MediaActionResult.Failed -> MediaToggle(current.actual, current.actual, result.error)
+                    MediaActionResult.Unsupported -> MediaToggle(current.actual, current.actual)
+                },
+            )
+        }
     }
 
     override suspend fun selectAudioRoute(routeId: String): MediaActionResult {

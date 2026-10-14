@@ -31,7 +31,7 @@ public enum class ConfigurationProblem {
 public enum class MediaPermission { MICROPHONE, CAMERA }
 
 /** 사용할 수 없는 장치 종류. */
-public enum class MediaDevice { MICROPHONE, CAMERA, AUDIO_ROUTE }
+public enum class MediaDevice { MICROPHONE, CAMERA, AUDIO_ROUTE, SCREEN }
 
 /**
  * Voxera가 돌려주는 오류 분류. 서버의 원시 오류 문자열과 토큰은 담지 않는다.

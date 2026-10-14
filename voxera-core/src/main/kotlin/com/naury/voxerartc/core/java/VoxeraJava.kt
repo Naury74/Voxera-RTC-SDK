@@ -10,6 +10,7 @@ import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.RtcEngineFactory
+import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.SessionState
 import com.naury.voxerartc.api.VoxeraError
 import com.naury.voxerartc.core.MediaPreferences
@@ -138,6 +139,11 @@ public class VoxeraClient internal constructor(
         action(callback) { session.setCameraEnabled(enabled) }
 
     public fun switchCamera(callback: VoxeraActionCallback?): VoxeraCancellable = action(callback) { session.switchCamera() }
+
+    public fun startScreenShare(consent: ScreenShareConsent, callback: VoxeraActionCallback?): VoxeraCancellable =
+        action(callback) { session.startScreenShare(consent) }
+
+    public fun stopScreenShare(callback: VoxeraActionCallback?): VoxeraCancellable = action(callback) { session.stopScreenShare() }
 
     public fun selectAudioRoute(routeId: String, callback: VoxeraActionCallback?): VoxeraCancellable =
         action(callback) { session.selectAudioRoute(routeId) }
