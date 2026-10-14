@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voxera_demo_badge">데모</string>
+    <string name="voxera_demo_notice">시뮬레이션 · 실제 통화가 아닙니다</string>
+
+    <string name="voxera_state_preparing">준비 중…</string>
+    <string name="voxera_state_connecting">연결 중…</string>
+    <string name="voxera_state_reconnecting">다시 연결하는 중…</string>
+    <string name="voxera_state_ending">통화를 끝내는 중…</string>
+    <string name="voxera_reconnecting_hint">네트워크가 돌아오면 통화가 이어집니다.</string>
+    <string name="voxera_waiting_others">다른 참가자를 기다리는 중</string>
+    <plurals name="voxera_participant_count">
+        <item quantity="other">참가자 %d명</item>
+    </plurals>
+
+    <string name="voxera_control_mic">마이크</string>
+    <string name="voxera_control_camera">카메라</string>
+    <string name="voxera_control_flip">전환</string>
+    <string name="voxera_control_audio">오디오</string>
+    <string name="voxera_control_people">참가자</string>
+    <string name="voxera_control_stats">품질</string>
+    <string name="voxera_control_end">종료</string>
+    <string name="voxera_control_on">켜짐</string>
+    <string name="voxera_control_off">꺼짐</string>
+    <string name="voxera_control_pending">적용 중…</string>
+
+    <string name="voxera_action_cancel">취소</string>
+    <string name="voxera_action_close">닫기</string>
+    <string name="voxera_action_rejoin">다시 입장</string>
+    <string name="voxera_action_retry">다시 시도</string>
+
+    <string name="voxera_end_title">통화 종료</string>
+    <string name="voxera_end_duration">통화 시간 %1$s</string>
+    <string name="voxera_end_reason_user">통화를 끝냈습니다.</string>
+    <string name="voxera_end_reason_host">앱이 통화를 끝냈습니다.</string>
+    <string name="voxera_end_reason_cancelled">연결되기 전에 취소했습니다.</string>
+    <string name="voxera_end_reason_remote">상대방이 통화를 끝냈습니다.</string>
+    <string name="voxera_end_reason_failure">연결 문제로 통화가 끝났습니다.</string>
+
+    <string name="voxera_failed_title">연결하지 못했습니다</string>
+    <string name="voxera_error_code">코드 %1$s</string>
+    <string name="voxera_error_config">서버 정보를 확인하고 다시 시도하세요.</string>
+    <string name="voxera_error_permission_mic">설정에서 마이크 권한을 허용하세요.</string>
+    <string name="voxera_error_permission_camera">설정에서 카메라 권한을 허용하세요.</string>
+    <string name="voxera_error_auth_expired">접근 토큰이 만료되었습니다. 새 토큰으로 다시 시도하세요.</string>
+    <string name="voxera_error_host_unauthorized">앱에 다시 로그인하세요.</string>
+    <string name="voxera_error_unreachable">서버에 연결할 수 없습니다. 주소와 네트워크를 확인하세요.</string>
+    <string name="voxera_error_incompatible">LiveKit 호환 서버가 아닙니다.</string>
+    <string name="voxera_error_network">네트워크가 없거나 다시 연결하는 데 너무 오래 걸렸습니다.</string>
+    <string name="voxera_error_device">마이크나 카메라를 쓸 수 없거나 다른 앱이 사용 중입니다.</string>
+    <string name="voxera_error_concurrent">이미 다른 통화가 진행 중입니다.</string>
+    <string name="voxera_error_not_connected">아직 통화가 연결되지 않았습니다.</string>
+    <string name="voxera_error_cancelled">입장을 취소했습니다.</string>
+    <string name="voxera_error_remote_ended">상대방이 통화를 끝냈습니다.</string>
+    <string name="voxera_error_duplicate_identity">같은 identity로 다른 기기에서 입장했습니다.</string>
+    <string name="voxera_error_internal">문제가 발생했습니다.</string>
+
+    <string name="voxera_routes_title">오디오 출력</string>
+    <string name="voxera_route_earpiece">휴대전화</string>
+    <string name="voxera_route_speaker">스피커</string>
+    <string name="voxera_route_wired">유선 이어폰</string>
+    <string name="voxera_route_bluetooth">블루투스</string>
+    <string name="voxera_route_usb">USB 오디오</string>
+    <string name="voxera_route_unknown">기타 출력</string>
+    <string name="voxera_route_selected">선택됨</string>
+    <string name="voxera_route_unavailable">지금 사용할 수 없음</string>
+
+    <string name="voxera_stats_title">통화 품질</string>
+    <string name="voxera_stats_simulated">시뮬레이션 값 · 데모 전용</string>
+    <string name="voxera_stats_waiting">첫 측정값을 기다리는 중…</string>
+    <string name="voxera_stats_rtt_note">RTT는 네트워크 왕복 시간이며 귀로 느끼는 지연과 다릅니다.</string>
+    <string name="voxera_metric_rtt">왕복 지연(RTT)</string>
+    <string name="voxera_metric_jitter">지터(수신)</string>
+    <string name="voxera_metric_loss">패킷 손실(수신)</string>
+    <string name="voxera_metric_bitrate_send">업로드 비트레이트</string>
+    <string name="voxera_metric_bitrate_receive">다운로드 비트레이트</string>
+    <string name="voxera_metric_fps">수신 프레임 레이트</string>
+    <string name="voxera_metric_na">N/A</string>
+
+    <string name="voxera_people_title">참가자 (%1$d)</string>
+    <string name="voxera_you">나</string>
+    <string name="voxera_speaking">말하는 중</string>
+    <string name="voxera_mic_off">마이크 꺼짐</string>
+    <string name="voxera_camera_off">카메라 꺼짐</string>
+    <string name="voxera_tile_pin">고정</string>
+    <string name="voxera_tile_unpin">고정 해제</string>
+    <plurals name="voxera_more_participants">
+        <item quantity="other">+%1$d명 더</item>
+    </plurals>
+</resources>

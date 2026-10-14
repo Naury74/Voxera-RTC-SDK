@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voxera_demo_badge">DEMO</string>
+    <string name="voxera_demo_notice">Simulated call · not a real connection</string>
+
+    <string name="voxera_state_preparing">Getting ready…</string>
+    <string name="voxera_state_connecting">Connecting…</string>
+    <string name="voxera_state_reconnecting">Reconnecting…</string>
+    <string name="voxera_state_ending">Ending call…</string>
+    <string name="voxera_reconnecting_hint">The call continues when the network recovers.</string>
+    <string name="voxera_waiting_others">Waiting for others to join</string>
+    <plurals name="voxera_participant_count">
+        <item quantity="one">%d participant</item>
+        <item quantity="other">%d participants</item>
+    </plurals>
+
+    <string name="voxera_control_mic">Mic</string>
+    <string name="voxera_control_camera">Camera</string>
+    <string name="voxera_control_flip">Flip</string>
+    <string name="voxera_control_audio">Audio</string>
+    <string name="voxera_control_people">People</string>
+    <string name="voxera_control_stats">Quality</string>
+    <string name="voxera_control_end">End</string>
+    <string name="voxera_control_on">On</string>
+    <string name="voxera_control_off">Off</string>
+    <string name="voxera_control_pending">Applying…</string>
+
+    <string name="voxera_action_cancel">Cancel</string>
+    <string name="voxera_action_close">Close</string>
+    <string name="voxera_action_rejoin">Join again</string>
+    <string name="voxera_action_retry">Try again</string>
+
+    <string name="voxera_end_title">Call ended</string>
+    <string name="voxera_end_duration">Duration %1$s</string>
+    <string name="voxera_end_reason_user">You left the call.</string>
+    <string name="voxera_end_reason_host">The app ended the call.</string>
+    <string name="voxera_end_reason_cancelled">Cancelled before connecting.</string>
+    <string name="voxera_end_reason_remote">The call was ended by the other side.</string>
+    <string name="voxera_end_reason_failure">The call ended after a connection problem.</string>
+
+    <string name="voxera_failed_title">Couldn\'t connect</string>
+    <string name="voxera_error_code">Code %1$s</string>
+    <string name="voxera_error_config">Check the server details and try again.</string>
+    <string name="voxera_error_permission_mic">Allow microphone access in Settings.</string>
+    <string name="voxera_error_permission_camera">Allow camera access in Settings.</string>
+    <string name="voxera_error_auth_expired">The access token expired. Get a new token and try again.</string>
+    <string name="voxera_error_host_unauthorized">Sign in to the app again.</string>
+    <string name="voxera_error_unreachable">Can\'t reach the server. Check the URL and your network.</string>
+    <string name="voxera_error_incompatible">This server isn\'t LiveKit compatible.</string>
+    <string name="voxera_error_network">No network, or reconnecting took too long.</string>
+    <string name="voxera_error_device">The microphone or camera is unavailable or used by another app.</string>
+    <string name="voxera_error_concurrent">Another call is already in progress.</string>
+    <string name="voxera_error_not_connected">The call isn\'t connected yet.</string>
+    <string name="voxera_error_cancelled">Joining was cancelled.</string>
+    <string name="voxera_error_remote_ended">The call was ended by the other side.</string>
+    <string name="voxera_error_duplicate_identity">Someone joined with the same identity on another device.</string>
+    <string name="voxera_error_internal">Something went wrong.</string>
+
+    <string name="voxera_routes_title">Audio output</string>
+    <string name="voxera_route_earpiece">Phone</string>
+    <string name="voxera_route_speaker">Speaker</string>
+    <string name="voxera_route_wired">Wired headset</string>
+    <string name="voxera_route_bluetooth">Bluetooth</string>
+    <string name="voxera_route_usb">USB audio</string>
+    <string name="voxera_route_unknown">Other output</string>
+    <string name="voxera_route_selected">Selected</string>
+    <string name="voxera_route_unavailable">Not available now</string>
+
+    <string name="voxera_stats_title">Call quality</string>
+    <string name="voxera_stats_simulated">Simulated values · demo only</string>
+    <string name="voxera_stats_waiting">Waiting for the first sample…</string>
+    <string name="voxera_stats_rtt_note">RTT is the network round trip, not the delay you hear.</string>
+    <string name="voxera_metric_rtt">Round-trip time</string>
+    <string name="voxera_metric_jitter">Jitter (receive)</string>
+    <string name="voxera_metric_loss">Packet loss (receive)</string>
+    <string name="voxera_metric_bitrate_send">Upload bitrate</string>
+    <string name="voxera_metric_bitrate_receive">Download bitrate</string>
+    <string name="voxera_metric_fps">Receive frame rate</string>
+    <string name="voxera_metric_na">N/A</string>
+
+    <string name="voxera_people_title">People (%1$d)</string>
+    <string name="voxera_you">You</string>
+    <string name="voxera_speaking">Speaking</string>
+    <string name="voxera_mic_off">Microphone off</string>
+    <string name="voxera_camera_off">Camera off</string>
+    <string name="voxera_tile_pin">Pin</string>
+    <string name="voxera_tile_unpin">Unpin</string>
+    <plurals name="voxera_more_participants">
+        <item quantity="one">+%1$d more</item>
+        <item quantity="other">+%1$d more</item>
+    </plurals>
+</resources>
