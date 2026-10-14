@@ -160,4 +160,6 @@
     <string name="voxera_prejoin_level_heard">마이크에 소리가 들어옵니다</string>
     <string name="voxera_prejoin_level_quiet">마이크가 켜져 있습니다. 말해서 확인해 보세요.</string>
     <string name="voxera_prejoin_level_unavailable">지금은 마이크 소리 크기를 읽을 수 없습니다.</string>
+    <string name="voxera_interrupted_title">다른 통화가 오디오를 쓰고 있습니다</string>
+    <string name="voxera_interrupted_body">그 통화가 끝날 때까지 상대에게 내 소리가 가지 않습니다.</string>
 </resources>

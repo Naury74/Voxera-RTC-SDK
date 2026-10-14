@@ -163,4 +163,6 @@
     <string name="voxera_prejoin_level_heard">Microphone is picking up sound</string>
     <string name="voxera_prejoin_level_quiet">Microphone is on. Say something to test it.</string>
     <string name="voxera_prejoin_level_unavailable">Can\'t read the microphone level right now.</string>
+    <string name="voxera_interrupted_title">Another call is using the audio</string>
+    <string name="voxera_interrupted_body">Others can\'t hear you until that call ends.</string>
 </resources>

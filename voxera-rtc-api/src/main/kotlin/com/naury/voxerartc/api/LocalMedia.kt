@@ -43,4 +43,9 @@ public data class LocalMediaState(
     /** 지금 적용 중인 카메라 효과. */
     val videoEffect: VideoEffect = VideoEffect.None,
     val effectsAvailability: EffectsAvailability = EffectsAvailability.UNSUPPORTED,
+    /**
+     * 다른 통화(휴대전화 통화·다른 앱의 통화)가 오디오를 가져가 내 소리가 상대에게 가지 않는 중. 그 통화가 끝나면 `false`로 돌아온다.
+     * 엔진이 알 수 없으면 늘 `false`다(LiveKit 엔진은 Android 12+에서 알려 준다).
+     */
+    val audioInterrupted: Boolean = false,
 )

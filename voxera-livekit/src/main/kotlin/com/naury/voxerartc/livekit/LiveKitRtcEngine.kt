@@ -128,6 +128,7 @@ internal class LiveKitRtcEngine(
         room.remoteParticipants.values.forEach { participant -> participant.trackPublications.values.forEach(::applyVideoSubscription) }
         videoTracks.register(this)
         room.audioSwitchHandler?.registerAudioDeviceChangeListener(audioDeviceListener)
+        conditions.start()
         // 권한이 없거나 장치를 못 열어도 입장은 유지한다. 실제 게시 상태는 LocalMediaChanged로 알린다.
         if (options.startWithMicrophone) setMicrophoneEnabled(true)
         if (options.startWithCamera) setCameraEnabled(true)
@@ -234,6 +235,28 @@ internal class LiveKitRtcEngine(
         scope.launch { emitLocalState() }
     })
 
+    /** 다른 통화가 오디오를 가져간 중이면 true. */
+    @Volatile
+    private var audioInterrupted = false
+
+    private val conditions = DeviceConditions(
+        context,
+        onOverheated = {
+            // 기기가 뜨거우면 효과를 끄고 기본 통화만 유지한다(E31). 사용자가 효과를 다시 고르면 다시 켜진다.
+            if (!effectProcessor.effect.isNone) {
+                effectProcessor.effect = VideoEffect.None
+                effectsThrottled = true
+                scope.launch { emitLocalState() }
+            }
+        },
+        onAudioInterrupted = { interrupted ->
+            if (audioInterrupted != interrupted) {
+                audioInterrupted = interrupted
+                scope.launch { emitLocalState() }
+            }
+        },
+    )
+
     override suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult {
         effectsThrottled = false
         effectProcessor.effect = effect
@@ -313,6 +336,7 @@ internal class LiveKitRtcEngine(
             selectedAudioRouteId = handler?.selectedAudioDevice?.routeId(),
             videoEffect = effectProcessor.effect,
             effectsAvailability = if (effectsThrottled) EffectsAvailability.DISABLED_FOR_PERFORMANCE else EffectsAvailability.AVAILABLE,
+            audioInterrupted = audioInterrupted,
         )
     }
 
@@ -340,6 +364,7 @@ internal class LiveKitRtcEngine(
         if (!released.compareAndSet(false, true)) return
         videoTracks.unregister(this)
         room.audioSwitchHandler?.unregisterAudioDeviceChangeListener(audioDeviceListener)
+        conditions.close()
         scope.cancel()
         room.release()
     }

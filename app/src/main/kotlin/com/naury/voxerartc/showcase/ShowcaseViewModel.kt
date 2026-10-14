@@ -26,6 +26,9 @@ import com.naury.voxerartc.invitation.InviteResult
 import com.naury.voxerartc.testkit.DemoScenario
 import com.naury.voxerartc.testkit.FakeInvitationGateway
 import com.naury.voxerartc.testkit.VoxeraDemo
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,8 +55,12 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     private val _active = MutableStateFlow<ActiveCall?>(null)
     val active: StateFlow<ActiveCall?> = _active.asStateFlow()
 
-    private val _form = MutableStateFlow(ConnectForm())
-    val form: StateFlow<ConnectForm> = _form.asStateFlow()
+    /**
+     * 연결 설정 입력값. 입력칸 값이 비동기로 늦게 돌아오면 빠르게 친 글자가 빠질 수 있어 StateFlow 대신 Compose 상태로 둔다.
+     * 토큰이 들어 있을 수 있으므로 저장(SavedState)하지 않고 메모리에만 둔다.
+     */
+    var form: ConnectForm by mutableStateOf(ConnectForm())
+        private set
 
     private val liveEngines by lazy { LiveKitRtcEngineFactory(application) }
     private val liveSdk by lazy { Voxera.create(liveEngines) }
@@ -62,7 +69,7 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     val liveVideoRenderer: VoxeraVideoRenderer by lazy { liveEngines.videoTracks.asComposeRenderer() }
 
     fun updateForm(form: ConnectForm) {
-        _form.value = form
+        this.form = form
     }
 
     fun startDemo(scenario: DemoScenario) {
@@ -94,7 +101,7 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
 
     /** 입력값과 입장 전 선택으로 실제 LiveKit 룸에 들어간다. 권한 요청은 입장 전 화면이 마친다. */
     fun startLive(choice: PrejoinChoice) {
-        val form = _form.value
+        val form = this.form
         val roomId = form.roomName.trim()
         val credentials: RtcCredentialsProvider = when (form.method) {
             CredentialMethod.DEV_TOKEN_SERVER -> LiveKitTokenSources.developmentTokenServer(form.tokenServerId, form.displayName.trim())

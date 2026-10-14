@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
             }
             val theme = VoxeraThemeConfig(mode = themeMode)
             val active by viewModel.active.collectAsStateWithLifecycle()
-            val form by viewModel.form.collectAsStateWithLifecycle()
+            val form = viewModel.form
 
             // 진행 중 통화 알림용(Android 13+). 실제 통화에 들어갈 때 한 번 묻는다.
             val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }

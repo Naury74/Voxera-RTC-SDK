@@ -201,7 +201,7 @@ private fun CallContent(
     var lastTouch by remember { mutableLongStateOf(0L) }
     val accessibility = LocalAccessibilityManager.current
     val canHide = autoHideControls && mode == CallMode.VIDEO && sheet == RoomSheet.NONE && reconnecting == null &&
-        mediaError == null && !media.screenShare.actual && participants.any { !it.isLocal }
+        mediaError == null && !media.screenShare.actual && !media.audioInterrupted && participants.any { !it.isLocal }
     LaunchedEffect(canHide) { if (!canHide) chromeVisible = true }
     LaunchedEffect(canHide, chromeVisible, lastTouch) {
         if (!canHide || !chromeVisible) return@LaunchedEffect
@@ -295,6 +295,15 @@ private fun CallContent(
                     if (mediaError != null) {
                         GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
                             Text(stringResource(mediaError.messageRes()), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                        }
+                    }
+                }
+                // 휴대전화 통화 같은 다른 통화가 오디오를 가져가면 내 소리가 가지 않는다는 것을 알린다(E14).
+                AnimatedVisibility(media.audioInterrupted, enter = fadeIn(), exit = fadeOut()) {
+                    GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+                        Column {
+                            Text(stringResource(R.string.voxera_interrupted_title), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                            Text(stringResource(R.string.voxera_interrupted_body), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
                         }
                     }
                 }

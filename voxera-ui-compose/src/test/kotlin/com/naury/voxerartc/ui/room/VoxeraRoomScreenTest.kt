@@ -183,4 +183,16 @@ class VoxeraRoomScreenTest {
         compose.onNodeWithContentDescription("People").assertDoesNotExist()
         compose.onNode(hasContentDescription("Alex", substring = true)).assertExists()
     }
+
+    @Test
+    fun `다른 통화가 오디오를 가져가면 안내하고 끝나면 사라진다`() {
+        val session = connectedSession(CallMode.VOICE)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        factory.last.simulateLocalMedia { it.copy(audioInterrupted = true) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Another call is using the audio").assertIsDisplayed()
+        factory.last.simulateLocalMedia { it.copy(audioInterrupted = false) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Another call is using the audio").assertDoesNotExist()
+    }
 }
