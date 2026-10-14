@@ -228,6 +228,10 @@ internal class LiveKitRtcEngine(
         } catch (_: Exception) {
             // 다른 앱이 카메라를 쓰는 중이거나 장치를 열지 못함. 통화는 유지한다.
             false
+        } catch (_: AssertionError) {
+            // WebRTC 오디오 모듈은 AudioRecord를 열지 못하면 AssertionError를 던진다(API 26 에뮬레이터에서 확인).
+            // 앱을 죽이지 않고 장치 없음으로 처리한다.
+            false
         }
         emitLocalState()
         return if (applied) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.MediaDeviceUnavailable(device))
