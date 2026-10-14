@@ -42,6 +42,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -92,6 +94,8 @@ private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY }
  * @param onExit 종료·실패 화면에서 닫기를 누름. 호스트 내비게이션으로 돌아간다.
  * @param onRejoin `null`이 아니면 종료·실패 화면에 다시 입장 버튼을 보여 준다.
  * @param onEnd 종료·취소 버튼 동작. `null`이면 `session.leave()`. Call Mode에서는 `CallCoordinator.hangup`을 넘긴다.
+ * @param onShareScreen `null`이 아니면 영상 통화에 화면 공유 버튼을 보여 준다. 호스트가 시스템 화면 공유 승인 대화상자를 띄우고
+ *   승인 결과로 `session.startScreenShare`를 부른다(예: voxera-livekit-compose의 `rememberScreenShareLauncher`).
  * @param onSaveReport `null`이 아니면 종료·실패 화면에 진단 리포트 저장 버튼을 보여 준다. 저장 위치와 공유는 호스트가 정한다.
  */
 @Composable
@@ -102,6 +106,7 @@ public fun VoxeraRoomScreen(
     theme: VoxeraThemeConfig = VoxeraThemeConfig(),
     onRejoin: (() -> Unit)? = null,
     onEnd: (() -> Unit)? = null,
+    onShareScreen: (() -> Unit)? = null,
     onSaveReport: (() -> Unit)? = null,
 ) {
     VoxeraTheme(theme) {
@@ -124,8 +129,10 @@ public fun VoxeraRoomScreen(
                 is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
                 is SessionState.Ended -> EndedContent(current.reason, current.durationMs, simulated, onExit, onRejoin, onSaveReport)
                 is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
-                is SessionState.Connected -> CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, leave)
-                is SessionState.Reconnecting -> CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, leave)
+                is SessionState.Connected ->
+                    CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, leave, onShareScreen)
+                is SessionState.Reconnecting ->
+                    CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, leave, onShareScreen)
             }
         }
     }
@@ -270,6 +277,7 @@ private fun CallContent(
     renderer: VoxeraVideoRenderer?,
     simulated: Boolean,
     onLeave: () -> Unit,
+    onShareScreen: (() -> Unit)?,
 ) {
     var sheet by rememberSaveable { mutableStateOf(RoomSheet.NONE) }
     var pinnedId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -278,10 +286,21 @@ private fun CallContent(
     val landscape = window.width > window.height
     val scope = rememberCoroutineScope()
 
+    // 영상 View는 Compose 배너 위에 그려지므로, 상단 상태 줄·배너의 실제 높이만큼 무대를 내려 겹치지 않게 한다.
+    val density = LocalDensity.current
+    var overlayHeight by remember { mutableStateOf(0.dp) }
     Box(Modifier.fillMaxSize()) {
         val stageModifier = Modifier.fillMaxSize()
         if (mode == CallMode.VIDEO) {
-            VideoStage(participants, renderer, pinnedId, landscape, onTogglePin = { id -> pinnedId = if (pinnedId == id) null else id }, modifier = stageModifier)
+            VideoStage(
+                participants,
+                renderer,
+                pinnedId,
+                landscape,
+                onTogglePin = { id -> pinnedId = if (pinnedId == id) null else id },
+                topReserve = overlayHeight,
+                modifier = stageModifier,
+            )
         } else {
             VoiceStage(participants, elapsed, modifier = stageModifier)
         }
@@ -290,12 +309,31 @@ private fun CallContent(
             Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.xs),
+                .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.xs)
+                .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } },
             verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
         ) {
             TopBar(participants.size, elapsed, simulated, onPeople = { sheet = RoomSheet.PEOPLE }, onQuality = { sheet = RoomSheet.QUALITY })
+            // 공유 중에는 화면의 모든 내용(알림 포함)이 보인다는 것을 계속 알리고, 바로 멈출 수 있게 한다(G-09).
+            AnimatedVisibility(media.screenShare.actual, enter = fadeIn(), exit = fadeOut()) {
+                GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
+                        Text(
+                            stringResource(R.string.voxera_share_active),
+                            color = VoxeraTheme.colors.danger,
+                            style = VoxeraTheme.typography.label,
+                            modifier = Modifier.weight(1f),
+                        )
+                        VoxeraButton(
+                            stringResource(R.string.voxera_share_stop),
+                            onClick = { scope.launch { session.stopScreenShare() } },
+                            tone = VoxeraButtonTone.Danger,
+                        )
+                    }
+                }
+            }
             // 마이크·카메라 조작이 실패하면(권한 없음, 장치 점유) 이유와 할 일을 알린다. 다음 조작이 성공하면 사라진다.
-            val mediaError = media.microphone.lastError ?: media.camera.lastError
+            val mediaError = media.microphone.lastError ?: media.camera.lastError ?: media.screenShare.lastError
             AnimatedVisibility(mediaError != null, enter = fadeIn(), exit = fadeOut()) {
                 if (mediaError != null) {
                     GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
@@ -320,6 +358,9 @@ private fun CallContent(
             onCamera = { scope.launch { session.setCameraEnabled(!media.camera.desired) } },
             onFlip = { scope.launch { session.switchCamera() } },
             onAudio = { sheet = RoomSheet.AUDIO },
+            onShare = onShareScreen?.let { share ->
+                { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
+            },
             onEnd = onLeave,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -384,6 +425,7 @@ private fun CallDock(
     onCamera: () -> Unit,
     onFlip: () -> Unit,
     onAudio: () -> Unit,
+    onShare: (() -> Unit)?,
     onEnd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -391,8 +433,19 @@ private fun CallDock(
     val off = stringResource(R.string.voxera_control_off)
     val pending = stringResource(R.string.voxera_control_pending)
     fun stateOf(actual: Boolean, isPending: Boolean) = if (isPending) pending else if (actual) on else off
-    GlassDock(modifier) {
-        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), verticalAlignment = Alignment.CenterVertically) {
+    val video = mode == CallMode.VIDEO
+    val count = 2 + (if (video) 1 else 0) + (if (video && media.canSwitchCamera) 1 else 0) +
+        (if (video && onShare != null) 1 else 0) + (if (media.audioRoutes.isNotEmpty()) 1 else 0)
+    // 5개를 넘으면 360dp 폭에서도 종료 버튼이 잘리지 않도록 원을 48dp로 줄이고 폭을 나눠 쓴다.
+    val compact = count > 5
+    val circle = if (compact) 48.dp else 52.dp
+    GlassDock(if (compact) modifier.fillMaxWidth() else modifier) {
+        Row(
+            modifier = if (compact) Modifier.fillMaxWidth() else Modifier,
+            horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val item = if (compact) Modifier.weight(1f) else Modifier
             CallControlButton(
                 icon = if (media.microphone.actual) VoxeraIcons.Mic else VoxeraIcons.MicOff,
                 label = stringResource(R.string.voxera_control_mic),
@@ -400,6 +453,8 @@ private fun CallDock(
                 active = media.microphone.actual,
                 pending = media.microphone.isPending,
                 onClick = onMic,
+                circleSize = circle,
+                modifier = item,
             )
             if (mode == CallMode.VIDEO) {
                 CallControlButton(
@@ -409,6 +464,8 @@ private fun CallDock(
                     active = media.camera.actual,
                     pending = media.camera.isPending,
                     onClick = onCamera,
+                    circleSize = circle,
+                    modifier = item,
                 )
                 if (media.canSwitchCamera) {
                     CallControlButton(
@@ -416,13 +473,40 @@ private fun CallDock(
                         label = stringResource(R.string.voxera_control_flip),
                         enabled = media.camera.actual,
                         onClick = onFlip,
+                        circleSize = circle,
+                        modifier = item,
                     )
                 }
             }
-            if (media.audioRoutes.isNotEmpty()) {
-                CallControlButton(icon = media.selectedRouteIcon(), label = stringResource(R.string.voxera_control_audio), onClick = onAudio)
+            if (mode == CallMode.VIDEO && onShare != null) {
+                CallControlButton(
+                    icon = VoxeraIcons.ScreenShare,
+                    label = stringResource(R.string.voxera_control_share),
+                    stateLabel = stateOf(media.screenShare.actual, media.screenShare.isPending),
+                    active = media.screenShare.actual,
+                    pending = media.screenShare.isPending,
+                    onClick = onShare,
+                    circleSize = circle,
+                    modifier = item,
+                )
             }
-            CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_control_end), danger = true, onClick = onEnd)
+            if (media.audioRoutes.isNotEmpty()) {
+                CallControlButton(
+                    icon = media.selectedRouteIcon(),
+                    label = stringResource(R.string.voxera_control_audio),
+                    onClick = onAudio,
+                    circleSize = circle,
+                    modifier = item,
+                )
+            }
+            CallControlButton(
+                icon = VoxeraIcons.CallEnd,
+                label = stringResource(R.string.voxera_control_end),
+                danger = true,
+                onClick = onEnd,
+                circleSize = circle,
+                modifier = item,
+            )
         }
     }
 }

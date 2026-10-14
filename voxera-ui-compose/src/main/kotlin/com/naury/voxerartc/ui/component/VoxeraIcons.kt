@@ -56,6 +56,11 @@ internal object VoxeraIcons {
         "M3.5,18.49l6,-6.01 4,4L22,6.92l-1.41,-1.41 -7.09,7.97 -4,-4L2,16.99z",
     )
 
+    val ScreenShare: ImageVector = icon(
+        "ScreenShare",
+        "M20,18c1.1,0 1.99,-0.9 1.99,-2L22,6c0,-1.11 -0.9,-2 -2,-2H4c-1.11,0 -2,0.89 -2,2v10c0,1.1 0.89,2 2,2H0v2h24v-2h-4zM13,14.47V12.28c-2.78,0 -4.61,0.85 -6,2.72 0.56,-2.67 2.11,-5.33 6,-5.87V7l4,3.73 -4,3.74z",
+    )
+
     private fun icon(name: String, path: String): ImageVector = ImageVector.Builder(
         name = name,
         defaultWidth = 24.dp,

@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
@@ -55,14 +56,19 @@ internal fun VideoStage(
     landscape: Boolean,
     onTogglePin: (String) -> Unit,
     modifier: Modifier = Modifier,
+    topReserve: Dp = TopReserve,
 ) {
+    val top = maxOf(topReserve, TopReserve)
     val pinned = participants.firstOrNull { it.id == pinnedId }
     val local = participants.firstOrNull { it.isLocal }
     val remotes = participants.filterNot { it.isLocal }
+    // 다른 사람이 화면을 공유하면 그 화면을 무대에 크게 둔다(G-09). 내 공유 화면은 다시 그리지 않는다.
+    val sharing = remotes.firstOrNull { it.screenShare != null }
     when {
-        pinned != null -> PinnedStage(pinned, participants.filterNot { it.id == pinned.id }, renderer, onTogglePin, modifier)
+        sharing != null -> ScreenShareStage(sharing, participants, renderer, onTogglePin, top, modifier)
+        pinned != null -> PinnedStage(pinned, participants.filterNot { it.id == pinned.id }, renderer, onTogglePin, top, modifier)
         remotes.size == 1 && local != null -> OneOnOneStage(remotes.single(), local, renderer, onTogglePin, modifier)
-        else -> GridStage(participants, renderer, landscape, onTogglePin, modifier)
+        else -> GridStage(participants, renderer, landscape, onTogglePin, top, modifier)
     }
 }
 
@@ -96,11 +102,11 @@ private fun OneOnOneStage(remote: Participant, local: Participant, renderer: Vox
 }
 
 @Composable
-private fun PinnedStage(pinned: Participant, others: List<Participant>, renderer: VoxeraVideoRenderer?, onTogglePin: (String) -> Unit, modifier: Modifier) {
+private fun PinnedStage(pinned: Participant, others: List<Participant>, renderer: VoxeraVideoRenderer?, onTogglePin: (String) -> Unit, top: Dp, modifier: Modifier) {
     Column(
         modifier
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(top = TopReserve, bottom = BottomReserve, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
+            .padding(top = top, bottom = BottomReserve, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
         verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
     ) {
         ParticipantTile(pinned, renderer, Modifier.fillMaxWidth().weight(1f), pinned = true, onTogglePin = { onTogglePin(pinned.id) })
@@ -113,13 +119,37 @@ private fun PinnedStage(pinned: Participant, others: List<Participant>, renderer
 }
 
 @Composable
-private fun GridStage(participants: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit, modifier: Modifier) {
+private fun ScreenShareStage(
+    sharing: Participant,
+    participants: List<Participant>,
+    renderer: VoxeraVideoRenderer?,
+    onTogglePin: (String) -> Unit,
+    top: Dp,
+    modifier: Modifier,
+) {
+    Column(
+        modifier
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(top = top, bottom = BottomReserve, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
+        verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
+    ) {
+        ParticipantTile(sharing, renderer, Modifier.fillMaxWidth().weight(1f), showScreenShare = true)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
+            items(participants, key = { it.id }) { participant ->
+                ParticipantTile(participant, renderer, Modifier.size(width = 96.dp, height = 128.dp), onTogglePin = { onTogglePin(participant.id) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun GridStage(participants: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit, top: Dp, modifier: Modifier) {
     val (shown, hidden) = visibleTiles(participants)
     val spec = gridFor(shown.size + if (hidden > 0) 1 else 0, landscape)
     Column(
         modifier
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(top = TopReserve, bottom = BottomReserve, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
+            .padding(top = top, bottom = BottomReserve, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
         verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
     ) {
         val cells: List<Participant?> = shown + if (hidden > 0) listOf(null) else emptyList()

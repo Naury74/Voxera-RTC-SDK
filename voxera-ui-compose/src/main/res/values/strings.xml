@@ -126,4 +126,9 @@
     <string name="voxera_prejoin_mic_blocked">Microphone access is off. Allow it in Settings to talk.</string>
     <string name="voxera_prejoin_camera_blocked">Camera access is off. Allow it in Settings to share video.</string>
     <string name="voxera_prejoin_open_settings">Open settings</string>
+
+    <string name="voxera_control_share">Share</string>
+    <string name="voxera_share_active">You\'re sharing your screen. Everything on it is visible, including notifications.</string>
+    <string name="voxera_share_stop">Stop sharing</string>
+    <string name="voxera_share_label">%1$s · screen</string>
 </resources>

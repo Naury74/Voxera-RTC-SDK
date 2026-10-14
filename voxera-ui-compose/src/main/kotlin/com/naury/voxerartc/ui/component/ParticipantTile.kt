@@ -40,6 +40,7 @@ import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
  *
  * @param onTogglePin `null`이 아니면 탭으로 고정/해제한다.
  * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대·시스템 막대를 피할 때 쓴다.
+ * @param showScreenShare `true`면 카메라 대신 화면 공유 트랙을 그리고 이름표에 "화면"을 붙인다.
  */
 @Composable
 public fun ParticipantTile(
@@ -49,10 +50,12 @@ public fun ParticipantTile(
     pinned: Boolean = false,
     onTogglePin: (() -> Unit)? = null,
     labelPadding: PaddingValues = PaddingValues(0.dp),
+    showScreenShare: Boolean = false,
 ) {
     val colors = VoxeraTheme.colors
     val shape = RoundedCornerShape(VoxeraRadius.md)
-    val name = if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName
+    val baseName = if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName
+    val name = if (showScreenShare) stringResource(R.string.voxera_share_label, baseName) else baseName
     val description = buildList {
         add(name)
         if (participant.isSpeaking) add(stringResource(R.string.voxera_speaking))
@@ -60,7 +63,7 @@ public fun ParticipantTile(
         if (participant.camera == null) add(stringResource(R.string.voxera_camera_off))
     }.joinToString(", ")
     val pinLabel = stringResource(if (pinned) R.string.voxera_tile_unpin else R.string.voxera_tile_pin)
-    val track = participant.camera
+    val track = if (showScreenShare) participant.screenShare else participant.camera
     BoxWithConstraints(
         modifier = modifier
             .clip(shape)
@@ -79,12 +82,12 @@ public fun ParticipantTile(
             },
     ) {
         if (track != null && renderer != null) {
-            renderer.Render(track, mirror = participant.isLocal, modifier = Modifier.fillMaxSize())
+            renderer.Render(track, mirror = participant.isLocal && !showScreenShare, modifier = Modifier.fillMaxSize())
         } else {
             val avatar = (minOf(maxWidth, maxHeight) * 0.42f).coerceIn(40.dp, 120.dp)
             VoxeraAvatar(
                 id = participant.id,
-                name = name,
+                name = baseName,
                 size = avatar,
                 speaking = participant.isSpeaking,
                 audioLevel = participant.audioLevel,

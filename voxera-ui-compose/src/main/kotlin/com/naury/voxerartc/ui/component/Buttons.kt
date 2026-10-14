@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.ui.glass.voxeraGlass
 import com.naury.voxerartc.ui.glass.GlassLevel
@@ -76,6 +77,7 @@ public fun VoxeraButton(
  * @param stateLabel TalkBack이 읽을 현재 상태. 예: "꺼짐", "적용 중…". `null`이면 상태가 없는 동작 버튼이다.
  * @param active `true`면 강조 채움(예: 마이크 켜짐). 동작의 결과가 엔진에서 확인되기 전에는 [pending]으로 표시한다.
  * @param accent `true`면 주 강조색(예: 통화 수락).
+ * @param circleSize 원 크기. 버튼이 많아 폭이 좁으면 48dp(최소 터치 크기)까지 줄인다.
  */
 @Composable
 public fun CallControlButton(
@@ -89,6 +91,7 @@ public fun CallControlButton(
     danger: Boolean = false,
     accent: Boolean = false,
     enabled: Boolean = true,
+    circleSize: Dp = 52.dp,
 ) {
     val colors = VoxeraTheme.colors
     val (container, tint) = when {
@@ -99,7 +102,7 @@ public fun CallControlButton(
     }
     Column(
         modifier = modifier
-            .sizeIn(minWidth = 56.dp, minHeight = 48.dp)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(RoundedCornerShape(VoxeraRadius.sm))
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
@@ -116,7 +119,7 @@ public fun CallControlButton(
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(circleSize.coerceAtLeast(48.dp))
                 .clip(CircleShape)
                 .background(container)
                 .then(if (pending) Modifier.border(2.dp, colors.secondary, CircleShape) else Modifier),

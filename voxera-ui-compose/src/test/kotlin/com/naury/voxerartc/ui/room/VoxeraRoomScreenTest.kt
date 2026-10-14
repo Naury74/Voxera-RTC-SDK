@@ -127,4 +127,18 @@ class VoxeraRoomScreenTest {
         compose.onNodeWithText("Allow microphone access in Settings.").assertIsDisplayed()
         session.close()
     }
+
+    @Test
+    fun `내가 화면을 공유하면 경고 배너가 나오고 중지하면 사라진다`() {
+        val session = connectedSession(CallMode.VIDEO)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}, onShareScreen = {}) }
+        compose.onNodeWithContentDescription("Share").assertExists()
+        runBlocking { session.startScreenShare(object : com.naury.voxerartc.api.ScreenShareConsent {}) }
+        compose.waitUntil(5_000) { session.localMedia.value.screenShare.actual }
+        compose.onNodeWithText("Stop sharing").assertIsDisplayed().performClick()
+        compose.waitUntil(5_000) { !session.localMedia.value.screenShare.actual }
+        compose.waitForIdle()
+        compose.onNodeWithText("Stop sharing").assertDoesNotExist()
+        session.close()
+    }
 }
