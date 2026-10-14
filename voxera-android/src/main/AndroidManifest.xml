@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- 수화부로 음성 통화할 때 귀에 대면 화면을 끈다(VoxeraProximityScreenOff). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application>
         <service

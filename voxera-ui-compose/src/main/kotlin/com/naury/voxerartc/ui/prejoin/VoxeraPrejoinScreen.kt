@@ -183,7 +183,11 @@ public fun VoxeraPrejoinScreen(
                         CallMode.VIDEO to stringResource(R.string.voxera_prejoin_mode_video),
                     ),
                     selected = mode,
-                    onSelect = { mode = it },
+                    onSelect = {
+                        // 영상으로 바꾸면 카메라를 켠 채 시작하도록 맞춘다. 권한은 입장할 때 묻는다.
+                        if (it == CallMode.VIDEO && mode != CallMode.VIDEO) cameraWanted = true
+                        mode = it
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
 

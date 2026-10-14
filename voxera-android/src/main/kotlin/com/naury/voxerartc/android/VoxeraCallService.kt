@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
 import androidx.core.app.ServiceCompat
 
 /**
@@ -31,10 +32,11 @@ internal class VoxeraCallService : Service() {
             return START_NOT_STICKY
         }
         val title = intent.getStringExtra(EXTRA_TITLE).orEmpty()
+        val startedAt = intent.getLongExtra(EXTRA_STARTED_AT, 0L)
         // microphone·camera 타입은 API 30부터 있다. 그 전에는 manifest에 선언한 타입을 쓰게 한다(백그라운드 마이크 제한도 30부터).
         val effectiveTypes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) types else ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST
         try {
-            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(title), effectiveTypes)
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(title, startedAt), effectiveTypes)
         } catch (_: RuntimeException) {
             // 백그라운드 시작 제한·권한 회수 등으로 시작할 수 없음. 통화는 앞에 있는 동안만 유지된다.
             stopSelf()
@@ -43,15 +45,30 @@ internal class VoxeraCallService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun notification(title: String) = NotificationCompat.Builder(this, ensureChannel(this))
-        .setSmallIcon(R.drawable.voxera_ic_call)
-        .setContentTitle(title)
-        .setContentText(getString(R.string.voxera_call_notification_text))
-        .setOngoing(true)
-        .setCategory(NotificationCompat.CATEGORY_CALL)
-        .setPriority(NotificationCompat.PRIORITY_LOW)
-        .setContentIntent(launchIntent())
-        .build()
+    /**
+     * 통화 알림. 통화 형식(CallStyle)이라 Android 12+에서는 상태 표시줄에 통화 칩이 생기고, 경과 시간과 종료 버튼이 붙는다.
+     * 종료 버튼은 앱 안에서만 받는 방송을 보내며, 실제 종료는 [VoxeraForegroundCall]이 세션에 맡긴다.
+     */
+    private fun notification(title: String, startedAt: Long): android.app.Notification {
+        val caller = Person.Builder().setName(title.ifBlank { getString(R.string.voxera_call_notification_text) }).setImportant(true).build()
+        val hangUp = PendingIntent.getBroadcast(
+            this,
+            REQUEST_HANG_UP,
+            Intent(hangUpAction(this)).setPackage(packageName),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val builder = NotificationCompat.Builder(this, ensureChannel(this))
+            .setSmallIcon(R.drawable.voxera_ic_call)
+            .setContentTitle(title)
+            .setContentText(getString(R.string.voxera_call_notification_text))
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(launchIntent())
+            .setStyle(NotificationCompat.CallStyle.forOngoingCall(caller, hangUp))
+        if (startedAt > 0) builder.setWhen(startedAt).setShowWhen(true).setUsesChronometer(true)
+        return builder.build()
+    }
 
     private fun launchIntent(): PendingIntent? {
         val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
@@ -64,6 +81,11 @@ internal class VoxeraCallService : Service() {
         const val ACTION_STOP = "com.naury.voxerartc.android.action.STOP"
         const val EXTRA_TYPES = "types"
         const val EXTRA_TITLE = "title"
+        const val EXTRA_STARTED_AT = "startedAt"
+        private const val REQUEST_HANG_UP = 0x5603
+
+        /** 알림 종료 버튼이 보내는 방송. 패키지마다 달라 다른 앱과 겹치지 않는다. */
+        fun hangUpAction(context: Context): String = "${context.packageName}.voxera.call.HANG_UP"
         const val NOTIFICATION_ID = 0x766F78
         private const val CHANNEL_ID = "voxera_ongoing_call"
 

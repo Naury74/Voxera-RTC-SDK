@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -191,6 +193,13 @@ private fun CallContent(
     onEnterPictureInPicture: (() -> Unit)?,
     autoHideControls: Boolean,
 ) {
+    // 영상 통화 중에는 화면이 꺼지지 않게 한다. 음성 통화는 시스템 시간 초과를 따른다(근접 센서는 호스트·android 모듈 몫).
+    val view = LocalView.current
+    DisposableEffect(view, mode) {
+        val keep = mode == CallMode.VIDEO
+        if (keep) view.keepScreenOn = true
+        onDispose { if (keep) view.keepScreenOn = false }
+    }
     var sheet by rememberSaveable { mutableStateOf(RoomSheet.NONE) }
     var overflowControls by remember { mutableStateOf(emptyList<DockControl>()) }
     var pinnedId by rememberSaveable { mutableStateOf<String?>(null) }
