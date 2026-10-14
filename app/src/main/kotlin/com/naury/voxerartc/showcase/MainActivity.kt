@@ -1,16 +1,12 @@
 package com.naury.voxerartc.showcase
 
-import android.Manifest
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
@@ -20,10 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
+import com.naury.voxerartc.livekit.compose.LiveKitCameraPreviewContent
 import com.naury.voxerartc.ui.call.VoxeraCallScreen
+import com.naury.voxerartc.ui.prejoin.VoxeraPrejoinScreen
 import com.naury.voxerartc.ui.room.VoxeraRoomScreen
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.VoxeraThemeMode
@@ -38,6 +35,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(VoxeraThemeMode.SYSTEM) }
             var showSetup by rememberSaveable { mutableStateOf(false) }
+            var showPrejoin by rememberSaveable { mutableStateOf(false) }
             val dark = when (themeMode) {
                 VoxeraThemeMode.SYSTEM -> isSystemInDarkTheme()
                 VoxeraThemeMode.LIGHT -> false
@@ -51,11 +49,6 @@ class MainActivity : ComponentActivity() {
             val theme = VoxeraThemeConfig(mode = themeMode)
             val active by viewModel.active.collectAsStateWithLifecycle()
             val form by viewModel.form.collectAsStateWithLifecycle()
-
-            // 권한은 사용자가 연결을 누른 직후에만 묻는다. 거부해도 입장하며 해당 미디어 없이 연결된다.
-            val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                viewModel.startLive()
-            }
 
             val call = active
             when {
@@ -71,6 +64,23 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                showPrejoin -> {
+                    BackHandler { showPrejoin = false }
+                    // 권한은 이 화면에서 마이크·카메라를 켜거나 입장할 때만 묻는다. 거부해도 해당 미디어 없이 입장한다.
+                    VoxeraPrejoinScreen(
+                        roomName = form.roomName.trim(),
+                        displayName = form.displayName.trim(),
+                        initialMode = form.mode,
+                        onJoin = { choice ->
+                            showPrejoin = false
+                            showSetup = false
+                            viewModel.startLive(choice)
+                        },
+                        onBack = { showPrejoin = false },
+                        theme = theme,
+                        preview = { modifier -> LiveKitCameraPreviewContent(modifier) },
+                    )
+                }
                 showSetup -> {
                     BackHandler { showSetup = false }
                     ConnectScreen(
@@ -78,7 +88,7 @@ class MainActivity : ComponentActivity() {
                         form = form,
                         onFormChange = viewModel::updateForm,
                         onBack = { showSetup = false },
-                        onConnect = { permissions.launch(callPermissions(form.mode)) },
+                        onConnect = { showPrejoin = true },
                     )
                 }
                 else -> HomeScreen(
@@ -92,10 +102,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-/** 통화에 필요한 런타임 권한. 블루투스 이어폰 경로는 Android 12부터 별도 권한이 필요하다. */
-private fun callPermissions(mode: CallMode): Array<String> = buildList {
-    add(Manifest.permission.RECORD_AUDIO)
-    if (mode == CallMode.VIDEO) add(Manifest.permission.CAMERA)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(Manifest.permission.BLUETOOTH_CONNECT)
-}.toTypedArray()

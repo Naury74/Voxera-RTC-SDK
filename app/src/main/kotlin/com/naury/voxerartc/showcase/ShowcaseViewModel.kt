@@ -12,6 +12,7 @@ import com.naury.voxerartc.core.VoxeraSessionConfig
 import com.naury.voxerartc.livekit.LiveKitRtcEngineFactory
 import com.naury.voxerartc.livekit.LiveKitTokenSources
 import com.naury.voxerartc.livekit.compose.asComposeRenderer
+import com.naury.voxerartc.ui.prejoin.PrejoinChoice
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 import com.naury.voxerartc.invitation.CallCoordinator
 import com.naury.voxerartc.invitation.CallInfo
@@ -79,8 +80,8 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** 입력값으로 실제 LiveKit 룸에 들어간다. 권한 요청은 호출하기 전에 화면이 마친다. */
-    fun startLive() {
+    /** 입력값과 입장 전 선택으로 실제 LiveKit 룸에 들어간다. 권한 요청은 입장 전 화면이 마친다. */
+    fun startLive(choice: PrejoinChoice) {
         val form = _form.value
         val roomId = form.roomName.trim()
         val credentials: RtcCredentialsProvider = when (form.method) {
@@ -91,11 +92,11 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         val session = liveSdk.createSession(
             VoxeraSessionConfig(
                 credentials = credentials,
-                media = MediaPreferences(startWithMicrophone = true, startWithCamera = form.mode == CallMode.VIDEO),
+                media = MediaPreferences(startWithMicrophone = choice.microphone, startWithCamera = choice.camera),
                 serverUrlPolicy = form.serverUrlPolicy,
             ),
         )
-        start(ActiveCall(session, roomId, form.mode))
+        start(ActiveCall(session, roomId, choice.mode))
     }
 
     /** 같은 세션으로 다시 입장한다. 끝난 세션은 새 세대로 연결된다. */
