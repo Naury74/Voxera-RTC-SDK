@@ -1,0 +1,49 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace = "com.naury.voxerartc.showcase"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        applicationId = "com.naury.voxerartc.showcase"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        versionCode = 1
+        versionName = providers.gradleProperty("VOXERA_VERSION").get()
+    }
+
+    buildTypes {
+        release {
+            optimization {
+                enable = true
+            }
+            // 소비자 검증용 release를 별도 키 없이 설치할 수 있도록 debug 서명을 사용한다.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(project(":voxera-ui-compose"))
+    // 오프라인 데모는 자격 증명 없이 가짜 엔진으로 동작한다. 실제 통화와 타입 경계로 분리된다.
+    implementation(project(":voxera-testkit"))
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    testImplementation(libs.junit4)
+}

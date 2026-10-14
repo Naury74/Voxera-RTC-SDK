@@ -1,0 +1,43 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+
+# Local configuration
+local.properties
+*.env
+.env*
+**/secrets.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# Android
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+mapping/
+output-metadata.json
+
+# Signing and credentials
+*.jks
+*.keystore
+*.p12
+*.pem
+keystore.properties
+
+# RTC 진단·녹화 산출물 (토큰·미디어가 섞일 수 있다)
+**/debug-recordings/
+**/diagnostic-exports/
+
+# OS
+.DS_Store
+Thumbs.db
