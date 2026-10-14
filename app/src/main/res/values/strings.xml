@@ -66,4 +66,13 @@
     <string name="report_failed">Couldn\'t save the report.</string>
     <string name="scenario_screen_share">Screen share</string>
     <string name="scenario_screen_share_body">Shared screen on stage, your own share banner</string>
+    <string name="showcase_section_ringing">Call Mode</string>
+    <string name="showcase_section_ringing_body">Ringing screens driven by a demo host. Real invites come from your own server and push.</string>
+    <string name="showcase_try">Try a group call</string>
+    <string name="feature_voice">Voice</string>
+    <string name="feature_video">Video</string>
+    <string name="feature_groups">Up to 9 tiles</string>
+    <string name="feature_share">Screen share</string>
+    <string name="feature_pip">Picture-in-picture</string>
+    <string name="feature_effects">Camera effects</string>
 </resources>

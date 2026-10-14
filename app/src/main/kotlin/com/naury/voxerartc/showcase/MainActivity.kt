@@ -14,14 +14,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import com.naury.voxerartc.android.VoxeraPictureInPicture
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
 import com.naury.voxerartc.livekit.compose.LiveKitCameraPreviewContent
@@ -67,10 +71,26 @@ class MainActivity : ComponentActivity() {
                 call != null -> {
                     BackHandler(onBack = viewModel::exit)
                     val renderer = if (call.session.engineKind == RtcEngineKind.LIVE) viewModel.liveVideoRenderer else null
+                    val coordinator = call.coordinator
+                    // 통화마다 PiP를 붙이고, 통화 화면을 떠나면 뗀다. PiP 창의 종료 버튼은 화면의 종료 버튼과 같은 동작이다.
+                    val pip = remember(call.session) {
+                        VoxeraPictureInPicture.attach(this@MainActivity, call.session, onHangUp = {
+                            lifecycleScope.launch { if (coordinator != null) coordinator.hangup() else call.session.leave() }
+                        })
+                    }
+                    DisposableEffect(pip) { onDispose { pip.close() } }
+                    val inPip by pip.isInPictureInPicture.collectAsStateWithLifecycle()
+                    val enterPip = if (VoxeraPictureInPicture.isSupported(this@MainActivity)) ({ pip.enter(); Unit }) else null
                     CompositionLocalProvider(LocalVoxeraVideoRenderer provides renderer) {
-                        val coordinator = call.coordinator
                         if (coordinator != null) {
-                            VoxeraCallScreen(coordinator = coordinator, session = call.session, onExit = viewModel::exit, theme = theme)
+                            VoxeraCallScreen(
+                                coordinator = coordinator,
+                                session = call.session,
+                                onExit = viewModel::exit,
+                                theme = theme,
+                                pictureInPicture = inPip,
+                                onEnterPictureInPicture = enterPip,
+                            )
                         } else {
                             val live = call.session.engineKind == RtcEngineKind.LIVE
                             val liveShare = if (live) rememberScreenShareLauncher(call.session) else null
@@ -80,6 +100,8 @@ class MainActivity : ComponentActivity() {
                                 onExit = viewModel::exit,
                                 theme = theme,
                                 onRejoin = viewModel::rejoin,
+                                pictureInPicture = inPip,
+                                onEnterPictureInPicture = enterPip,
                                 onShareScreen = liveShare ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) }; Unit },
                                 onSaveReport = {
                                     val file = viewModel.saveReport()

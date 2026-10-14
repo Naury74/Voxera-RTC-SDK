@@ -1,7 +1,6 @@
 package com.naury.voxerartc.showcase
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +22,11 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -42,6 +41,7 @@ import com.naury.voxerartc.ui.component.VoxeraTextField
 import com.naury.voxerartc.ui.component.VoxeraToggleRow
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
+import com.naury.voxerartc.ui.glass.voxeraBackdrop
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
@@ -83,7 +83,7 @@ fun ConnectScreen(
             onFormChange(next)
         }
 
-        Box(Modifier.fillMaxSize().background(colors.canvas), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.fillMaxSize().voxeraBackdrop(), contentAlignment = Alignment.TopCenter) {
             Column(
                 Modifier
                     .widthIn(max = 560.dp)

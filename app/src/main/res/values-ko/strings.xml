@@ -66,4 +66,13 @@
     <string name="report_failed">리포트를 저장하지 못했습니다.</string>
     <string name="scenario_screen_share">화면 공유</string>
     <string name="scenario_screen_share_body">공유 화면 크게 보기, 내 공유 안내</string>
+    <string name="showcase_section_ringing">Call Mode</string>
+    <string name="showcase_section_ringing_body">데모 호스트가 띄우는 수신·발신 화면입니다. 실제 초대는 직접 운영하는 서버와 푸시로 보냅니다.</string>
+    <string name="showcase_try">그룹 통화 해 보기</string>
+    <string name="feature_voice">음성</string>
+    <string name="feature_video">영상</string>
+    <string name="feature_groups">최대 9칸</string>
+    <string name="feature_share">화면 공유</string>
+    <string name="feature_pip">PIP 창</string>
+    <string name="feature_effects">카메라 효과</string>
 </resources>

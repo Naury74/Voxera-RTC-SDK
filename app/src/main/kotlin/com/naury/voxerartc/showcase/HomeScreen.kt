@@ -1,62 +1,65 @@
 package com.naury.voxerartc.showcase
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.testkit.DemoScenario
+import com.naury.voxerartc.ui.component.GlassListDivider
+import com.naury.voxerartc.ui.component.GlassListGroup
+import com.naury.voxerartc.ui.component.GlassListRow
+import com.naury.voxerartc.ui.component.StatusChip
 import com.naury.voxerartc.ui.component.VoxeraAvatar
 import com.naury.voxerartc.ui.component.VoxeraButton
-import com.naury.voxerartc.ui.component.VoxeraButtonTone
+import com.naury.voxerartc.ui.component.VoxeraIcons
+import com.naury.voxerartc.ui.component.VoxeraSegmentedControl
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
+import com.naury.voxerartc.ui.glass.voxeraBackdrop
+import com.naury.voxerartc.ui.theme.VoxeraColors
 import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.VoxeraThemeMode
 
-private data class ScenarioItem(val scenario: DemoScenario, @StringRes val title: Int, @StringRes val body: Int)
-
-private val scenarios = listOf(
-    ScenarioItem(DemoScenario.VOICE_ONE_ON_ONE, R.string.scenario_voice, R.string.scenario_voice_body),
-    ScenarioItem(DemoScenario.VIDEO_ONE_ON_ONE, R.string.scenario_video, R.string.scenario_video_body),
-    ScenarioItem(DemoScenario.GROUP_FOUR, R.string.scenario_group_four, R.string.scenario_group_four_body),
-    ScenarioItem(DemoScenario.GROUP_NINE, R.string.scenario_group_nine, R.string.scenario_group_nine_body),
-    ScenarioItem(DemoScenario.UNSTABLE_NETWORK, R.string.scenario_unstable, R.string.scenario_unstable_body),
-    ScenarioItem(DemoScenario.SCREEN_SHARE, R.string.scenario_screen_share, R.string.scenario_screen_share_body),
+/** 홈 목록 한 줄. [tile]은 테마 색 중 하나를 고른다. */
+private data class HomeItem(
+    @StringRes val title: Int,
+    @StringRes val body: Int,
+    val icon: ImageVector,
+    val tile: (VoxeraColors) -> Color,
+    val onClick: () -> Unit,
 )
 
-/** 쇼케이스 홈(G-01). 오프라인 데모와 BYO LiveKit 연결을 서로 다른 카드로 나눈다. */
+/** 쇼케이스 홈(G-01). 오프라인 데모와 BYO LiveKit 연결을 서로 다른 묶음으로 나눈다. */
 @Composable
 fun HomeScreen(
     theme: VoxeraThemeConfig,
@@ -65,24 +68,31 @@ fun HomeScreen(
     onDemoCall: (incoming: Boolean) -> Unit,
     onConnectLiveKit: () -> Unit,
 ) {
+    val calls = listOf(
+        HomeItem(R.string.scenario_voice, R.string.scenario_voice_body, VoxeraIcons.Call, { it.primary }) { onStart(DemoScenario.VOICE_ONE_ON_ONE) },
+        HomeItem(R.string.scenario_video, R.string.scenario_video_body, VoxeraIcons.Videocam, { it.secondary }) { onStart(DemoScenario.VIDEO_ONE_ON_ONE) },
+        HomeItem(R.string.scenario_group_four, R.string.scenario_group_four_body, VoxeraIcons.Group, { it.primary }) { onStart(DemoScenario.GROUP_FOUR) },
+        HomeItem(R.string.scenario_group_nine, R.string.scenario_group_nine_body, VoxeraIcons.GridView, { it.secondary }) { onStart(DemoScenario.GROUP_NINE) },
+        HomeItem(R.string.scenario_screen_share, R.string.scenario_screen_share_body, VoxeraIcons.ScreenShare, { it.primary }) { onStart(DemoScenario.SCREEN_SHARE) },
+        HomeItem(R.string.scenario_unstable, R.string.scenario_unstable_body, VoxeraIcons.Wifi, { it.warning }) { onStart(DemoScenario.UNSTABLE_NETWORK) },
+    )
+    val ringing = listOf(
+        HomeItem(R.string.scenario_call_incoming, R.string.scenario_call_incoming_body, VoxeraIcons.Call, { it.primary }) { onDemoCall(true) },
+        HomeItem(R.string.scenario_call_outgoing, R.string.scenario_call_outgoing_body, VoxeraIcons.Call, { it.secondary }) { onDemoCall(false) },
+    )
     VoxeraTheme(theme) {
         val colors = VoxeraTheme.colors
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(colors.canvas),
-            contentAlignment = Alignment.TopCenter,
-        ) {
+        Box(Modifier.fillMaxSize().voxeraBackdrop(), contentAlignment = Alignment.TopCenter) {
             Column(
                 Modifier
                     .widthIn(max = 560.dp)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = VoxeraSpacing.xl, vertical = VoxeraSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.md),
+                    .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
             ) {
-                Text(stringResource(R.string.showcase_brand), color = colors.primary, style = VoxeraTheme.typography.label)
-                Column {
+                Column(Modifier.padding(horizontal = VoxeraSpacing.xs)) {
+                    Text(stringResource(R.string.showcase_brand), color = colors.primary, style = VoxeraTheme.typography.label)
                     Text(
                         stringResource(R.string.showcase_title),
                         color = colors.foreground,
@@ -91,96 +101,93 @@ fun HomeScreen(
                     )
                     Text(stringResource(R.string.showcase_subtitle), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
                 }
-                Hero()
-                Text(stringResource(R.string.showcase_tagline), color = colors.foreground, style = VoxeraTheme.typography.title)
+                Spacer(Modifier.height(VoxeraSpacing.xs))
+                Hero(onTry = { onStart(DemoScenario.GROUP_FOUR) })
 
-                GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                        Text(stringResource(R.string.showcase_offline_title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
-                        Text(stringResource(R.string.showcase_offline_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
-                        scenarios.forEach { item -> ScenarioRow(item.title, item.body, onClick = { onStart(item.scenario) }) }
-                        ScenarioRow(R.string.scenario_call_incoming, R.string.scenario_call_incoming_body, onClick = { onDemoCall(true) })
-                        ScenarioRow(R.string.scenario_call_outgoing, R.string.scenario_call_outgoing_body, onClick = { onDemoCall(false) })
+                SectionHeader(R.string.showcase_offline_title, R.string.showcase_offline_body)
+                GlassListGroup(Modifier.fillMaxWidth()) {
+                    calls.forEachIndexed { index, item ->
+                        if (index > 0) GlassListDivider()
+                        GlassListRow(stringResource(item.title), item.onClick, icon = item.icon, tileColor = item.tile(colors), subtitle = stringResource(item.body))
                     }
                 }
 
-                GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                        Text(stringResource(R.string.byo_card_title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
-                        Text(stringResource(R.string.byo_card_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
-                        VoxeraButton(stringResource(R.string.byo_card_action), onClick = onConnectLiveKit, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
+                SectionHeader(R.string.showcase_section_ringing, R.string.showcase_section_ringing_body)
+                GlassListGroup(Modifier.fillMaxWidth()) {
+                    ringing.forEachIndexed { index, item ->
+                        if (index > 0) GlassListDivider()
+                        GlassListRow(stringResource(item.title), item.onClick, icon = item.icon, tileColor = item.tile(colors), subtitle = stringResource(item.body))
                     }
                 }
 
-                ThemeSelector(theme.mode, onThemeChange)
-                Text(stringResource(R.string.showcase_byo_footer), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+                SectionHeader(R.string.byo_card_title, R.string.byo_card_body)
+                GlassListGroup(Modifier.fillMaxWidth()) {
+                    GlassListRow(
+                        stringResource(R.string.byo_card_action),
+                        onConnectLiveKit,
+                        icon = VoxeraIcons.Code,
+                        tileColor = colors.secondary,
+                        subtitle = stringResource(R.string.showcase_byo_footer),
+                    )
+                }
+
+                SectionHeader(R.string.showcase_theme, null)
+                VoxeraSegmentedControl(
+                    options = listOf(
+                        VoxeraThemeMode.SYSTEM to stringResource(R.string.showcase_theme_system),
+                        VoxeraThemeMode.LIGHT to stringResource(R.string.showcase_theme_light),
+                        VoxeraThemeMode.DARK to stringResource(R.string.showcase_theme_dark),
+                    ),
+                    selected = theme.mode,
+                    onSelect = onThemeChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(VoxeraSpacing.xl))
             }
         }
     }
 }
 
 @Composable
-private fun Hero() {
-    GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
-        // 좁은 화면에서도 네 개가 모두 보이도록 폭에 맞춰 줄인다.
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val size = ((maxWidth - VoxeraSpacing.sm * 3) / 4).coerceAtMost(64.dp)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                listOf("Alex", "Taylor", "Jamie", "Morgan").forEachIndexed { index, name ->
-                    VoxeraAvatar(id = "hero-$index", name = name, size = size, speaking = index == 0, audioLevel = 0.6f)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ScenarioRow(@StringRes title: Int, @StringRes body: Int, onClick: () -> Unit) {
+private fun SectionHeader(@StringRes title: Int, @StringRes body: Int?) {
     val colors = VoxeraTheme.colors
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .clip(RoundedCornerShape(VoxeraRadius.sm))
-            .background(colors.primary.copy(alpha = 0.10f))
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm),
+    Column(Modifier.padding(start = VoxeraSpacing.xs, end = VoxeraSpacing.xs, top = VoxeraSpacing.lg, bottom = VoxeraSpacing.xxs)) {
+        Text(stringResource(title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
+        if (body != null) Text(stringResource(body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+    }
+}
+
+/** 겹쳐 놓은 이니셜 아바타, 소개 문구, 기능 칩, 바로 해 보기 버튼. 아바타 묶음은 장식이라 읽지 않는다. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun Hero(onTry: () -> Unit) {
+    val colors = VoxeraTheme.colors
+    GlassSurface(
+        level = GlassLevel.Low,
+        shape = RoundedCornerShape(VoxeraRadius.xxl),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(VoxeraSpacing.lg),
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Box(Modifier.size(10.dp).clip(CircleShape).background(colors.primary))
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(title), color = colors.foreground, style = VoxeraTheme.typography.label)
-            Text(stringResource(body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
-        }
-    }
-}
-
-@Composable
-private fun ThemeSelector(current: VoxeraThemeMode, onChange: (VoxeraThemeMode) -> Unit) {
-    val colors = VoxeraTheme.colors
-    val options = listOf(
-        VoxeraThemeMode.SYSTEM to R.string.showcase_theme_system,
-        VoxeraThemeMode.LIGHT to R.string.showcase_theme_light,
-        VoxeraThemeMode.DARK to R.string.showcase_theme_dark,
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-        Text(stringResource(R.string.showcase_theme), color = colors.foregroundSecondary, style = VoxeraTheme.typography.label)
-        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-            options.forEach { (mode, label) ->
-                val selected = mode == current
-                Box(
-                    Modifier
-                        .heightIn(min = 48.dp)
-                        .clip(CircleShape)
-                        .background(if (selected) colors.primary else colors.surfaceElevated)
-                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onChange(mode) })
-                        .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.sm),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(stringResource(label), color = if (selected) colors.onPrimary else colors.foreground, style = VoxeraTheme.typography.label)
+        Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.md)) {
+            Row(Modifier.clearAndSetSemantics { }, verticalAlignment = Alignment.CenterVertically) {
+                listOf("Alex", "Taylor", "Jamie", "Morgan").forEachIndexed { index, name ->
+                    VoxeraAvatar(
+                        id = "hero-$index",
+                        name = name,
+                        size = 56.dp,
+                        speaking = index == 0,
+                        audioLevel = 0.7f,
+                        modifier = Modifier.offset(x = (-14 * index).dp),
+                    )
                 }
             }
+            Text(stringResource(R.string.showcase_tagline), color = colors.foreground, style = VoxeraTheme.typography.headline)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
+                listOf(R.string.feature_voice, R.string.feature_video, R.string.feature_groups, R.string.feature_share, R.string.feature_pip, R.string.feature_effects).forEach {
+                    StatusChip(stringResource(it), colors.primary)
+                }
+            }
+            VoxeraButton(stringResource(R.string.showcase_try), onClick = onTry, icon = VoxeraIcons.Videocam, modifier = Modifier.fillMaxWidth())
         }
     }
 }
