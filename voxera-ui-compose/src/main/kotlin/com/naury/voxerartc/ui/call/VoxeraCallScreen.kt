@@ -1,6 +1,5 @@
 package com.naury.voxerartc.ui.call
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +16,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -30,6 +29,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.voxerartc.api.CallMode
@@ -49,6 +50,8 @@ import com.naury.voxerartc.ui.component.VoxeraButton
 import com.naury.voxerartc.ui.component.VoxeraButtonTone
 import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.ui.room.VoxeraRoomScreen
+import com.naury.voxerartc.ui.glass.voxeraBackdrop
+import com.naury.voxerartc.ui.room.SpeakingRipple
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
@@ -62,6 +65,7 @@ import kotlinx.coroutines.launch
  *
  * @param session [coordinator]가 쓰는 세션과 같아야 한다.
  * @param onExit 종료 화면에서 닫기를 누름.
+ * @param pictureInPicture·onEnterPictureInPicture 통화 중 화면에 그대로 넘긴다([VoxeraRoomScreen] 참고).
  */
 @Composable
 public fun VoxeraCallScreen(
@@ -70,14 +74,24 @@ public fun VoxeraCallScreen(
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
     theme: VoxeraThemeConfig = VoxeraThemeConfig(),
+    pictureInPicture: Boolean = false,
+    onEnterPictureInPicture: (() -> Unit)? = null,
 ) {
     val state by coordinator.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     when (val current = state) {
         is CallState.ConnectingMedia, is CallState.Active ->
-            VoxeraRoomScreen(session, onExit = onExit, modifier = modifier, theme = theme, onEnd = { scope.launch { coordinator.hangup() } })
+            VoxeraRoomScreen(
+                session,
+                onExit = onExit,
+                modifier = modifier,
+                theme = theme,
+                onEnd = { scope.launch { coordinator.hangup() } },
+                pictureInPicture = pictureInPicture,
+                onEnterPictureInPicture = onEnterPictureInPicture,
+            )
         else -> VoxeraTheme(theme) {
-            Box(modifier.fillMaxSize().background(VoxeraTheme.colors.canvas).windowInsetsPadding(WindowInsets.safeDrawing)) {
+            Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = if (current is CallState.Ringing) 0.6f else 0f).windowInsetsPadding(WindowInsets.safeDrawing)) {
                 if (session.engineKind == RtcEngineKind.SIMULATED) {
                     StatusChip(stringResource(R.string.voxera_demo_badge), VoxeraTheme.colors.warning, Modifier.align(Alignment.TopCenter).padding(top = VoxeraSpacing.md))
                 }
@@ -89,9 +103,12 @@ public fun VoxeraCallScreen(
                         .padding(horizontal = VoxeraSpacing.xl, vertical = VoxeraSpacing.xxl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    // 세로가 짧은 화면(가로 모드, 작은 폰)에서는 여백을 줄여 수락·거절 버튼이 한 화면에 들어오게 한다.
+                    val compact = LocalWindowInfo.current.containerSize.height < with(LocalDensity.current) { 720.dp.roundToPx() }
                     when (current) {
                         is CallState.Ringing -> RingingContent(
                             current,
+                            compact = compact,
                             onAccept = { scope.launch { coordinator.accept() } },
                             onDecline = { scope.launch { coordinator.decline() } },
                             onCancel = { scope.launch { coordinator.cancel() } },
@@ -111,7 +128,7 @@ public fun VoxeraCallScreen(
 }
 
 @Composable
-private fun RingingContent(ringing: CallState.Ringing, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
+private fun RingingContent(ringing: CallState.Ringing, compact: Boolean, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
     val call = ringing.call
     val incoming = ringing.direction == CallDirection.INCOMING
     val title = when {
@@ -126,25 +143,32 @@ private fun RingingContent(ringing: CallState.Ringing, onAccept: () -> Unit, onD
         }
     }
     Text(title, color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.body, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-    Spacer(Modifier.height(VoxeraSpacing.xl))
-    VoxeraAvatar(call.peerId, call.peerDisplayName, size = 152.dp, speaking = true, audioLevel = 0.4f)
-    Spacer(Modifier.height(VoxeraSpacing.lg))
-    Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.headline, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
+    // 물결 고리가 아바타 밖으로 퍼지므로 위아래를 넉넉히 비운다.
+    val ripple = if (compact) VoxeraSpacing.xl else 64.dp
+    val avatar = if (compact) 112.dp else 152.dp
+    Spacer(Modifier.height(ripple))
+    Box(contentAlignment = Alignment.Center) {
+        SpeakingRipple(speaking = true, level = 0.8f, size = avatar)
+        VoxeraAvatar(call.peerId, call.peerDisplayName, size = avatar)
+    }
+    Spacer(Modifier.height(if (compact) VoxeraSpacing.xl else 48.dp))
+    Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
     Spacer(Modifier.height(VoxeraSpacing.xs))
     Text(pluralStringResource(R.plurals.voxera_call_rings_for, remaining, remaining), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, textAlign = TextAlign.Center)
-    Spacer(Modifier.height(VoxeraSpacing.xxl))
+    Spacer(Modifier.height(if (compact) VoxeraSpacing.xl else VoxeraSpacing.xxl * 2))
     if (incoming) {
-        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl)) {
-            CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_decline), danger = true, onClick = onDecline)
+        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2)) {
+            CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_decline), danger = true, onClick = onDecline, circleSize = 72.dp)
             CallControlButton(
-                icon = if (call.mode == CallMode.VIDEO) VoxeraIcons.Videocam else VoxeraIcons.Mic,
+                icon = if (call.mode == CallMode.VIDEO) VoxeraIcons.Videocam else VoxeraIcons.Call,
                 label = stringResource(R.string.voxera_call_accept),
                 accent = true,
                 onClick = onAccept,
+                circleSize = 72.dp,
             )
         }
     } else {
-        CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_cancel), danger = true, onClick = onCancel)
+        CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_cancel), danger = true, onClick = onCancel, circleSize = 72.dp)
     }
 }
 

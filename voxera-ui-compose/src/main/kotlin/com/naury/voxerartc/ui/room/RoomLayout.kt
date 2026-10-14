@@ -35,3 +35,12 @@ internal fun visibleTiles(participants: List<Participant>, capacity: Int = MAX_V
     val order = participants.map { it.id }
     return shown.sortedBy { order.indexOf(it.id) } to participants.size - shown.size
 }
+
+/** 격자 한 쪽의 최대 타일 수. */
+internal const val PAGE_SIZE = 9
+
+/** 영상 격자의 쪽 나누기. 첫 쪽 맨 앞에 로컬 참가자를 두고 나머지는 원래 순서를 지킨다. 참가자가 없으면 빈 쪽 하나. */
+internal fun gridPages(participants: List<Participant>, pageSize: Int = PAGE_SIZE): List<List<Participant>> {
+    val ordered = participants.filter { it.isLocal } + participants.filterNot { it.isLocal }
+    return ordered.chunked(pageSize).ifEmpty { listOf(emptyList()) }
+}

@@ -144,4 +144,23 @@
     <string name="voxera_effects_unsupported">Camera effects aren\'t available here.</string>
     <string name="voxera_effects_throttled">Effects were turned off because this device couldn\'t keep up. Your call continues with the original video.</string>
     <string name="voxera_effects_note">Applied to the video others see and to your preview. Nothing is uploaded for processing.</string>
+    <string name="voxera_tile_pinned">Pinned</string>
+    <string name="voxera_weak_connection">Weak connection</string>
+    <string name="voxera_tile_swap">Swap views</string>
+    <string name="voxera_page_of">Page %1$d of %2$d</string>
+    <string name="voxera_end_quality">Call quality</string>
+    <string name="voxera_health_stable">Stable</string>
+    <string name="voxera_health_fair">Fair</string>
+    <string name="voxera_health_poor">Poor</string>
+    <string name="voxera_status_stable">Good connection</string>
+    <string name="voxera_status_fair">Connection is a little unstable</string>
+    <string name="voxera_status_poor">Poor connection</string>
+    <string name="voxera_notice_joined">%1$s joined</string>
+    <string name="voxera_notice_left">%1$s left</string>
+    <string name="voxera_control_pip">Picture-in-picture</string>
+    <string name="voxera_stats_health">Call health</string>
+    <string name="voxera_effects_camera_off">Turn on the camera to choose an effect.</string>
+    <string name="voxera_prejoin_level_heard">Microphone is picking up sound</string>
+    <string name="voxera_prejoin_level_quiet">Microphone is on. Say something to test it.</string>
+    <string name="voxera_prejoin_level_unavailable">Can\'t read the microphone level right now.</string>
 </resources>

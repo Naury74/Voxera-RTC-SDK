@@ -20,6 +20,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import com.naury.voxerartc.ui.glass.GlassDock
+import com.naury.voxerartc.ui.glass.GlassPill
+import com.naury.voxerartc.ui.glass.voxeraBackdrop
+import com.naury.voxerartc.ui.glass.voxeraGlass
+import com.naury.voxerartc.ui.room.SpeakingRipple
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
@@ -32,13 +42,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -146,13 +156,15 @@ public fun VoxeraPrejoinScreen(
 
     VoxeraTheme(theme) {
         val colors = VoxeraTheme.colors
-        Box(modifier.fillMaxSize().background(colors.canvas), contentAlignment = Alignment.TopCenter) {
+        val micOn = micWanted && mic == PermissionStatus.GRANTED
+        val level by rememberMicLevel(micOn)
+        Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = level ?: 0f), contentAlignment = Alignment.TopCenter) {
             Column(
                 Modifier
                     .widthIn(max = 560.dp)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = VoxeraSpacing.xl, vertical = VoxeraSpacing.md),
+                    .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.md),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -162,22 +174,6 @@ public fun VoxeraPrejoinScreen(
                     Column {
                         Text(stringResource(R.string.voxera_prejoin_title), color = colors.foreground, style = VoxeraTheme.typography.headline, modifier = Modifier.semantics { heading() })
                         Text(roomName, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
-                    }
-                }
-
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(3f / 4f)
-                        .clip(RoundedCornerShape(VoxeraRadius.xl))
-                        .background(colors.surfaceElevated),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val showPreview = video && cameraWanted && camera == PermissionStatus.GRANTED && preview != null
-                    if (showPreview) {
-                        preview(Modifier.fillMaxSize())
-                    } else {
-                        VoxeraAvatar(id = "self", name = displayName.ifBlank { "?" }, size = 128.dp, speaking = micWanted && mic == PermissionStatus.GRANTED, audioLevel = 0.3f)
                     }
                 }
 
@@ -191,39 +187,105 @@ public fun VoxeraPrejoinScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                val on = stringResource(R.string.voxera_control_on)
-                val off = stringResource(R.string.voxera_control_off)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    val micOn = micWanted && mic == PermissionStatus.GRANTED
-                    CallControlButton(
-                        icon = if (micOn) VoxeraIcons.Mic else VoxeraIcons.MicOff,
-                        label = stringResource(R.string.voxera_control_mic),
-                        stateLabel = if (micOn) on else off,
-                        active = micOn,
-                        onClick = {
-                            micWanted = !micWanted || mic != PermissionStatus.GRANTED
-                            if (micWanted) request(Manifest.permission.RECORD_AUDIO)
-                        },
-                    )
-                    if (video) {
-                        val cameraOn = cameraWanted && camera == PermissionStatus.GRANTED
-                        CallControlButton(
-                            icon = if (cameraOn) VoxeraIcons.Videocam else VoxeraIcons.VideocamOff,
-                            label = stringResource(R.string.voxera_control_camera),
-                            stateLabel = if (cameraOn) on else off,
-                            active = cameraOn,
-                            onClick = {
-                                cameraWanted = !cameraWanted || camera != PermissionStatus.GRANTED
-                                if (cameraWanted) request(Manifest.permission.CAMERA)
-                            },
-                        )
+                // 미리보기 위에 이름표와 유리 조작 막대를 겹친다(G-03).
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(3f / 4f)
+                        .voxeraGlass(RoundedCornerShape(VoxeraRadius.xxl), GlassLevel.Low),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val showPreview = video && cameraWanted && camera == PermissionStatus.GRANTED && preview != null
+                    if (showPreview) {
+                        preview(Modifier.fillMaxSize().clip(RoundedCornerShape(VoxeraRadius.xxl)))
+                    } else {
+                        Box(contentAlignment = Alignment.Center) {
+                            SpeakingRipple(speaking = micOn && (level ?: 0f) > 0.15f, level = level ?: 0f, size = 128.dp)
+                            VoxeraAvatar(id = "self", name = displayName.ifBlank { "?" }, size = 128.dp, speaking = micOn && (level ?: 0f) > 0.15f, audioLevel = level ?: 0f)
+                        }
+                    }
+                    GlassPill(Modifier.align(Alignment.TopStart).padding(VoxeraSpacing.md)) {
+                        Text(displayName.ifBlank { stringResource(R.string.voxera_you) }, color = colors.onScrim, style = VoxeraTheme.typography.caption)
+                    }
+                    val on = stringResource(R.string.voxera_control_on)
+                    val off = stringResource(R.string.voxera_control_off)
+                    GlassDock(Modifier.align(Alignment.BottomCenter).padding(bottom = VoxeraSpacing.md)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
+                            CallControlButton(
+                                icon = if (micOn) VoxeraIcons.Mic else VoxeraIcons.MicOff,
+                                label = stringResource(R.string.voxera_control_mic),
+                                stateLabel = if (micOn) on else off,
+                                active = micOn,
+                                onClick = {
+                                    micWanted = !micWanted || mic != PermissionStatus.GRANTED
+                                    if (micWanted) request(Manifest.permission.RECORD_AUDIO)
+                                },
+                            )
+                            if (video) {
+                                val cameraOn = cameraWanted && camera == PermissionStatus.GRANTED
+                                CallControlButton(
+                                    icon = if (cameraOn) VoxeraIcons.Videocam else VoxeraIcons.VideocamOff,
+                                    label = stringResource(R.string.voxera_control_camera),
+                                    stateLabel = if (cameraOn) on else off,
+                                    active = cameraOn,
+                                    onClick = {
+                                        cameraWanted = !cameraWanted || camera != PermissionStatus.GRANTED
+                                        if (cameraWanted) request(Manifest.permission.CAMERA)
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
 
+                if (micOn) MicLevelMeter(level)
                 PermissionNotice(micWanted, mic, R.string.voxera_prejoin_mic_denied, R.string.voxera_prejoin_mic_blocked, context)
                 if (video) PermissionNotice(cameraWanted, camera, R.string.voxera_prejoin_camera_denied, R.string.voxera_prejoin_camera_blocked, context)
 
-                VoxeraButton(stringResource(R.string.voxera_prejoin_join), onClick = ::join, modifier = Modifier.fillMaxWidth())
+                VoxeraButton(
+                    stringResource(R.string.voxera_prejoin_join),
+                    onClick = ::join,
+                    icon = if (video) VoxeraIcons.Videocam else VoxeraIcons.Call,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 마이크 레벨 막대 16칸. 말하면 차오르고, 마이크를 열 수 없으면 그 사실을 글자로 알린다.
+ * TalkBack에는 "마이크 소리 감지됨/조용함"으로 읽힌다.
+ */
+@Composable
+private fun MicLevelMeter(level: Float?) {
+    val colors = VoxeraTheme.colors
+    val heard = (level ?: 0f) > 0.15f
+    val description = stringResource(
+        when {
+            level == null -> R.string.voxera_prejoin_level_unavailable
+            heard -> R.string.voxera_prejoin_level_heard
+            else -> R.string.voxera_prejoin_level_quiet
+        },
+    )
+    GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.lg), modifier = Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = description }) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
+            Icon(VoxeraIcons.Mic, contentDescription = null, tint = if (heard) colors.primary else colors.foregroundSecondary, modifier = Modifier.size(20.dp))
+            if (level == null) {
+                Text(description, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+            } else {
+                Row(Modifier.weight(1f).height(16.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    val lit = (level * 16).toInt()
+                    repeat(16) { index ->
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(if (index < lit) (if (index >= 13) colors.warning else colors.primary) else colors.foreground.copy(alpha = 0.12f)),
+                        )
+                    }
+                }
             }
         }
     }

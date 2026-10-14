@@ -141,4 +141,23 @@
     <string name="voxera_effects_unsupported">여기서는 카메라 효과를 쓸 수 없습니다.</string>
     <string name="voxera_effects_throttled">기기가 처리 속도를 따라가지 못해 효과를 껐습니다. 통화는 원본 영상으로 계속됩니다.</string>
     <string name="voxera_effects_note">상대에게 보내는 영상과 내 미리보기에 적용됩니다. 처리를 위해 영상을 업로드하지 않습니다.</string>
+    <string name="voxera_tile_pinned">고정됨</string>
+    <string name="voxera_weak_connection">연결 약함</string>
+    <string name="voxera_tile_swap">화면 바꾸기</string>
+    <string name="voxera_page_of">%2$d쪽 중 %1$d쪽</string>
+    <string name="voxera_end_quality">통화 품질</string>
+    <string name="voxera_health_stable">안정</string>
+    <string name="voxera_health_fair">보통</string>
+    <string name="voxera_health_poor">불안정</string>
+    <string name="voxera_status_stable">연결 상태 좋음</string>
+    <string name="voxera_status_fair">연결이 조금 불안정합니다</string>
+    <string name="voxera_status_poor">연결이 불안정합니다</string>
+    <string name="voxera_notice_joined">%1$s 님이 들어왔습니다</string>
+    <string name="voxera_notice_left">%1$s 님이 나갔습니다</string>
+    <string name="voxera_control_pip">PIP 창으로 보기</string>
+    <string name="voxera_stats_health">통화 상태</string>
+    <string name="voxera_effects_camera_off">카메라를 켜면 효과를 고를 수 있습니다.</string>
+    <string name="voxera_prejoin_level_heard">마이크에 소리가 들어옵니다</string>
+    <string name="voxera_prejoin_level_quiet">마이크가 켜져 있습니다. 말해서 확인해 보세요.</string>
+    <string name="voxera_prejoin_level_unavailable">지금은 마이크 소리 크기를 읽을 수 없습니다.</string>
 </resources>

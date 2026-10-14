@@ -1,8 +1,8 @@
 package com.naury.voxerartc.ui.room
 
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,6 +11,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
+import com.naury.voxerartc.api.Participant
 import com.google.common.truth.Truth.assertThat
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.JoinResult
@@ -142,5 +146,41 @@ class VoxeraRoomScreenTest {
         compose.waitForIdle()
         compose.onNodeWithText("Stop sharing").assertDoesNotExist()
         session.close()
+    }
+
+    @Test
+    fun `영상 통화에서 조작이 없으면 조작 막대를 숨기고 화면을 누르면 다시 보여 준다`() {
+        val session = connectedSession(CallMode.VIDEO)
+        factory.last.upsertRemote(Participant(id = "alex", displayName = "Alex", isLocal = false))
+        compose.mainClock.autoAdvance = false
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("End").assertExists()
+        compose.mainClock.advanceTimeBy(5_000)
+        compose.onNodeWithContentDescription("End").assertDoesNotExist()
+        compose.onRoot().performTouchInput { click(center) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("End").assertExists()
+    }
+
+    @Test
+    fun `자동 숨김을 끄면 조작 막대가 계속 보인다`() {
+        val session = connectedSession(CallMode.VIDEO)
+        factory.last.upsertRemote(Participant(id = "alex", displayName = "Alex", isLocal = false))
+        compose.mainClock.autoAdvance = false
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}, autoHideControls = false) }
+        compose.mainClock.advanceTimeBy(10_000)
+        compose.onNodeWithContentDescription("End").assertExists()
+    }
+
+    @Test
+    fun `PiP 창에서는 조작 없이 상대 한 명만 보여 준다`() {
+        val session = connectedSession(CallMode.VIDEO)
+        factory.last.upsertRemote(Participant(id = "alex", displayName = "Alex", isLocal = false))
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}, pictureInPicture = true) }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("End").assertDoesNotExist()
+        compose.onNodeWithContentDescription("People").assertDoesNotExist()
+        compose.onNode(hasContentDescription("Alex", substring = true)).assertExists()
     }
 }
