@@ -29,6 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class VoxeraRoomScreenTest {
@@ -129,6 +130,7 @@ class VoxeraRoomScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "w420dp-h900dp")
     fun `내가 화면을 공유하면 경고 배너가 나오고 중지하면 사라진다`() {
         val session = connectedSession(CallMode.VIDEO)
         compose.setContent { VoxeraRoomScreen(session, onExit = {}, onShareScreen = {}) }

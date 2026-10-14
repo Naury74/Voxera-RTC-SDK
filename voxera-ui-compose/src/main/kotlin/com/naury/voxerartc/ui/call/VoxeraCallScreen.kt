@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -80,7 +82,11 @@ public fun VoxeraCallScreen(
                     StatusChip(stringResource(R.string.voxera_demo_badge), VoxeraTheme.colors.warning, Modifier.align(Alignment.TopCenter).padding(top = VoxeraSpacing.md))
                 }
                 Column(
-                    Modifier.align(Alignment.Center).widthIn(max = 420.dp).padding(horizontal = VoxeraSpacing.xl),
+                    Modifier
+                        .align(Alignment.Center)
+                        .widthIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = VoxeraSpacing.xl, vertical = VoxeraSpacing.xxl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     when (current) {
@@ -125,7 +131,7 @@ private fun RingingContent(ringing: CallState.Ringing, onAccept: () -> Unit, onD
     Spacer(Modifier.height(VoxeraSpacing.lg))
     Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.headline, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
     Spacer(Modifier.height(VoxeraSpacing.xs))
-    Text(pluralStringResource(R.plurals.voxera_call_rings_for, remaining, remaining), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+    Text(pluralStringResource(R.plurals.voxera_call_rings_for, remaining, remaining), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, textAlign = TextAlign.Center)
     Spacer(Modifier.height(VoxeraSpacing.xxl))
     if (incoming) {
         Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl)) {

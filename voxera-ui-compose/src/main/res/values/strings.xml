@@ -20,6 +20,7 @@
     <string name="voxera_control_audio">Audio</string>
     <string name="voxera_control_people">People</string>
     <string name="voxera_control_stats">Quality</string>
+    <string name="voxera_control_more">More</string>
     <string name="voxera_control_end">End</string>
     <string name="voxera_control_on">On</string>
     <string name="voxera_control_off">Off</string>

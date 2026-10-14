@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -102,7 +104,8 @@ public fun CallControlButton(
     }
     Column(
         modifier = modifier
-            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .width(circleSize.coerceAtLeast(48.dp) + 8.dp)
+            .sizeIn(minHeight = 48.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(RoundedCornerShape(VoxeraRadius.sm))
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
@@ -127,15 +130,22 @@ public fun CallControlButton(
         ) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp).alpha(if (pending) 0.6f else 1f))
         }
+        // 막대 폭은 고정이라 이름표 글꼴만 최대 1.3배까지 키운다. 전체 이름은 contentDescription으로 읽힌다.
+        val fontScale = LocalDensity.current.fontScale
+        val caption = VoxeraTheme.typography.caption
+        val labelStyle = if (fontScale > MAX_LABEL_SCALE) caption.copy(fontSize = caption.fontSize * (MAX_LABEL_SCALE / fontScale)) else caption
         Text(
             label,
             color = colors.foreground,
-            style = VoxeraTheme.typography.caption,
+            style = labelStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
     }
 }
+
+private const val MAX_LABEL_SCALE = 1.3f
 
 /** 작은 상태 칩(예: DEMO, 연결 약함). 색만으로 뜻을 전하지 않도록 항상 글자를 담는다. */
 @Composable

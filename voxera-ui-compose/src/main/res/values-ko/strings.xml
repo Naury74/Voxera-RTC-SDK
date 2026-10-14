@@ -19,6 +19,7 @@
     <string name="voxera_control_audio">오디오</string>
     <string name="voxera_control_people">참가자</string>
     <string name="voxera_control_stats">품질</string>
+    <string name="voxera_control_more">더보기</string>
     <string name="voxera_control_end">종료</string>
     <string name="voxera_control_on">켜짐</string>
     <string name="voxera_control_off">꺼짐</string>
