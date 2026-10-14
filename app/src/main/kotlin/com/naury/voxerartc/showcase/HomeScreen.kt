@@ -60,6 +60,7 @@ fun HomeScreen(
     theme: VoxeraThemeConfig,
     onThemeChange: (VoxeraThemeMode) -> Unit,
     onStart: (DemoScenario) -> Unit,
+    onDemoCall: (incoming: Boolean) -> Unit,
     onConnectLiveKit: () -> Unit,
 ) {
     VoxeraTheme(theme) {
@@ -95,7 +96,9 @@ fun HomeScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
                         Text(stringResource(R.string.showcase_offline_title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
                         Text(stringResource(R.string.showcase_offline_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
-                        scenarios.forEach { item -> ScenarioRow(item, onClick = { onStart(item.scenario) }) }
+                        scenarios.forEach { item -> ScenarioRow(item.title, item.body, onClick = { onStart(item.scenario) }) }
+                        ScenarioRow(R.string.scenario_call_incoming, R.string.scenario_call_incoming_body, onClick = { onDemoCall(true) })
+                        ScenarioRow(R.string.scenario_call_outgoing, R.string.scenario_call_outgoing_body, onClick = { onDemoCall(false) })
                     }
                 }
 
@@ -126,7 +129,7 @@ private fun Hero() {
 }
 
 @Composable
-private fun ScenarioRow(item: ScenarioItem, onClick: () -> Unit) {
+private fun ScenarioRow(@StringRes title: Int, @StringRes body: Int, onClick: () -> Unit) {
     val colors = VoxeraTheme.colors
     Row(
         Modifier
@@ -141,8 +144,8 @@ private fun ScenarioRow(item: ScenarioItem, onClick: () -> Unit) {
     ) {
         Box(Modifier.size(10.dp).clip(CircleShape).background(colors.primary))
         Column(Modifier.weight(1f)) {
-            Text(stringResource(item.title), color = colors.foreground, style = VoxeraTheme.typography.label)
-            Text(stringResource(item.body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+            Text(stringResource(title), color = colors.foreground, style = VoxeraTheme.typography.label)
+            Text(stringResource(body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
         }
     }
 }

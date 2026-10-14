@@ -58,4 +58,8 @@
     <string name="byo_problem_name">Up to 64 characters.</string>
     <string name="byo_problem_not_jwt">This isn\'t an access token (JWT). Never paste an API Secret or API Key here.</string>
     <string name="byo_problem_expired">This token has expired. Get a new one.</string>
+    <string name="scenario_call_incoming">Incoming call (demo host)</string>
+    <string name="scenario_call_incoming_body">Accept or decline, ring timeout</string>
+    <string name="scenario_call_outgoing">Outgoing call (demo host)</string>
+    <string name="scenario_call_outgoing_body">Ringing, then the other side answers</string>
 </resources>

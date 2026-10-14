@@ -58,4 +58,8 @@
     <string name="byo_problem_name">64자까지 입력할 수 있습니다.</string>
     <string name="byo_problem_not_jwt">접근 토큰(JWT)이 아닙니다. API Secret이나 API Key는 절대 넣지 마세요.</string>
     <string name="byo_problem_expired">만료된 토큰입니다. 새 토큰을 받으세요.</string>
+    <string name="scenario_call_incoming">걸려 온 통화 (데모 호스트)</string>
+    <string name="scenario_call_incoming_body">수락·거절, 벨 제한 시간</string>
+    <string name="scenario_call_outgoing">거는 통화 (데모 호스트)</string>
+    <string name="scenario_call_outgoing_body">벨이 울리다 상대가 받음</string>
 </resources>

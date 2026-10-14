@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
+import com.naury.voxerartc.ui.call.VoxeraCallScreen
 import com.naury.voxerartc.ui.room.VoxeraRoomScreen
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.VoxeraThemeMode
@@ -62,7 +63,12 @@ class MainActivity : ComponentActivity() {
                     BackHandler(onBack = viewModel::exit)
                     val renderer = if (call.session.engineKind == RtcEngineKind.LIVE) viewModel.liveVideoRenderer else null
                     CompositionLocalProvider(LocalVoxeraVideoRenderer provides renderer) {
-                        VoxeraRoomScreen(session = call.session, onExit = viewModel::exit, theme = theme, onRejoin = viewModel::rejoin)
+                        val coordinator = call.coordinator
+                        if (coordinator != null) {
+                            VoxeraCallScreen(coordinator = coordinator, session = call.session, onExit = viewModel::exit, theme = theme)
+                        } else {
+                            VoxeraRoomScreen(session = call.session, onExit = viewModel::exit, theme = theme, onRejoin = viewModel::rejoin)
+                        }
                     }
                 }
                 showSetup -> {
@@ -79,6 +85,7 @@ class MainActivity : ComponentActivity() {
                     theme = theme,
                     onThemeChange = { themeMode = it },
                     onStart = viewModel::startDemo,
+                    onDemoCall = viewModel::startDemoCall,
                     onConnectLiveKit = { showSetup = true },
                 )
             }

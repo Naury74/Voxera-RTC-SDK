@@ -13,11 +13,17 @@ import com.naury.voxerartc.livekit.LiveKitRtcEngineFactory
 import com.naury.voxerartc.livekit.LiveKitTokenSources
 import com.naury.voxerartc.livekit.compose.asComposeRenderer
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
+import com.naury.voxerartc.invitation.CallCoordinator
+import com.naury.voxerartc.invitation.CallInfo
+import com.naury.voxerartc.invitation.InvitationEventType
+import com.naury.voxerartc.invitation.InviteResult
 import com.naury.voxerartc.testkit.DemoScenario
+import com.naury.voxerartc.testkit.FakeInvitationGateway
 import com.naury.voxerartc.testkit.VoxeraDemo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -27,7 +33,8 @@ import kotlinx.coroutines.launch
  */
 class ShowcaseViewModel(application: Application) : AndroidViewModel(application) {
 
-    data class ActiveCall(val session: VoxeraSession, val roomId: String, val mode: CallMode)
+    /** [coordinator]가 있으면 Call Mode(초대 신호 + 룸 미디어)이고, 입장은 coordinator가 정한다. */
+    data class ActiveCall(val session: VoxeraSession, val roomId: String, val mode: CallMode, val coordinator: CallCoordinator? = null)
 
     private val _active = MutableStateFlow<ActiveCall?>(null)
     val active: StateFlow<ActiveCall?> = _active.asStateFlow()
@@ -47,6 +54,29 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
 
     fun startDemo(scenario: DemoScenario) {
         start(ActiveCall(VoxeraDemo.createFakeSession(scenario), VoxeraDemo.ROOM_ID, scenario.mode))
+    }
+
+    /**
+     * 가짜 호스트 gateway로 Call Mode를 시연한다. [incoming]이면 잠시 뒤 전화가 걸려 오고, 아니면 바로 걸어 상대가 3초 뒤 받는다.
+     * 실제 앱에서는 호스트 서버·푸시가 이 gateway를 구현한다.
+     */
+    fun startDemoCall(incoming: Boolean) {
+        val session = VoxeraDemo.createFakeSession(DemoScenario.VIDEO_ONE_ON_ONE)
+        val gateway = FakeInvitationGateway(viewModelScope)
+        val coordinator = CallCoordinator(gateway, session).also { it.start() }
+        replace(ActiveCall(session, VoxeraDemo.ROOM_ID, CallMode.VIDEO, coordinator))
+        viewModelScope.launch {
+            if (incoming) {
+                delay(1_500)
+                gateway.ring("demo-call", "Alex Morgan", CallMode.VIDEO)
+            } else {
+                gateway.answer = FakeInvitationGateway.Answer(InvitationEventType.ACCEPTED, delayMs = 3_000)
+                gateway.initiateResult = { request ->
+                    InviteResult.Created(CallInfo("demo-call", "demo-room", request.mode, "alex", "Alex Morgan"), gateway.nextRevision())
+                }
+                coordinator.call(listOf("alex"), CallMode.VIDEO)
+            }
+        }
     }
 
     /** 입력값으로 실제 LiveKit 룸에 들어간다. 권한 요청은 호출하기 전에 화면이 마친다. */
@@ -74,14 +104,20 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun exit() {
-        _active.value?.session?.close()
-        _active.value = null
+        replace(null)
     }
 
     private fun start(call: ActiveCall) {
-        _active.value?.session?.close()
-        _active.value = call
+        replace(call)
         join(call)
+    }
+
+    private fun replace(call: ActiveCall?) {
+        _active.value?.let { previous ->
+            previous.coordinator?.close()
+            previous.session.close()
+        }
+        _active.value = call
     }
 
     private fun join(call: ActiveCall) {
@@ -89,6 +125,6 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     }
 
     override fun onCleared() {
-        _active.value?.session?.close()
+        replace(null)
     }
 }
