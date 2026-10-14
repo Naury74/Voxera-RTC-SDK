@@ -1,0 +1,64 @@
+package com.naury.voxerartc.livekit
+
+import android.content.Context
+import android.view.View
+import androidx.annotation.MainThread
+import com.naury.voxerartc.api.VideoTrackHandle
+import io.livekit.android.renderer.TextureViewRenderer
+import livekit.org.webrtc.RendererCommon
+import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.atomic.AtomicBoolean
+
+/**
+ * [VideoTrackHandle]로 LiveKit 영상 트랙을 찾아 화면에 붙인다. LiveKit 트랙 객체는 밖으로 내보내지 않고 View만 준다.
+ *
+ * [LiveKitRtcEngineFactory.videoTracks]로 얻으며, 그 factory가 만든 연결 중인 엔진에서만 트랙을 찾는다.
+ */
+public class LiveKitVideoTracks internal constructor() {
+
+    private val engines = CopyOnWriteArraySet<LiveKitRtcEngine>()
+
+    internal fun register(engine: LiveKitRtcEngine) {
+        engines += engine
+    }
+
+    internal fun unregister(engine: LiveKitRtcEngine) {
+        engines -= engine
+    }
+
+    /**
+     * [handle] 트랙을 그리는 View를 만든다. 트랙을 찾지 못하면(이미 끝난 통화, 재게시 등) `null`.
+     * 다 쓰면 [LiveKitVideoView.close]를 불러 렌더러를 트랙에서 떼고 EGL 자원을 해제해야 한다.
+     *
+     * @param mirror 로컬 전면 카메라처럼 좌우를 뒤집어 보여 줄지.
+     */
+    @MainThread
+    public fun createView(context: Context, handle: VideoTrackHandle, mirror: Boolean): LiveKitVideoView? {
+        for (engine in engines) {
+            val found = engine.findVideoTrack(handle) ?: continue
+            val (room, track) = found
+            val renderer = TextureViewRenderer(context)
+            room.initVideoRenderer(renderer)
+            renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+            renderer.setMirror(mirror)
+            track.addRenderer(renderer)
+            return LiveKitVideoView(renderer) {
+                track.removeRenderer(renderer)
+                renderer.release()
+            }
+        }
+        return null
+    }
+}
+
+/** 영상 트랙이 붙은 View. [close]는 여러 번 불러도 안전하다. */
+public class LiveKitVideoView internal constructor(
+    public val view: View,
+    private val release: () -> Unit,
+) : AutoCloseable {
+    private val closed = AtomicBoolean(false)
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) release()
+    }
+}

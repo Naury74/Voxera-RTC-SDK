@@ -31,6 +31,6 @@ rootProject.name = "Voxera"
 
 include(":app")
 include(":voxera-rtc-api", ":voxera-core")
-include(":voxera-livekit")
+include(":voxera-livekit", ":voxera-livekit-compose")
 include(":voxera-testkit")
 include(":voxera-ui-compose")

@@ -27,6 +27,8 @@ import io.livekit.android.room.Room
 import io.livekit.android.room.track.CameraPosition
 import io.livekit.android.room.track.LocalVideoTrack
 import io.livekit.android.room.track.Track
+import io.livekit.android.room.track.VideoTrack
+import com.naury.voxerartc.api.VideoTrackHandle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -53,9 +55,12 @@ import io.livekit.android.room.participant.Participant as LiveKitParticipant
 public class LiveKitRtcEngineFactory(context: Context) : RtcEngineFactory {
     private val appContext = context.applicationContext
 
+    /** 이 factory가 만든 엔진의 영상 트랙을 화면에 붙인다. UI 어댑터(voxera-livekit-compose)가 쓴다. */
+    public val videoTracks: LiveKitVideoTracks = LiveKitVideoTracks()
+
     override val kind: RtcEngineKind = RtcEngineKind.LIVE
 
-    override fun create(): RtcEngine = LiveKitRtcEngine(appContext)
+    override fun create(): RtcEngine = LiveKitRtcEngine(appContext, videoTracks)
 }
 
 /**
@@ -63,7 +68,10 @@ public class LiveKitRtcEngineFactory(context: Context) : RtcEngineFactory {
  *
  * 재연결은 LiveKit이 스스로 하며, 이 엔진은 `Reconnecting`/`Reconnected`/`Disconnected` 이벤트만 옮긴다.
  */
-internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
+internal class LiveKitRtcEngine(
+    private val context: Context,
+    private val videoTracks: LiveKitVideoTracks,
+) : RtcEngine {
 
     override val kind: RtcEngineKind = RtcEngineKind.LIVE
 
@@ -93,6 +101,7 @@ internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
             return ConnectOutcome.Failed(classifyConnectFailure(failure))
         }
         connected.set(true)
+        videoTracks.register(this)
         room.audioSwitchHandler?.registerAudioDeviceChangeListener(audioDeviceListener)
         // 권한이 없거나 장치를 못 열어도 입장은 유지한다. 실제 게시 상태는 LocalMediaChanged로 알린다.
         if (options.startWithMicrophone) setMicrophoneEnabled(true)
@@ -197,6 +206,15 @@ internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
         )
     }
 
+    /** 핸들이 가리키는 영상 트랙. 참가자가 나갔거나 트랙이 바뀌었으면 `null`. */
+    internal fun findVideoTrack(handle: VideoTrackHandle): Pair<Room, VideoTrack>? {
+        if (released.get()) return null
+        val participant = (listOf(room.localParticipant) + room.remoteParticipants.values)
+            .firstOrNull { it.voxeraId == handle.participantId } ?: return null
+        val track = participant.trackPublications[handle.trackId]?.track as? VideoTrack ?: return null
+        return room to track
+    }
+
     private fun hasPermission(permission: String): Boolean =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
@@ -205,6 +223,7 @@ internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
 
     override suspend fun release() {
         if (!released.compareAndSet(false, true)) return
+        videoTracks.unregister(this)
         room.audioSwitchHandler?.unregisterAudioDeviceChangeListener(audioDeviceListener)
         scope.cancel()
         room.release()
