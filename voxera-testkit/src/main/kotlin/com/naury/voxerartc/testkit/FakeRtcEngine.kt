@@ -16,6 +16,8 @@ import com.naury.voxerartc.api.RtcEngineEvent
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.EffectsAvailability
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import com.naury.voxerartc.api.VoxeraError
@@ -41,6 +43,7 @@ public class FakeRtcEngine(
     public var mediaAckDelayMs: Long = 0,
     private val cameras: List<CameraFacing> = listOf(CameraFacing.FRONT, CameraFacing.BACK),
     private val audioRoutes: List<AudioRoute> = DefaultAudioRoutes,
+    private val effects: EffectsAvailability = EffectsAvailability.AVAILABLE,
 ) : RtcEngine {
 
     override val kind: RtcEngineKind = RtcEngineKind.SIMULATED
@@ -67,6 +70,7 @@ public class FakeRtcEngine(
         canSwitchCamera = cameras.size > 1,
         audioRoutes = audioRoutes,
         selectedAudioRouteId = audioRoutes.firstOrNull()?.id,
+        effectsAvailability = effects,
     )
 
     /** [connect]에 전달된 자격 증명. */
@@ -159,6 +163,20 @@ public class FakeRtcEngine(
         delay(mediaAckDelayMs)
         simulateScreenShareStopped()
         return MediaActionResult.Applied
+    }
+
+    override suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult {
+        if (media.effectsAvailability != EffectsAvailability.AVAILABLE) return MediaActionResult.Unsupported
+        delay(mediaAckDelayMs)
+        media = media.copy(videoEffect = effect)
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
+        return MediaActionResult.Applied
+    }
+
+    /** 처리 시간 초과로 엔진이 효과를 끈 상황을 보낸다. */
+    public fun simulateEffectsThrottled() {
+        media = media.copy(videoEffect = VideoEffect.None, effectsAvailability = EffectsAvailability.DISABLED_FOR_PERFORMANCE)
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
     }
 
     /** 사용자가 시스템 알림에서 공유를 멈춘 것처럼 엔진 쪽에서 공유를 끝낸다. */

@@ -4,6 +4,7 @@ import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.ConnectOptions
 import com.naury.voxerartc.api.ConnectOutcome
 import com.naury.voxerartc.api.ConnectionQuality
+import com.naury.voxerartc.api.EffectsAvailability
 import com.naury.voxerartc.api.MetricDirection
 import com.naury.voxerartc.api.MetricKind
 import com.naury.voxerartc.api.MetricSource
@@ -99,6 +100,8 @@ internal class DemoRtcEngine(
         local = Participant(id = "local", displayName = "You", isLocal = true),
         connectDelayMs = 900,
         mediaAckDelayMs = 120,
+        // 데모 영상은 그림이라 색 효과를 미리 볼 수 없다. 효과 화면은 지원 안 됨 상태로 보여 준다.
+        effects = EffectsAvailability.UNSUPPORTED,
     ),
 ) : RtcEngine by fake {
 
