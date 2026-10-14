@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraManager
 import androidx.core.content.ContextCompat
+import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.CameraFacing
 import com.naury.voxerartc.api.ConnectOptions
 import com.naury.voxerartc.api.ConnectOutcome
@@ -28,6 +29,8 @@ import io.livekit.android.room.track.CameraPosition
 import io.livekit.android.room.track.LocalVideoTrack
 import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.VideoTrack
+import io.livekit.android.room.track.RemoteTrackPublication
+import io.livekit.android.room.track.TrackPublication
 import io.livekit.android.room.track.screencapture.ScreenCaptureParams
 import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.EffectsAvailability
@@ -99,7 +102,17 @@ internal class LiveKitRtcEngine(
         scope.launch { _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia())) }
     }
 
+    /** 음성 모드면 원격 영상은 화면에 그리지 않으므로 받지 않는다(데이터·배터리 절약). */
+    @Volatile
+    private var receiveVideo = true
+
+    private fun applyVideoSubscription(publication: TrackPublication) {
+        if (publication.kind != Track.Kind.VIDEO) return
+        (publication as? RemoteTrackPublication)?.setSubscribed(receiveVideo)
+    }
+
     override suspend fun connect(credentials: RtcCredentials, options: ConnectOptions): ConnectOutcome {
+        receiveVideo = options.mode == CallMode.VIDEO
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             room.events.events.collect { event -> onRoomEvent(event) }
         }
@@ -112,6 +125,7 @@ internal class LiveKitRtcEngine(
             return ConnectOutcome.Failed(classifyConnectFailure(failure))
         }
         connected.set(true)
+        room.remoteParticipants.values.forEach { participant -> participant.trackPublications.values.forEach(::applyVideoSubscription) }
         videoTracks.register(this)
         room.audioSwitchHandler?.registerAudioDeviceChangeListener(audioDeviceListener)
         // 권한이 없거나 장치를 못 열어도 입장은 유지한다. 실제 게시 상태는 LocalMediaChanged로 알린다.
@@ -158,9 +172,16 @@ internal class LiveKitRtcEngine(
             is RoomEvent.ParticipantNameChanged -> listOf(upsert(event.participant))
             is RoomEvent.ActiveSpeakersChanged -> allParticipants()
             is RoomEvent.ConnectionQualityChanged -> listOf(upsert(event.participant))
-            is RoomEvent.TrackSubscribed -> listOf(upsert(event.participant))
+            is RoomEvent.TrackSubscribed -> {
+                // 입장 전부터 있던 트랙은 TrackPublished 없이 자동 구독되므로 여기서도 음성 모드 규칙을 적용한다.
+                applyVideoSubscription(event.publication)
+                listOf(upsert(event.participant))
+            }
             is RoomEvent.TrackUnsubscribed -> listOf(upsert(event.participant))
-            is RoomEvent.TrackPublished -> listOf(upsert(event.participant))
+            is RoomEvent.TrackPublished -> {
+                applyVideoSubscription(event.publication)
+                listOf(upsert(event.participant))
+            }
             is RoomEvent.TrackUnpublished -> listOf(upsert(event.participant))
             is RoomEvent.TrackMuted -> listOf(upsert(event.participant))
             is RoomEvent.TrackUnmuted -> listOf(upsert(event.participant))
