@@ -170,6 +170,18 @@ class DefaultVoxeraSessionTest {
     }
 
     @Test
+    fun `토큰 서버 거절은 설정 오류로 알리고 다시 시도하지 않는다`() = runTest {
+        var calls = 0
+        val session = sdk().createSession(config(credentials = {
+            calls++
+            throw CredentialsUnavailableException(CredentialsUnavailableException.Kind.REJECTED)
+        }))
+        assertThat(session.join("room", CallMode.VOICE))
+            .isEqualTo(JoinResult.Rejected(VoxeraError.InvalidConfiguration(ConfigurationProblem.TOKEN_SOURCE_REJECTED)))
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
     fun `일시적 오류는 정해진 횟수만 늘어나는 간격으로 다시 시도한다`() = runTest {
         val attemptsAt = mutableListOf<Long>()
         val session = sdk().createSession(config(

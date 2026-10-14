@@ -60,5 +60,8 @@ public class CredentialsUnavailableException(
 
         /** 일시적인 서버·망 문제(5xx, 시간 초과). 제한된 횟수만 다시 시도한다. */
         TRANSIENT,
+
+        /** 토큰 서버가 요청을 거절했거나 응답 형식이 맞지 않음(잘못된 주소·ID). 사용자가 설정을 고쳐야 한다. */
+        REJECTED,
     }
 }

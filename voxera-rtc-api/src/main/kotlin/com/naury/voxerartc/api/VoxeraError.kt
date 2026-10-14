@@ -22,6 +22,9 @@ public enum class ConfigurationProblem {
     /** JWT 모양이 아님. API Secret을 붙여 넣었을 가능성이 크다. */
     TOKEN_NOT_JWT,
     TOKEN_EXPIRED,
+
+    /** 토큰 서버가 요청을 거절함. 토큰 서버 주소·ID를 확인해야 한다. */
+    TOKEN_SOURCE_REJECTED,
 }
 
 /** 권한이 필요한 미디어 기능. */

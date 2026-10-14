@@ -212,6 +212,8 @@ internal class DefaultVoxeraSession(
             } catch (failure: CredentialsUnavailableException) {
                 when (failure.kind) {
                     CredentialsUnavailableException.Kind.UNAUTHORIZED -> return CredentialFetch.Error(VoxeraError.HostUnauthorized)
+                    CredentialsUnavailableException.Kind.REJECTED ->
+                        return CredentialFetch.Error(VoxeraError.InvalidConfiguration(ConfigurationProblem.TOKEN_SOURCE_REJECTED))
                     CredentialsUnavailableException.Kind.TRANSIENT -> {
                         if (attempt >= policy.credentialAttempts) return CredentialFetch.Error(VoxeraError.ServerUnreachable)
                         delay(policy.credentialRetryDelayMs shl (attempt - 1))
