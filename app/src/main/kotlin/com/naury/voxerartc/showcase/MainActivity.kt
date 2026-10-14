@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.voxerartc.api.CallMode
+import com.naury.voxerartc.api.RtcEngineKind
+import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
 import com.naury.voxerartc.ui.room.VoxeraRoomScreen
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.VoxeraThemeMode
@@ -57,7 +60,10 @@ class MainActivity : ComponentActivity() {
             when {
                 call != null -> {
                     BackHandler(onBack = viewModel::exit)
-                    VoxeraRoomScreen(session = call.session, onExit = viewModel::exit, theme = theme, onRejoin = viewModel::rejoin)
+                    val renderer = if (call.session.engineKind == RtcEngineKind.LIVE) viewModel.liveVideoRenderer else null
+                    CompositionLocalProvider(LocalVoxeraVideoRenderer provides renderer) {
+                        VoxeraRoomScreen(session = call.session, onExit = viewModel::exit, theme = theme, onRejoin = viewModel::rejoin)
+                    }
                 }
                 showSetup -> {
                     BackHandler { showSetup = false }

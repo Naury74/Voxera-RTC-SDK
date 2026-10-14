@@ -11,6 +11,8 @@ import com.naury.voxerartc.core.VoxeraSession
 import com.naury.voxerartc.core.VoxeraSessionConfig
 import com.naury.voxerartc.livekit.LiveKitRtcEngineFactory
 import com.naury.voxerartc.livekit.LiveKitTokenSources
+import com.naury.voxerartc.livekit.compose.asComposeRenderer
+import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 import com.naury.voxerartc.testkit.DemoScenario
 import com.naury.voxerartc.testkit.VoxeraDemo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +35,11 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     private val _form = MutableStateFlow(ConnectForm())
     val form: StateFlow<ConnectForm> = _form.asStateFlow()
 
-    private val liveSdk by lazy { Voxera.create(LiveKitRtcEngineFactory(application)) }
+    private val liveEngines by lazy { LiveKitRtcEngineFactory(application) }
+    private val liveSdk by lazy { Voxera.create(liveEngines) }
+
+    /** 실제 통화 영상 렌더러. 데모 세션은 UI가 자체 가짜 영상을 쓴다. */
+    val liveVideoRenderer: VoxeraVideoRenderer by lazy { liveEngines.videoTracks.asComposeRenderer() }
 
     fun updateForm(form: ConnectForm) {
         _form.value = form

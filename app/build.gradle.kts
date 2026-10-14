@@ -37,8 +37,8 @@ dependencies {
     implementation(project(":voxera-ui-compose"))
     // 오프라인 데모는 자격 증명 없이 가짜 엔진으로 동작한다. 실제 통화와 타입 경계로 분리된다.
     implementation(project(":voxera-testkit"))
-    // 실제 통화(BYO LiveKit). 사용자가 입력한 서버와 토큰으로만 연결한다.
-    implementation(project(":voxera-livekit"))
+    // 실제 통화(BYO LiveKit)와 영상 렌더링. 사용자가 입력한 서버와 토큰으로만 연결한다.
+    implementation(project(":voxera-livekit-compose"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
