@@ -41,6 +41,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import livekit.org.webrtc.RTCStatsCollectorCallback
+import kotlin.coroutines.resume
 import java.util.concurrent.atomic.AtomicBoolean
 import io.livekit.android.room.participant.Participant as LiveKitParticipant
 
@@ -107,8 +114,31 @@ internal class LiveKitRtcEngine(
         if (options.startWithMicrophone) setMicrophoneEnabled(true)
         if (options.startWithCamera) setCameraEnabled(true)
         _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia()))
+        scope.launch { sampleQuality() }
         return ConnectOutcome.Connected(room.localParticipant.snapshot())
     }
+
+    /** 연결되어 있는 동안 [QUALITY_INTERVAL_MS]마다 WebRTC 통계를 모아 품질 표본을 보낸다. 재연결 중에는 건너뛴다. */
+    private suspend fun sampleQuality() {
+        val sampler = QualitySampler()
+        while (currentCoroutineContext().isActive) {
+            delay(QUALITY_INTERVAL_MS)
+            if (room.state != Room.State.CONNECTED) continue
+            val publisher = withTimeoutOrNull(STATS_TIMEOUT_MS) { collectStats(room::getPublisherRTCStats) } ?: emptyList()
+            val subscriber = withTimeoutOrNull(STATS_TIMEOUT_MS) { collectStats(room::getSubscriberRTCStats) } ?: emptyList()
+            _events.emit(RtcEngineEvent.QualitySampled(sampler.sample(System.nanoTime() / 1_000_000, publisher, subscriber)))
+        }
+    }
+
+    private suspend fun collectStats(request: (RTCStatsCollectorCallback) -> Unit): List<StatEntry> =
+        suspendCancellableCoroutine { continuation ->
+            request(
+                RTCStatsCollectorCallback { report ->
+                    val entries = report.statsMap.values.map { StatEntry(it.id, it.type, it.members) }
+                    if (continuation.isActive) continuation.resume(entries)
+                },
+            )
+        }
 
     private suspend fun onRoomEvent(event: RoomEvent) {
         if (!connected.get() || released.get()) return
@@ -220,6 +250,11 @@ internal class LiveKitRtcEngine(
 
     private fun cameraCount(): Int =
         (context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager)?.cameraIdList?.size ?: 0
+
+    private companion object {
+        const val QUALITY_INTERVAL_MS = 2_000L
+        const val STATS_TIMEOUT_MS = 1_000L
+    }
 
     override suspend fun release() {
         if (!released.compareAndSet(false, true)) return
