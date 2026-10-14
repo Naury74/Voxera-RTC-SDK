@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -121,9 +122,13 @@ fun HomeScreen(
 @Composable
 private fun Hero() {
     GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            listOf("Alex", "Taylor", "Jamie", "Morgan").forEachIndexed { index, name ->
-                VoxeraAvatar(id = "hero-$index", name = name, size = 64.dp, speaking = index == 0, audioLevel = 0.6f)
+        // 좁은 화면에서도 네 개가 모두 보이도록 폭에 맞춰 줄인다.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val size = ((maxWidth - VoxeraSpacing.sm * 3) / 4).coerceAtMost(64.dp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                listOf("Alex", "Taylor", "Jamie", "Morgan").forEachIndexed { index, name ->
+                    VoxeraAvatar(id = "hero-$index", name = name, size = size, speaking = index == 0, audioLevel = 0.6f)
+                }
             }
         }
     }
