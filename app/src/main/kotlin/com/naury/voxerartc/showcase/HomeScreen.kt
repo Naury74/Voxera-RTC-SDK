@@ -34,6 +34,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.testkit.DemoScenario
 import com.naury.voxerartc.ui.component.VoxeraAvatar
+import com.naury.voxerartc.ui.component.VoxeraButton
+import com.naury.voxerartc.ui.component.VoxeraButtonTone
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
 import com.naury.voxerartc.ui.theme.VoxeraRadius
@@ -52,9 +54,14 @@ private val scenarios = listOf(
     ScenarioItem(DemoScenario.UNSTABLE_NETWORK, R.string.scenario_unstable, R.string.scenario_unstable_body),
 )
 
-/** 쇼케이스 홈(G-01). 오프라인 데모만 제공하며, 실제 LiveKit 연결은 BYO 설정 화면이 생긴 뒤에 추가한다. */
+/** 쇼케이스 홈(G-01). 오프라인 데모와 BYO LiveKit 연결을 서로 다른 카드로 나눈다. */
 @Composable
-fun HomeScreen(theme: VoxeraThemeConfig, onThemeChange: (VoxeraThemeMode) -> Unit, onStart: (DemoScenario) -> Unit) {
+fun HomeScreen(
+    theme: VoxeraThemeConfig,
+    onThemeChange: (VoxeraThemeMode) -> Unit,
+    onStart: (DemoScenario) -> Unit,
+    onConnectLiveKit: () -> Unit,
+) {
     VoxeraTheme(theme) {
         val colors = VoxeraTheme.colors
         Box(
@@ -89,6 +96,14 @@ fun HomeScreen(theme: VoxeraThemeConfig, onThemeChange: (VoxeraThemeMode) -> Uni
                         Text(stringResource(R.string.showcase_offline_title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
                         Text(stringResource(R.string.showcase_offline_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
                         scenarios.forEach { item -> ScenarioRow(item, onClick = { onStart(item.scenario) }) }
+                    }
+                }
+
+                GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
+                        Text(stringResource(R.string.byo_card_title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
+                        Text(stringResource(R.string.byo_card_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
+                        VoxeraButton(stringResource(R.string.byo_card_action), onClick = onConnectLiveKit, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
                     }
                 }
 
