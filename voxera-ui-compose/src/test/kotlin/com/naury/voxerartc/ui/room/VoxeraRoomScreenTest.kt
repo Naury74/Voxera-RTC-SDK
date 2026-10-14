@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
@@ -189,12 +190,13 @@ class VoxeraRoomScreenTest {
     fun `다른 통화가 오디오를 가져가면 안내하고 끝나면 사라진다`() {
         val session = connectedSession(CallMode.VOICE)
         compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        // 엔진 이벤트는 세션 쪽 스레드에서 오므로 화면이 바뀔 때까지 기다린다.
+        val banner = "Another call is using the audio"
         factory.last.simulateLocalMedia { it.copy(audioInterrupted = true) }
-        compose.waitForIdle()
-        compose.onNodeWithText("Another call is using the audio").assertIsDisplayed()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText(banner).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(banner).assertIsDisplayed()
         factory.last.simulateLocalMedia { it.copy(audioInterrupted = false) }
-        compose.waitForIdle()
-        compose.onNodeWithText("Another call is using the audio").assertDoesNotExist()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText(banner).fetchSemanticsNodes().isEmpty() }
     }
 
     @Test
