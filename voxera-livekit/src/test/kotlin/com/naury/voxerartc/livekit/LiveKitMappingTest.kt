@@ -2,6 +2,11 @@ package com.naury.voxerartc.livekit
 
 import com.google.common.truth.Truth.assertThat
 import com.naury.voxerartc.api.AudioRouteType
+import com.naury.voxerartc.api.CredentialReason
+import com.naury.voxerartc.api.CredentialRequest
+import com.naury.voxerartc.api.CredentialsUnavailableException
+import com.naury.voxerartc.api.RtcCredentials
+import io.livekit.android.token.TokenSourceResponse
 import com.naury.voxerartc.api.VoxeraError
 import io.livekit.android.events.DisconnectReason
 import io.livekit.android.room.RoomException
@@ -57,5 +62,29 @@ class LiveKitMappingTest {
     fun `오디오 경로 id는 종류와 이름으로 정해진다`() {
         assertThat(routeIdOf(AudioRouteType.BLUETOOTH, "Galaxy Buds")).isEqualTo("bluetooth:Galaxy Buds")
         assertThat(routeIdOf(AudioRouteType.SPEAKER, "Speakerphone")).isNotEqualTo(routeIdOf(AudioRouteType.EARPIECE, "Speakerphone"))
+    }
+}
+
+class LiveKitTokenSourcesTest {
+
+    @Test
+    fun `토큰 서버 망 오류는 다시 시도 가능, 해석 실패는 거절`() {
+        val transient = classifyTokenFailure(IOException("timeout")) as CredentialsUnavailableException
+        assertThat(transient.kind).isEqualTo(CredentialsUnavailableException.Kind.TRANSIENT)
+        val rejected = classifyTokenFailure(IllegalArgumentException("Failed to decode")) as CredentialsUnavailableException
+        assertThat(rejected.kind).isEqualTo(CredentialsUnavailableException.Kind.REJECTED)
+    }
+
+    @Test
+    fun `성공 응답은 서버 주소와 토큰으로 바뀐다`() {
+        val credentials = Result.success(TokenSourceResponse(serverUrl = "wss://a.livekit.cloud", participantToken = "jwt")).toCredentials()
+        assertThat(credentials).isEqualTo(RtcCredentials("wss://a.livekit.cloud", "jwt"))
+    }
+
+    @Test
+    fun `기존 토큰 공급자는 앞뒤 공백을 지운 값을 돌려준다`() = kotlinx.coroutines.runBlocking {
+        val provider = LiveKitTokenSources.literal(" wss://a.livekit.cloud ", " jwt ")
+        assertThat(provider.getCredentials(CredentialRequest("room", CredentialReason.INITIAL_JOIN)))
+            .isEqualTo(RtcCredentials("wss://a.livekit.cloud", "jwt"))
     }
 }
