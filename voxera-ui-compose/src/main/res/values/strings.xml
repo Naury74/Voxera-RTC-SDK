@@ -90,4 +90,25 @@
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>
     </plurals>
+
+    <string name="voxera_call_incoming_voice">Incoming voice call</string>
+    <string name="voxera_call_incoming_video">Incoming video call</string>
+    <string name="voxera_call_outgoing">Calling…</string>
+    <string name="voxera_call_dialing">Starting call…</string>
+    <string name="voxera_call_accept">Accept</string>
+    <string name="voxera_call_decline">Decline</string>
+    <string name="voxera_call_cancel">Cancel</string>
+    <plurals name="voxera_call_rings_for">
+        <item quantity="one">Rings for %1$d more second</item>
+        <item quantity="other">Rings for %1$d more seconds</item>
+    </plurals>
+    <string name="voxera_call_ended">Call ended</string>
+    <string name="voxera_call_end_completed">The call has ended.</string>
+    <string name="voxera_call_end_declined">The call was declined.</string>
+    <string name="voxera_call_end_missed">Missed call.</string>
+    <string name="voxera_call_end_busy">The other person is on another call.</string>
+    <string name="voxera_call_end_cancelled">The call was cancelled.</string>
+    <string name="voxera_call_end_expired">No answer.</string>
+    <string name="voxera_call_end_elsewhere">Answered on another device.</string>
+    <string name="voxera_call_end_failed">The call couldn\'t be connected.</string>
 </resources>

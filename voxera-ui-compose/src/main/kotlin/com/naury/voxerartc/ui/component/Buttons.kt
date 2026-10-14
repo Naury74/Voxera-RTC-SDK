@@ -75,6 +75,7 @@ public fun VoxeraButton(
  *
  * @param stateLabel TalkBack이 읽을 현재 상태. 예: "꺼짐", "적용 중…". `null`이면 상태가 없는 동작 버튼이다.
  * @param active `true`면 강조 채움(예: 마이크 켜짐). 동작의 결과가 엔진에서 확인되기 전에는 [pending]으로 표시한다.
+ * @param accent `true`면 주 강조색(예: 통화 수락).
  */
 @Composable
 public fun CallControlButton(
@@ -86,11 +87,13 @@ public fun CallControlButton(
     active: Boolean = false,
     pending: Boolean = false,
     danger: Boolean = false,
+    accent: Boolean = false,
     enabled: Boolean = true,
 ) {
     val colors = VoxeraTheme.colors
     val (container, tint) = when {
         danger -> colors.danger to colors.onDanger
+        accent -> colors.primary to colors.onPrimary
         active -> colors.foreground.copy(alpha = 0.92f) to colors.canvas
         else -> colors.foreground.copy(alpha = 0.10f) to colors.foreground
     }

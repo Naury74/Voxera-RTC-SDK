@@ -91,6 +91,7 @@ private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY }
  *
  * @param onExit 종료·실패 화면에서 닫기를 누름. 호스트 내비게이션으로 돌아간다.
  * @param onRejoin `null`이 아니면 종료·실패 화면에 다시 입장 버튼을 보여 준다.
+ * @param onEnd 종료·취소 버튼 동작. `null`이면 `session.leave()`. Call Mode에서는 `CallCoordinator.hangup`을 넘긴다.
  */
 @Composable
 public fun VoxeraRoomScreen(
@@ -99,6 +100,7 @@ public fun VoxeraRoomScreen(
     modifier: Modifier = Modifier,
     theme: VoxeraThemeConfig = VoxeraThemeConfig(),
     onRejoin: (() -> Unit)? = null,
+    onEnd: (() -> Unit)? = null,
 ) {
     VoxeraTheme(theme) {
         val state by session.state.collectAsStateWithLifecycle()
@@ -107,7 +109,7 @@ public fun VoxeraRoomScreen(
         val simulated = session.engineKind == RtcEngineKind.SIMULATED
         val renderer = if (simulated) SimulatedVideoRenderer else LocalVoxeraVideoRenderer.current
         val scope = rememberCoroutineScope()
-        val leave: () -> Unit = { scope.launch { session.leave() } }
+        val leave: () -> Unit = onEnd ?: { scope.launch { session.leave() } }
 
         Box(
             modifier
