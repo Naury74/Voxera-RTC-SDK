@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        통화가 연결된 동안 앱이 백그라운드로 가도 마이크·카메라가 끊기지 않게 하는 foreground service.
+        Android 14부터는 서비스 타입별 권한이 필요하며, 런타임 권한(RECORD_AUDIO, CAMERA)이 허용된 타입만 켠다.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+
+    <application>
+        <service
+            android:name="com.naury.voxerartc.android.VoxeraCallService"
+            android:exported="false"
+            android:foregroundServiceType="microphone|camera"
+            android:stopWithTask="true" />
+    </application>
+</manifest>

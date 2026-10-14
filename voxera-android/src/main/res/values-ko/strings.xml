@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voxera_call_channel_name">진행 중인 통화</string>
+    <string name="voxera_call_channel_description">통화가 마이크나 카메라를 쓰는 동안 표시됩니다.</string>
+    <string name="voxera_call_notification_text">통화 중 · 눌러서 돌아가기</string>
+</resources>

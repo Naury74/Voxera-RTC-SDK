@@ -11,7 +11,17 @@
 | `BLUETOOTH` (maxSdk 30) | audioswitch | 아니요 | Android 11 이하 블루투스 경로 |
 | `BLUETOOTH_CONNECT` | voxera-livekit | 예(Android 12+) | 블루투스 이어폰 경로 찾기·선택 |
 
-제거하는 항목: LiveKit이 선언하는 `ScreenCaptureService`(mediaProjection foreground service), `FOREGROUND_SERVICE`,
+`voxera-android`(통화 중 백그라운드 유지)를 추가하면 다음이 더해집니다.
+
+| 항목 | 런타임 요청 | 용도 |
+| --- | --- | --- |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MICROPHONE`, `FOREGROUND_SERVICE_CAMERA` | 아니요 | 통화 중 foreground service(`VoxeraCallService`, 타입 microphone\|camera) |
+| `POST_NOTIFICATIONS` (호스트가 선언) | 예(Android 13+) | 진행 중 통화 알림 표시. 거부해도 서비스는 동작한다 |
+
+서비스 타입은 실제로 허용된 권한만 켭니다(마이크 권한이 없으면 서비스를 띄우지 않고, 카메라는 켜져 있을 때만).
+Android 12+는 백그라운드에서 foreground service를 시작할 수 없으므로 `VoxeraForegroundCall.keepWhileConnected`는 입장 직후 앱이 앞에 있을 때 부릅니다.
+
+제거하는 항목: LiveKit이 선언하는 `ScreenCaptureService`(mediaProjection foreground service)와
 `FOREGROUND_SERVICE_MEDIA_PROJECTION`. 화면 공유는 아직 제공하지 않으므로 쓰지 않는 서비스를 선언하지 않습니다.
 
 `voxera-core`·`voxera-rtc-api`·`voxera-testkit`·`voxera-ui-compose`는 권한을 선언하지 않습니다. 오프라인 데모만 쓰는 앱은 권한이 필요 없습니다.

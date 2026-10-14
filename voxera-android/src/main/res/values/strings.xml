@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voxera_call_channel_name">Ongoing calls</string>
+    <string name="voxera_call_channel_description">Shown while a call keeps using the microphone or camera.</string>
+    <string name="voxera_call_notification_text">Call in progress · tap to return</string>
+</resources>
