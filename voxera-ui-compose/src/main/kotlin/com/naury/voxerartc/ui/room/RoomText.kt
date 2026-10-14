@@ -2,6 +2,7 @@ package com.naury.voxerartc.ui.room
 
 import androidx.annotation.StringRes
 import com.naury.voxerartc.api.AudioRouteType
+import com.naury.voxerartc.api.ConfigurationProblem
 import com.naury.voxerartc.api.EndReason
 import com.naury.voxerartc.api.MediaPermission
 import com.naury.voxerartc.api.VoxeraError
@@ -11,7 +12,11 @@ import java.util.Locale
 /** 사용자가 할 수 있는 다음 행동을 담은 오류 문구. 서버 원문이나 토큰은 쓰지 않는다. */
 @StringRes
 internal fun VoxeraError.messageRes(): Int = when (this) {
-    is VoxeraError.InvalidConfiguration -> R.string.voxera_error_config
+    is VoxeraError.InvalidConfiguration -> when (problem) {
+        ConfigurationProblem.SERVER_URL_INSECURE -> R.string.voxera_error_config_insecure
+        ConfigurationProblem.TOKEN_SOURCE_REJECTED -> R.string.voxera_error_config_token_source
+        else -> R.string.voxera_error_config
+    }
     is VoxeraError.PermissionDenied -> when (permission) {
         MediaPermission.MICROPHONE -> R.string.voxera_error_permission_mic
         MediaPermission.CAMERA -> R.string.voxera_error_permission_camera

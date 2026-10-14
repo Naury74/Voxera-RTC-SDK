@@ -42,6 +42,8 @@
     <string name="voxera_dropped_title">Call disconnected</string>
     <string name="voxera_error_code">Code %1$s</string>
     <string name="voxera_error_config">Check the server details and try again.</string>
+    <string name="voxera_error_config_insecure">This app doesn\'t allow unencrypted (ws://) servers. Use a wss:// address.</string>
+    <string name="voxera_error_config_token_source">The token server rejected the request. Check the token server ID or URL.</string>
     <string name="voxera_error_permission_mic">Allow microphone access in Settings.</string>
     <string name="voxera_error_permission_camera">Allow camera access in Settings.</string>
     <string name="voxera_error_auth_expired">The server rejected the access token or it expired. Get a new token and try again.</string>
