@@ -15,6 +15,7 @@ import com.naury.voxerartc.api.RtcEngine
 import com.naury.voxerartc.api.RtcEngineEvent
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
+import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import com.naury.voxerartc.api.VoxeraError
@@ -142,6 +143,30 @@ public class FakeRtcEngine(
         media = media.copy(selectedAudioRouteId = routeId)
         _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
         return MediaActionResult.Applied
+    }
+
+    override suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult {
+        delay(mediaAckDelayMs)
+        pendingMediaFailures.removeFirstOrNull()?.let { return MediaActionResult.Failed(it) }
+        localState = localState.copy(screenShare = VideoTrackHandle(localState.id, "local-screen-${++cameraTrackSerial}", VideoSource.SCREEN_SHARE))
+        media = media.copy(screenShare = MediaToggle(desired = true, actual = true))
+        _events.tryEmit(RtcEngineEvent.ParticipantUpserted(localState))
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
+        return MediaActionResult.Applied
+    }
+
+    override suspend fun stopScreenShare(): MediaActionResult {
+        delay(mediaAckDelayMs)
+        simulateScreenShareStopped()
+        return MediaActionResult.Applied
+    }
+
+    /** 사용자가 시스템 알림에서 공유를 멈춘 것처럼 엔진 쪽에서 공유를 끝낸다. */
+    public fun simulateScreenShareStopped() {
+        localState = localState.copy(screenShare = null)
+        media = media.copy(screenShare = MediaToggle.Off)
+        _events.tryEmit(RtcEngineEvent.ParticipantUpserted(localState))
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
     }
 
     override suspend fun release() {

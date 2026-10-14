@@ -17,6 +17,7 @@ import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.RtcEngine
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
+import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import com.naury.voxerartc.core.Voxera
@@ -47,7 +48,16 @@ public enum class DemoScenario(public val mode: CallMode, public val remoteNames
 
     /** 연결 뒤 잠시 끊겼다가 복구되는 망. 재연결 화면을 보여 준다. */
     UNSTABLE_NETWORK(CallMode.VOICE, listOf("Alex Morgan")),
+
+    /** 첫 번째 원격 참가자가 화면을 공유한다. 공유 화면이 무대에 크게 나온다. */
+    SCREEN_SHARE(CallMode.VIDEO, listOf("Taylor", "Alex")),
 }
+
+/** 오프라인 데모의 화면 공유 승인. 실제 화면을 캡처하지 않으며 가짜 엔진만 받아들인다. */
+public object DemoScreenShareConsent : ScreenShareConsent
+
+/** 데모에서 공유하는 화면의 가짜 트랙 id. UI는 이 id로 가짜 문서 화면을 그린다. */
+public const val DEMO_SCREEN_TRACK_PREFIX: String = "demo-screen-"
 
 /** 오프라인 데모 진입점. 만든 세션의 [VoxeraSession.engineKind]는 항상 [RtcEngineKind.SIMULATED]다. */
 public object VoxeraDemo {
@@ -101,6 +111,9 @@ internal class DemoRtcEngine(
             isLocal = false,
             isMicrophoneEnabled = index % 4 != 3,
             camera = if (scenario.mode == CallMode.VIDEO) VideoTrackHandle("demo-${index + 1}", "demo-camera-${index + 1}", VideoSource.CAMERA) else null,
+            screenShare = if (scenario == DemoScenario.SCREEN_SHARE && index == 0) {
+                VideoTrackHandle("demo-1", "$DEMO_SCREEN_TRACK_PREFIX${index + 1}", VideoSource.SCREEN_SHARE)
+            } else null,
             connectionQuality = ConnectionQuality.GOOD,
         )
     }.toMutableList()
