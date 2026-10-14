@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">Voxera</string>
+    <string name="showcase_brand">VOXERA</string>
+    <string name="showcase_title">Welcome</string>
+    <string name="showcase_subtitle">Offline showcase · no server or account needed</string>
+    <string name="showcase_tagline">An RTC call kit for Android builders</string>
+    <string name="showcase_offline_title">Offline showcase</string>
+    <string name="showcase_offline_body">Simulated participants and network events. Nothing is sent over the network and no real call is made.</string>
+    <string name="showcase_byo_footer">Your server · your token · your rules</string>
+    <string name="showcase_theme">Theme</string>
+    <string name="showcase_theme_system">System</string>
+    <string name="showcase_theme_light">Light</string>
+    <string name="showcase_theme_dark">Dark</string>
+    <string name="scenario_voice">1:1 voice call</string>
+    <string name="scenario_voice_body">Speaking ring, timer, audio output</string>
+    <string name="scenario_video">1:1 video call</string>
+    <string name="scenario_video_body">Full-screen remote, corner self view</string>
+    <string name="scenario_group_four">Group of 4</string>
+    <string name="scenario_group_four_body">2×2 grid, active speaker, pin</string>
+    <string name="scenario_group_nine">Group of 9</string>
+    <string name="scenario_group_nine_body">3×3 grid with 48dp controls</string>
+    <string name="scenario_unstable">Unstable network</string>
+    <string name="scenario_unstable_body">Reconnecting and recovery</string>
 </resources>

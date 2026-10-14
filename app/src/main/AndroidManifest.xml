@@ -9,6 +9,16 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Voxera" />
+        android:theme="@style/Theme.Voxera">
+        <!-- 통화 중 회전·크기 변경에도 세션은 ViewModel이 유지한다. Activity 재생성은 그대로 허용한다. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 
 </manifest>
