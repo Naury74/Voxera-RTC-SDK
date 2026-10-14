@@ -84,11 +84,11 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-004 | Fake RTC Engine | 완료 | 1/3/8명 원격 참가자 시뮬레이션 테스트 |
 | VOX-005 | 오프라인 쇼케이스 | 완료 | 에뮬레이터(API 36, 폴더블)에서 5가지 시나리오 수동 확인 |
 | VOX-006 | 자격 증명·URL 검사 | 완료 | JVM 단위 테스트 |
-| VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 대비 테스트 통과. API 26/30 실기기 확인 안 함 |
+| VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 테두리 반사광·배경 빛 번짐·캡슐 버튼·선택 알약·스위치로 개편, 대비 테스트 통과. API 26/30 실기기 확인 안 함 |
 | VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터+로컬 LiveKit 실통화 |
 | VOX-010 | BYO 설정(개발 토큰 서버·기존 토큰·endpoint) | 부분 | 기존 토큰·endpoint는 로컬 서버로 확인. 개발 토큰 서버(LiveKit Cloud)는 확인 안 함 |
 | VOX-011 | 입장 전 대기(권한·카메라 미리보기) | 완료 | 거부·영구 거부·설정 복귀를 에뮬레이터에서 확인. 마이크 레벨 표시는 없음 |
-| VOX-019 | 백그라운드 통화 유지(foreground service) | 부분 | 홈 이동 시 녹음 유지 확인. PiP·Telecom 연동은 없음 |
+| VOX-019 | 백그라운드 통화 유지·PiP | 부분 | foreground service 녹음 유지(Fold7), PiP 자동 진입·마이크/종료 버튼·복귀를 에뮬레이터 실통화로 확인. 실기기 PiP·Telecom 연동은 안 함 |
 | VOX-022~024 | Call Mode 계약·가짜 호스트 샘플·수신 화면 | 완료 | 경합 JVM 테스트, 데모 화면 확인. 실제 호스트 서버·푸시는 확인 안 함 |
 | VOX-025 | Java facade | 완료 | Java 소스 테스트 |
 | VOX-014 | 실제 영상 렌더링 | 완료 | 에뮬레이터에서 원격·로컬 영상 확인 |
@@ -100,7 +100,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-026 | 접근성·작은 화면·큰 글꼴 | 부분 | 320dp·200% 테스트와 에뮬레이터 확인, TalkBack 읽기 순서 지정. 실제 TalkBack 사용 점검은 안 함 |
 | VOX-028 | 배포 리허설 | 부분 | 로컬 Maven + `samples/consumer`. Maven Central 게시는 라이선스 결정 전이라 안 함 |
 | VOX-027 | 기기·API 매트릭스 | 부분 | API 26·36 에뮬레이터, Fold7(API 36) 실기기 확인. 30·31·33~35는 안 함 |
-| VOX-015 | 장치 전환 실기기 검증 | 부분 | Fold7 스피커↔휴대전화, 백그라운드 마이크 확인. 블루투스·유선은 안 함 |
+| VOX-015 | 장치 전환 실기기 검증 | 부분 | Fold7 스피커↔휴대전화↔블루투스, 블루투스 끊김·재연결, 백그라운드 마이크 확인. 유선은 안 함 |
 | VOX-029 | 공개 문서·라이선스 | 미착수 | - |
 
 ## 빌드

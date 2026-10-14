@@ -47,7 +47,10 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 
 - `VoxeraTheme`은 호스트 `MaterialTheme`를 바꾸지 않고 `VoxeraTokens`를 CompositionLocal로 전달합니다. 테마를 바꿔도 UI만 다시
   그리며 세션·트랙은 그대로입니다(Robolectric 테스트로 확인).
-- 유리 표면은 반투명 tint + 위쪽 반사광 + 1dp 테두리 + 가벼운 그림자입니다. 배경 흐림은 하지 않습니다.
+- 유리 표면은 반투명 tint + 위쪽 반사광 + 테두리 반사광(왼쪽 위가 가장 밝음) + 1dp 외곽선 + 그림자입니다. 배경 흐림은 하지 않습니다.
+- 영상이 없는 화면 배경(`voxeraBackdrop`)은 강조색 빛 번짐을 1/4 해상도 그림으로 한 번 그려 늘려 붙입니다. 위에 있는 것이 다시 그려져도
+  그라디언트를 다시 계산하지 않습니다.
+- 반복 애니메이션(말할 때 물결, 연결 중 물결)과 튕김 효과는 시스템 애니메이션 배율이 0이면 끕니다.
   `VoxeraGlassQuality.AUTO`는 배터리 절약이면 `REDUCED`, 고대비면 `OFF`(불투명)로 낮춥니다.
 - 호스트 색 덮어쓰기(`VoxeraPaletteOverride`)는 글자 4.5:1, 강조 그래픽 3:1 대비에 못 미치면 버리고 기본값을 씁니다.
 
@@ -66,3 +69,7 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | Light primary | `#008E78` | `#007D69` | 흰 글자 대비 4.09:1 → 5.08:1 (WCAG 4.5:1) |
 | 토큰 | 13종 | `onPrimary`, `onDanger`, `onScrim`, `warning` 추가 | 버튼·영상 위 글자·테스트 전용 경고 문구 |
 | GlassLevel.High | alpha ≥ 0.88 | 0.96 | 바텀 시트 글자 뒤로 조작 막대가 비쳐 보임 |
+| PiP | UI 축소만 언급 | `voxera-android`의 `VoxeraPictureInPicture`(자동 진입·마이크/종료 버튼), `VoxeraRoomScreen(pictureInPicture)` | Activity·PendingIntent가 필요한 부분은 android 모듈, 그리는 부분은 ui 모듈에 둠 |
+| 다른 통화 끼어듦 | Telecom 연동 | `LocalMediaState.audioInterrupted`(Android 12+ 오디오 모드) | READ_PHONE_STATE 없이 알 수 있는 범위만. Telecom 연동은 아직 없음 |
+| 아이콘 | 내부 | `VoxeraIcons` 공개 | 호스트가 Voxera 화면과 같은 모양의 조작을 만들 수 있게 |
+| 데모 효과 | 미지원 표시 | 가짜 영상에 효과 적용 | 오프라인 데모에서 효과 화면을 끝까지 써 볼 수 있게 |
