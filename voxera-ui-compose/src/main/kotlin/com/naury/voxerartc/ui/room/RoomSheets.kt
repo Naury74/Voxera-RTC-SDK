@@ -325,12 +325,13 @@ internal fun EffectsSheet(media: LocalMediaState, onSelect: (VideoEffect) -> Uni
         EffectsAvailability.AVAILABLE -> Unit
     }
     Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm), modifier = Modifier.selectableGroup()) {
+        // 기본 프리셋 다섯 개가 360dp 폭에 한 줄로 들어가게 한다. 더 늘면 옆으로 넘긴다.
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs), modifier = Modifier.selectableGroup()) {
             items(EffectPresets, key = { it.first }) { (label, effect) ->
                 val selected = media.videoEffect == effect
                 Column(
                     Modifier
-                        .width(72.dp)
+                        .width(64.dp)
                         .clip(RoundedCornerShape(VoxeraRadius.sm))
                         .selectable(selected = selected, enabled = media.camera.actual, role = Role.RadioButton) { onSelect(effect) }
                         .padding(vertical = VoxeraSpacing.xxs),
@@ -359,7 +360,7 @@ private fun EffectSwatch(effect: VideoEffect, selected: Boolean, enabled: Boolea
     val tinted = base.map { applyEffect(it, effect) }
     Box(
         Modifier
-            .size(60.dp)
+            .size(56.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(CircleShape)
             .background(Brush.linearGradient(tinted))

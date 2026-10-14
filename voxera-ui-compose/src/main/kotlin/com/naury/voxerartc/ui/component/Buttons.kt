@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -119,6 +121,12 @@ public fun CallControlButton(
 ) {
     val colors = VoxeraTheme.colors
     val interaction = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
+    // 누를 때 짧은 진동으로 조작이 먹었음을 알린다. 시스템 터치 진동을 끈 기기에서는 울리지 않는다.
+    val click = {
+        haptics.performHapticFeedback(if (danger) HapticFeedbackType.Confirm else HapticFeedbackType.ContextClick)
+        onClick()
+    }
     val (container, tint) = when {
         danger -> colors.danger to colors.onDanger
         accent -> colors.primary to colors.onPrimary
@@ -133,13 +141,13 @@ public fun CallControlButton(
             .sizeIn(minHeight = 48.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(RoundedCornerShape(VoxeraRadius.sm))
-            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = click)
             .clearAndSetSemantics {
                 role = Role.Button
                 contentDescription = label
                 stateLabel?.let { stateDescription = it }
                 if (!enabled) disabled()
-                onClick(label = label) { onClick(); true }
+                onClick(label = label) { click(); true }
             }
             .padding(VoxeraSpacing.xxs),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,6 +1,7 @@
 package com.naury.voxerartc.showcase
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,15 +16,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -170,15 +174,19 @@ private fun Hero(onTry: () -> Unit) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.md)) {
             Row(Modifier.clearAndSetSemantics { }, verticalAlignment = Alignment.CenterVertically) {
+                // 겹친 아바타 사이를 카드 색 테두리로 갈라 한 장씩 구분되게 한다.
+                val cut = colors.surface
                 listOf("Alex", "Taylor", "Jamie", "Morgan").forEachIndexed { index, name ->
-                    VoxeraAvatar(
-                        id = "hero-$index",
-                        name = name,
-                        size = 56.dp,
-                        speaking = index == 0,
-                        audioLevel = 0.7f,
-                        modifier = Modifier.offset(x = (-14 * index).dp),
-                    )
+                    Box(
+                        Modifier
+                            .offset(x = (-14 * index).dp)
+                            .size(62.dp)
+                            .clip(CircleShape)
+                            .background(cut),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        VoxeraAvatar(id = "hero-$index", name = name, size = 56.dp, speaking = index == 0, audioLevel = 0.7f)
+                    }
                 }
             }
             Text(stringResource(R.string.showcase_tagline), color = colors.foreground, style = VoxeraTheme.typography.headline)

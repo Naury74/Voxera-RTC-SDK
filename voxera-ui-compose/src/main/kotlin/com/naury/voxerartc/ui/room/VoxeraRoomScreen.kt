@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +73,7 @@ import com.naury.voxerartc.api.MonotonicClock
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.SessionState
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.core.VoxeraSession
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.component.VoxeraButton
@@ -84,6 +86,7 @@ import com.naury.voxerartc.ui.glass.voxeraBackdrop
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
+import com.naury.voxerartc.ui.video.LocalSimulatedEffect
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
 import com.naury.voxerartc.ui.video.SimulatedVideoRenderer
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
@@ -138,21 +141,23 @@ public fun VoxeraRoomScreen(
         val leave: () -> Unit = onEnd ?: { scope.launch { session.leave() } }
         val speaking = participants.filter { !it.isLocal && it.isSpeaking }.maxOfOrNull { it.audioLevel } ?: 0f
 
-        Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = speaking)) {
-            val current = state
-            when {
-                pictureInPicture && (current is SessionState.Connected || current is SessionState.Reconnecting) ->
-                    PictureInPictureContent(session, participants, media, renderer, (current as? SessionState.Connected)?.mode ?: (current as SessionState.Reconnecting).mode)
-                pictureInPicture -> PictureInPictureStatus(current)
-                current is SessionState.Idle || current is SessionState.Preparing || current is SessionState.Connecting ->
-                    ConnectingContent(current, simulated, onCancel = leave)
-                current is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
-                current is SessionState.Ended -> EndedContent(current.reason, current.durationMs, history, simulated, onExit, onRejoin, onSaveReport)
-                current is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
-                current is SessionState.Connected ->
-                    CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
-                current is SessionState.Reconnecting ->
-                    CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
+        CompositionLocalProvider(LocalSimulatedEffect provides if (simulated) media.videoEffect else VideoEffect.None) {
+            Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = speaking)) {
+                val current = state
+                when {
+                    pictureInPicture && (current is SessionState.Connected || current is SessionState.Reconnecting) ->
+                        PictureInPictureContent(session, participants, media, renderer, (current as? SessionState.Connected)?.mode ?: (current as SessionState.Reconnecting).mode)
+                    pictureInPicture -> PictureInPictureStatus(current)
+                    current is SessionState.Idle || current is SessionState.Preparing || current is SessionState.Connecting ->
+                        ConnectingContent(current, simulated, onCancel = leave)
+                    current is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
+                    current is SessionState.Ended -> EndedContent(current.reason, current.durationMs, history, simulated, onExit, onRejoin, onSaveReport)
+                    current is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
+                    current is SessionState.Connected ->
+                        CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
+                    current is SessionState.Reconnecting ->
+                        CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
+                }
             }
         }
     }

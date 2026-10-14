@@ -100,8 +100,8 @@ internal class DemoRtcEngine(
         local = Participant(id = "local", displayName = "You", isLocal = true),
         connectDelayMs = 900,
         mediaAckDelayMs = 120,
-        // 데모 영상은 그림이라 색 효과를 미리 볼 수 없다. 효과 화면은 지원 안 됨 상태로 보여 준다.
-        effects = EffectsAvailability.UNSUPPORTED,
+        // 데모 내 영상(추상 그림)에 밝기·대비·채도를 그대로 적용해 효과를 미리 볼 수 있다.
+        effects = EffectsAvailability.AVAILABLE,
     ),
 ) : RtcEngine by fake {
 

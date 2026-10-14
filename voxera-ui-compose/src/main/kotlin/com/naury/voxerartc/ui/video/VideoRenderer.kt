@@ -15,9 +15,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import com.naury.voxerartc.ui.component.avatarColors
+import com.naury.voxerartc.ui.room.applyEffect
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 
 /**
@@ -33,11 +35,14 @@ public fun interface VoxeraVideoRenderer {
 public val LocalVoxeraVideoRenderer: androidx.compose.runtime.ProvidableCompositionLocal<VoxeraVideoRenderer?> =
     staticCompositionLocalOf { null }
 
+/** 데모 내 영상에 적용할 효과. 데모 세션일 때 [com.naury.voxerartc.ui.room.VoxeraRoomScreen]이 넣는다. */
+internal val LocalSimulatedEffect = staticCompositionLocalOf { VideoEffect.None }
+
 /**
  * 오프라인 데모용 가짜 영상. 인물 이미지 없이 참가자별 색으로 천천히 움직이는 추상 화면을 그린다.
- * 실제 카메라 영상처럼 보이지 않도록 단순한 그라디언트만 쓴다.
+ * 실제 카메라 영상처럼 보이지 않도록 단순한 그라디언트만 쓴다. 내 영상(mirror)에는 [LocalSimulatedEffect]를 적용한다.
  */
-internal val SimulatedVideoRenderer = VoxeraVideoRenderer { track, _, modifier ->
+internal val SimulatedVideoRenderer = VoxeraVideoRenderer { track, mirror, modifier ->
     if (track.source == VideoSource.SCREEN_SHARE) {
         SimulatedScreen(modifier)
         return@VoxeraVideoRenderer
@@ -50,9 +55,10 @@ internal val SimulatedVideoRenderer = VoxeraVideoRenderer { track, _, modifier -
         animationSpec = infiniteRepeatable(tween(6_000, easing = LinearEasing), RepeatMode.Reverse),
         label = "phase",
     )
+    val effect = if (mirror) LocalSimulatedEffect.current else VideoEffect.None
     Canvas(modifier) {
-        val a = lerp(canvas, start, 0.55f)
-        val b = lerp(canvas, end, 0.45f)
+        val a = applyEffect(lerp(canvas, start, 0.55f), effect)
+        val b = applyEffect(lerp(canvas, end, 0.45f), effect)
         drawRect(
             Brush.linearGradient(
                 listOf(a, b),
