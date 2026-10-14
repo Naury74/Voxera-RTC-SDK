@@ -18,6 +18,7 @@ kotlin {
 
 dependencies {
     api(project(":voxera-core"))
+    api(project(":voxera-invitation"))
 
     testImplementation(libs.junit4)
     testImplementation(libs.truth)
