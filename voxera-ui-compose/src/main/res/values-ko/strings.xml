@@ -38,11 +38,12 @@
     <string name="voxera_end_reason_failure">연결 문제로 통화가 끝났습니다.</string>
 
     <string name="voxera_failed_title">연결하지 못했습니다</string>
+    <string name="voxera_dropped_title">통화가 끊겼습니다</string>
     <string name="voxera_error_code">코드 %1$s</string>
     <string name="voxera_error_config">서버 정보를 확인하고 다시 시도하세요.</string>
     <string name="voxera_error_permission_mic">설정에서 마이크 권한을 허용하세요.</string>
     <string name="voxera_error_permission_camera">설정에서 카메라 권한을 허용하세요.</string>
-    <string name="voxera_error_auth_expired">접근 토큰이 만료되었습니다. 새 토큰으로 다시 시도하세요.</string>
+    <string name="voxera_error_auth_expired">서버가 접근 토큰을 거부했거나 토큰이 만료되었습니다. 새 토큰으로 다시 시도하세요.</string>
     <string name="voxera_error_host_unauthorized">앱에 다시 로그인하세요.</string>
     <string name="voxera_error_unreachable">서버에 연결할 수 없습니다. 주소와 네트워크를 확인하세요.</string>
     <string name="voxera_error_incompatible">LiveKit 호환 서버가 아닙니다.</string>

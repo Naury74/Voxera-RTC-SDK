@@ -119,7 +119,7 @@ public fun VoxeraRoomScreen(
                     ConnectingContent(current, simulated, onCancel = leave)
                 is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
                 is SessionState.Ended -> EndedContent(current.reason, current.durationMs, simulated, onExit, onRejoin)
-                is SessionState.Failed -> FailedContent(current.error, simulated, onExit, onRejoin)
+                is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin)
                 is SessionState.Connected -> CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, leave)
                 is SessionState.Reconnecting -> CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, leave)
             }
@@ -181,10 +181,10 @@ private fun EndedContent(reason: EndReason, durationMs: Long?, simulated: Boolea
 }
 
 @Composable
-private fun FailedContent(error: VoxeraError, simulated: Boolean, onExit: () -> Unit, onRejoin: (() -> Unit)?) {
+private fun FailedContent(error: VoxeraError, dropped: Boolean, simulated: Boolean, onExit: () -> Unit, onRejoin: (() -> Unit)?) {
     CenteredColumn(simulated) {
         Text(
-            stringResource(R.string.voxera_failed_title),
+            stringResource(if (dropped) R.string.voxera_dropped_title else R.string.voxera_failed_title),
             color = VoxeraTheme.colors.foreground,
             style = VoxeraTheme.typography.headline,
             modifier = Modifier.semantics { heading() },
@@ -193,7 +193,8 @@ private fun FailedContent(error: VoxeraError, simulated: Boolean, onExit: () -> 
         GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
                 Text(stringResource(error.messageRes()), color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.body)
-                Text(stringResource(R.string.voxera_error_code, error.code), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+                val code = if (error is VoxeraError.InternalFailure) "${error.code} · ${error.technicalCode}" else error.code
+                Text(stringResource(R.string.voxera_error_code, code), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
             }
         }
         Spacer(Modifier.height(VoxeraSpacing.xxl))

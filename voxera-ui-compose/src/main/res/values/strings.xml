@@ -39,11 +39,12 @@
     <string name="voxera_end_reason_failure">The call ended after a connection problem.</string>
 
     <string name="voxera_failed_title">Couldn\'t connect</string>
+    <string name="voxera_dropped_title">Call disconnected</string>
     <string name="voxera_error_code">Code %1$s</string>
     <string name="voxera_error_config">Check the server details and try again.</string>
     <string name="voxera_error_permission_mic">Allow microphone access in Settings.</string>
     <string name="voxera_error_permission_camera">Allow camera access in Settings.</string>
-    <string name="voxera_error_auth_expired">The access token expired. Get a new token and try again.</string>
+    <string name="voxera_error_auth_expired">The server rejected the access token or it expired. Get a new token and try again.</string>
     <string name="voxera_error_host_unauthorized">Sign in to the app again.</string>
     <string name="voxera_error_unreachable">Can\'t reach the server. Check the URL and your network.</string>
     <string name="voxera_error_incompatible">This server isn\'t LiveKit compatible.</string>

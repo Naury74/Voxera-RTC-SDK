@@ -17,6 +17,7 @@ import com.naury.voxerartc.api.JoinResult
 import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.SessionState
+import com.naury.voxerartc.api.VoxeraError
 import com.naury.voxerartc.core.Voxera
 import com.naury.voxerartc.core.VoxeraSession
 import com.naury.voxerartc.core.VoxeraSessionConfig
@@ -103,5 +104,16 @@ class VoxeraRoomScreenTest {
         compose.onNodeWithText("Close").performClick()
         assertThat(exited).isTrue()
         assertThat(factory.last.isReleased).isTrue()
+    }
+
+    @Test
+    fun `통화 중 끊기면 연결 실패가 아니라 통화가 끊겼다고 알린다`() {
+        val session = connectedSession(CallMode.VOICE)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}, onRejoin = {}) }
+        factory.last.simulateDisconnect(VoxeraError.NetworkUnavailable)
+        compose.waitUntil(5_000) { session.state.value is SessionState.Failed }
+        compose.onNodeWithText("Call disconnected").assertIsDisplayed()
+        compose.onNodeWithText("Try again").assertIsDisplayed()
+        session.close()
     }
 }
