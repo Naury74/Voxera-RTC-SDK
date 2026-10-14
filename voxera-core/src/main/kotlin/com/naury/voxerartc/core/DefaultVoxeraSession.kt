@@ -30,6 +30,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
@@ -286,10 +287,12 @@ internal class DefaultVoxeraSession(
             delay(config.policy.reconnectDeadlineMs)
             if (dispatch(SessionAction.ReconnectDeadlinePassed(generation, clock.nowMs())).accepted) {
                 // 타이머 자신이 releaseConnection에서 취소되므로 정리는 별도 코루틴에서 한다.
-                scope.launch(NonCancellable) {
-                    releaseConnection(generation)
-                    releaseCallLock(generation)
-                    dispatch(SessionAction.Failed(generation, VoxeraError.NetworkUnavailable, clock.nowMs()))
+                scope.launch {
+                    withContext(NonCancellable) {
+                        releaseConnection(generation)
+                        releaseCallLock(generation)
+                        dispatch(SessionAction.Failed(generation, VoxeraError.NetworkUnavailable, clock.nowMs()))
+                    }
                 }
             }
         }
@@ -332,6 +335,7 @@ internal class DefaultVoxeraSession(
     }
 
     /** 해당 세대의 연결을 한 번만 정리한다. 다른 세대거나 이미 정리했으면 아무것도 하지 않는다. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun releaseConnection(generation: Long) {
         val released = synchronized(lock) {
             connection?.takeIf { it.generation == generation }?.also { connection = null }
