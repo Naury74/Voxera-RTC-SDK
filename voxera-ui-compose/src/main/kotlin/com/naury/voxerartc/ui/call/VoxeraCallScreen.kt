@@ -95,20 +95,26 @@ public fun VoxeraCallScreen(
                 if (session.engineKind == RtcEngineKind.SIMULATED) {
                     StatusChip(stringResource(R.string.voxera_demo_badge), VoxeraTheme.colors.warning, Modifier.align(Alignment.TopCenter).padding(top = VoxeraSpacing.md))
                 }
+                // 세로가 짧은 화면(가로 모드, 작은 폰)에서는 여백을 줄이고, 가로 모드는 상대 정보와 버튼을 좌우로 나눈다.
+                val window = LocalWindowInfo.current.containerSize
+                val compact = window.height < with(LocalDensity.current) { 720.dp.roundToPx() }
+                val landscape = window.width > window.height
+                // DEMO 표시와 제목이 겹치지 않게 위를 비운다.
+                val top = if (session.engineKind == RtcEngineKind.SIMULATED) 48.dp else 0.dp
                 Column(
                     Modifier
                         .align(Alignment.Center)
-                        .widthIn(max = 420.dp)
+                        .widthIn(max = if (landscape) 760.dp else 420.dp)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = VoxeraSpacing.xl, vertical = VoxeraSpacing.xxl),
+                        .padding(top = top)
+                        .padding(horizontal = VoxeraSpacing.xl, vertical = if (compact) VoxeraSpacing.md else VoxeraSpacing.xxl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // 세로가 짧은 화면(가로 모드, 작은 폰)에서는 여백을 줄여 수락·거절 버튼이 한 화면에 들어오게 한다.
-                    val compact = LocalWindowInfo.current.containerSize.height < with(LocalDensity.current) { 720.dp.roundToPx() }
                     when (current) {
                         is CallState.Ringing -> RingingContent(
                             current,
                             compact = compact,
+                            landscape = landscape,
                             onAccept = { scope.launch { coordinator.accept() } },
                             onDecline = { scope.launch { coordinator.decline() } },
                             onCancel = { scope.launch { coordinator.cancel() } },
@@ -128,7 +134,29 @@ public fun VoxeraCallScreen(
 }
 
 @Composable
-private fun RingingContent(ringing: CallState.Ringing, compact: Boolean, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
+private fun RingingContent(
+    ringing: CallState.Ringing,
+    compact: Boolean,
+    landscape: Boolean,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    if (landscape) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) { RingingPeer(ringing, compact = true) }
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) { RingingActions(ringing, onAccept, onDecline, onCancel) }
+        }
+    } else {
+        RingingPeer(ringing, compact)
+        Spacer(Modifier.height(if (compact) VoxeraSpacing.xl else VoxeraSpacing.xxl * 2))
+        RingingActions(ringing, onAccept, onDecline, onCancel)
+    }
+}
+
+/** 수신·발신 제목, 상대 아바타와 물결, 이름, 남은 시간. */
+@Composable
+private fun RingingPeer(ringing: CallState.Ringing, compact: Boolean) {
     val call = ringing.call
     val incoming = ringing.direction == CallDirection.INCOMING
     val title = when {
@@ -145,7 +173,7 @@ private fun RingingContent(ringing: CallState.Ringing, compact: Boolean, onAccep
     Text(title, color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.body, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
     // 물결 고리가 아바타 밖으로 퍼지므로 위아래를 넉넉히 비운다.
     val ripple = if (compact) VoxeraSpacing.xl else 64.dp
-    val avatar = if (compact) 112.dp else 152.dp
+    val avatar = if (compact) 104.dp else 152.dp
     Spacer(Modifier.height(ripple))
     Box(contentAlignment = Alignment.Center) {
         SpeakingRipple(speaking = true, level = 0.8f, size = avatar)
@@ -155,8 +183,13 @@ private fun RingingContent(ringing: CallState.Ringing, compact: Boolean, onAccep
     Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
     Spacer(Modifier.height(VoxeraSpacing.xs))
     Text(pluralStringResource(R.plurals.voxera_call_rings_for, remaining, remaining), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, textAlign = TextAlign.Center)
-    Spacer(Modifier.height(if (compact) VoxeraSpacing.xl else VoxeraSpacing.xxl * 2))
-    if (incoming) {
+}
+
+/** 수신이면 거절·수락, 발신이면 취소 버튼. */
+@Composable
+private fun RingingActions(ringing: CallState.Ringing, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
+    val call = ringing.call
+    if (ringing.direction == CallDirection.INCOMING) {
         Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2)) {
             CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_decline), danger = true, onClick = onDecline, circleSize = 72.dp)
             CallControlButton(
