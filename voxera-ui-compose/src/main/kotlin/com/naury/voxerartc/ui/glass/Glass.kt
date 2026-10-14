@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -34,6 +33,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.Canvas
 import com.naury.voxerartc.ui.theme.VoxeraColors
 import com.naury.voxerartc.ui.theme.VoxeraGlassQuality
 import com.naury.voxerartc.ui.theme.VoxeraRadius
@@ -162,30 +167,44 @@ internal const val PILL_MIN_ALPHA = 0.75f
 
 /**
  * 영상이 없는 화면의 배경. [VoxeraColors.canvas] 위에 강조색 빛 번짐 세 개를 크게 깔아, 위에 올린 유리 표면이 비쳐
- * 보이게 한다. 정적인 그림이라 계속 다시 그리지 않는다. 글자 대비는 번짐이 가장 진한 곳에서도 지켜지도록 옅게 둔다.
+ * 보이게 한다. 글자 대비는 번짐이 가장 진한 곳에서도 지켜지도록 옅게 둔다.
  *
- * @param emphasis 0~1. 말하는 사람이 있을 때처럼 분위기를 살짝 올릴 때 쓴다.
+ * 번짐은 화면의 1/4 해상도 그림으로 한 번 그려 두고 늘려 붙인다. 커서 깜빡임처럼 위에 있는 것이 다시 그려져도
+ * 그라디언트를 다시 계산하지 않으므로 정적인 화면에서 GPU 일이 계속 생기지 않는다.
+ *
+ * @param emphasis 0~1. 말하는 사람이 있을 때처럼 분위기를 살짝 올릴 때 쓴다. 다섯 단계로 끊어 반영한다.
  */
 @Composable
 public fun Modifier.voxeraBackdrop(emphasis: Float = 0f): Modifier {
     val colors = VoxeraTheme.colors
     val strength = if (colors.isDark) 0.30f else 0.20f
-    val boost = 1f + emphasis.coerceIn(0f, 1f) * 0.35f
+    val step = (emphasis.coerceIn(0f, 1f) * 4).roundToInt() / 4f
+    val boost = 1f + step * 0.35f
     return this
         .background(colors.canvas)
-        .drawBehind {
-            fun glow(color: Color, center: Offset, radius: Float, alpha: Float) {
-                drawCircle(
-                    Brush.radialGradient(listOf(color.copy(alpha = alpha), Color.Transparent), center = center, radius = radius),
-                    radius = radius,
-                    center = center,
-                )
+        .drawWithCache {
+            val scale = 4
+            val width = (size.width / scale).toInt().coerceAtLeast(1)
+            val height = (size.height / scale).toInt().coerceAtLeast(1)
+            val image = ImageBitmap(width, height)
+            val small = Size(width.toFloat(), height.toFloat())
+            CanvasDrawScope().draw(this, layoutDirection, Canvas(image), small) {
+                fun glow(color: Color, center: Offset, radius: Float, alpha: Float) {
+                    drawCircle(
+                        Brush.radialGradient(listOf(color.copy(alpha = alpha), Color.Transparent), center = center, radius = radius),
+                        radius = radius,
+                        center = center,
+                    )
+                }
+                val w = small.width
+                val h = small.height
+                glow(colors.primary, Offset(w * 0.1f, h * 0.06f), maxOf(w, h) * 0.55f, strength * boost)
+                glow(colors.secondary, Offset(w * 1.0f, h * 0.42f), maxOf(w, h) * 0.5f, strength * 0.85f * boost)
+                glow(lerp(colors.primary, colors.secondary, 0.5f), Offset(w * 0.25f, h * 1.02f), maxOf(w, h) * 0.45f, strength * 0.6f)
             }
-            val w = size.width
-            val h = size.height
-            glow(colors.primary, Offset(w * 0.1f, h * 0.06f), maxOf(w, h) * 0.55f, strength * boost)
-            glow(colors.secondary, Offset(w * 1.0f, h * 0.42f), maxOf(w, h) * 0.5f, strength * 0.85f * boost)
-            glow(lerp(colors.primary, colors.secondary, 0.5f), Offset(w * 0.25f, h * 1.02f), maxOf(w, h) * 0.45f, strength * 0.6f)
+            onDrawBehind {
+                drawImage(image, dstSize = IntSize(size.width.toInt(), size.height.toInt()), filterQuality = FilterQuality.Low)
+            }
         }
 }
 
