@@ -59,6 +59,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
@@ -306,8 +308,9 @@ private fun CallContent(
     // 영상 View는 Compose 배너 위에 그려지므로, 상단 상태 줄·배너의 실제 높이만큼 무대를 내려 겹치지 않게 한다.
     val density = LocalDensity.current
     var overlayHeight by remember { mutableStateOf(0.dp) }
-    Box(Modifier.fillMaxSize()) {
-        val stageModifier = Modifier.fillMaxSize()
+    // TalkBack 읽기 순서: 상단 상태·안내 → 영상 무대 → 조작 막대. 그리는 순서(무대가 맨 아래)와 다르므로 따로 정한다.
+    Box(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
+        val stageModifier = Modifier.fillMaxSize().semantics { traversalIndex = 1f }
         if (mode == CallMode.VIDEO) {
             VideoStage(
                 participants,
@@ -327,7 +330,8 @@ private fun CallContent(
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.xs)
-                .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } },
+                .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } }
+                .semantics { traversalIndex = 0f },
             verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
         ) {
             TopBar(participants.size, elapsed, simulated, onPeople = { sheet = RoomSheet.PEOPLE }, onQuality = { sheet = RoomSheet.QUALITY })
@@ -387,7 +391,8 @@ private fun CallContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
+                .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
+                .semantics { traversalIndex = 2f },
         )
 
         RoomSheetHost(
