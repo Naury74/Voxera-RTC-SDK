@@ -73,3 +73,6 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 다른 통화 끼어듦 | Telecom 연동 | `LocalMediaState.audioInterrupted`(Android 12+ 오디오 모드) | READ_PHONE_STATE 없이 알 수 있는 범위만. Telecom 연동은 아직 없음 |
 | 아이콘 | 내부 | `VoxeraIcons` 공개 | 호스트가 Voxera 화면과 같은 모양의 조작을 만들 수 있게 |
 | 데모 효과 | 미지원 표시 | 가짜 영상에 효과 적용 | 오프라인 데모에서 효과 화면을 끝까지 써 볼 수 있게 |
+| 반응 | 없음 | `Reaction` 6종, `VoxeraSession.reactions/sendReaction`, LiveKit 데이터 메시지(주제 `voxera.reaction`) | 정해진 종류만 주고받아 네트워크에서 온 임의 문자열을 그리지 않음. 1초 5개 제한 |
+| 통화 알림 | 진행 알림 | CallStyle(경과 시간·종료 버튼) | 상태 표시줄 통화 칩, 앱을 열지 않고 끊기 |
+| 조작 막대 자동 숨김 | 숨김 컨트롤 | 영상 통화 4초, 터치 탐색 중에는 숨기지 않음 | TalkBack 사용자가 종료 버튼을 잃지 않게 |
