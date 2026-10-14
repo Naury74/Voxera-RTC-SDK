@@ -8,8 +8,8 @@
 **Voxera**는 Android 앱에 음성·영상 통화 화면을 붙이는 UI 포함 RTC SDK입니다. 호스트 앱이 자신의 LiveKit 호환 서버 주소와
 짧은 수명 토큰을 넘기면 룸 통화를 할 수 있도록 만드는 것이 목표입니다. SDK 제공자는 통화 서버를 운영하거나 토큰을 발급하지 않습니다.
 
-> 현재 단계: **M0 foundation**. 서버 없이 도는 오프라인 쇼케이스와 세션 상태 머신, Glass UI가 들어 있습니다.
-> 실제 LiveKit 연결(`voxera-livekit`)은 아직 없습니다. 아래 표의 "검증"은 실제로 돌린 테스트만 적습니다.
+> 현재 단계: **M1 vertical RTC 진행 중**. 오프라인 쇼케이스, 세션 상태 머신, Glass UI에 더해 실제 LiveKit 연결(BYO 설정,
+> 음성·영상·음소거·재연결·품질 진단)이 들어 있습니다. 아래 표의 "검증"은 실제로 돌린 것만 적습니다([docs/verification.md](docs/verification.md)).
 
 <table>
   <tr>
@@ -28,6 +28,8 @@
 | --- | --- | --- |
 | `voxera-rtc-api` | Kotlin JVM | 엔진 중립 모델(`SessionState`, `Participant`, `VideoTrackHandle`, `QualitySnapshot`), `VoxeraError`, `RtcEngine` 포트, 서버 주소·토큰 입력 검사 |
 | `voxera-core` | Kotlin JVM | `Voxera.create`, `VoxeraSession`, 세대 기반 상태 reducer |
+| `voxera-livekit` | Android | LiveKit Android 2.29.0 기반 `LiveKitRtcEngineFactory`, 토큰 공급자(`LiveKitTokenSources`), 영상 트랙 조회 |
+| `voxera-livekit-compose` | Compose | LiveKit 영상을 `VoxeraRoomScreen`에 그리는 렌더러 |
 | `voxera-testkit` | Kotlin JVM | `FakeRtcEngine`(가상 시간), `VoxeraDemo`·`DemoScenario` 오프라인 데모 |
 | `voxera-ui-compose` | Compose | `VoxeraTheme`(Light/Dark Glass 토큰), `VoxeraRoomScreen`, 조작 막대·참가자 타일 |
 | `app` | Showcase | 오프라인 쇼케이스. 배포하지 않음 |
@@ -46,16 +48,24 @@ VoxeraRoomScreen(session = session, onExit = { /* 호스트 내비게이션 */ }
 
 데모 세션은 네트워크에 연결하지 않으며 화면에 항상 `DEMO`를 표시합니다. 품질 값은 `MetricSource.SIMULATED`입니다.
 
-## 호스트 토큰 공급자 (목표 사용법)
+## 실제 통화 (호스트 토큰 공급자)
 
 ```kotlin
-val sdk = Voxera.create(engineFactory) // 실제 통화용 LiveKit factory는 다음 단계(VOX-007)
+val engines = LiveKitRtcEngineFactory(applicationContext)
+val sdk = Voxera.create(engines)
 val session = sdk.createSession(
     VoxeraSessionConfig(credentials = RtcCredentialsProvider { request ->
         myBackend.getLiveKitCredentials(room = request.roomId) // 호스트 서버가 짧은 토큰 발급
     }),
 )
+
+// Compose: 실제 영상 렌더러를 넘긴다.
+CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.asComposeRenderer()) {
+    VoxeraRoomScreen(session = session, onExit = { /* 호스트 내비게이션 */ })
+}
 ```
+
+마이크·카메라 권한은 호스트가 입장 버튼을 누른 직후 요청합니다. 합쳐지는 권한과 런타임 요청 정책은 [docs/permissions.md](docs/permissions.md).
 
 - API Secret·Signing Key를 앱·SDK·저장소에 넣지 않습니다. 토큰은 호스트 서버가 발급합니다.
 - 기본으로 `wss://`만 허용하고, `ServerUrlPolicy(allowInsecureLocalhost = true)`일 때만 로컬 개발 주소에 `ws://`를 씁니다.
@@ -73,7 +83,12 @@ val session = sdk.createSession(
 | VOX-005 | 오프라인 쇼케이스 | 완료 | 에뮬레이터(API 36, 폴더블)에서 5가지 시나리오 수동 확인 |
 | VOX-006 | 자격 증명·URL 검사 | 완료 | JVM 단위 테스트 |
 | VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 대비 테스트 통과. API 26/30 실기기 확인 안 함 |
-| VOX-007 이후 | LiveKit 연결, BYO 설정, 사전 대기 화면, 화면 공유, 초대 등 | 미착수 | - |
+| VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터+로컬 LiveKit 실통화 |
+| VOX-010 | BYO 설정(개발 토큰 서버·기존 토큰·endpoint) | 부분 | 기존 토큰 방식만 실서버 확인. 나머지 두 방식은 확인 안 함 |
+| VOX-014 | 실제 영상 렌더링 | 완료 | 에뮬레이터에서 원격·로컬 영상 확인 |
+| VOX-016 | 재연결·오류 화면 | 완료 | 서버 강제 종료 후 Reconnecting → Failed, 다시 시도 |
+| VOX-020 | 품질 진단(실제 통계) | 완료 | 샘플러 JVM 테스트, 실통화 값 표시 |
+| VOX-011, 015, 017~019, 021~029 | 사전 대기, 장치 전환 검증, 효과, 화면 공유, PiP, 초대, Java 등 | 미착수 | - |
 
 ## 빌드
 
@@ -88,7 +103,7 @@ AGP 9.4.1, Kotlin 2.4.20, compileSdk/targetSdk 37, minSdk 26. 버전은 `gradle/
 
 ## 알려진 제한
 
-- 실제 RTC 연결이 없어 2기기 통화·재연결·장치 라우팅은 검증하지 않았습니다.
+- 실기기 2대 통화, LiveKit Cloud, 블루투스·유선 전환은 아직 검증하지 않았습니다(에뮬레이터 + 로컬 서버 + CLI 봇만 확인).
 - 배경 흐림(backdrop blur)은 하지 않습니다. 영상 Surface 뒤를 흐리게 하는 보편적인 Android 방법이 없어 반투명 tint·테두리로 대신합니다.
 - TalkBack·글꼴 200%·태블릿 레이아웃은 기본 의미 정보와 최소 터치 영역만 반영했고 기기별 점검은 하지 않았습니다.
 - 공개 라이선스는 아직 정하지 않았습니다([NOTICE](NOTICE)).
