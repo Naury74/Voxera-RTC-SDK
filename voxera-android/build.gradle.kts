@@ -24,6 +24,7 @@ kotlin {
 dependencies {
     api(project(":voxera-core"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity)
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit4)
