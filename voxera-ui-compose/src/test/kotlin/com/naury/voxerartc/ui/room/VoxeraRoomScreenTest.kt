@@ -130,7 +130,7 @@ class VoxeraRoomScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "w420dp-h900dp")
+    @Config(qualifiers = "w480dp-h900dp")
     fun `내가 화면을 공유하면 경고 배너가 나오고 중지하면 사라진다`() {
         val session = connectedSession(CallMode.VIDEO)
         compose.setContent { VoxeraRoomScreen(session, onExit = {}, onShareScreen = {}) }

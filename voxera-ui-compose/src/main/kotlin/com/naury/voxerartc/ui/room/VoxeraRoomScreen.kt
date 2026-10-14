@@ -94,7 +94,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** 통화 화면에서 연 시트. */
-private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE }
+private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS }
 
 /**
  * 룸 통화 화면. [session]의 상태만 관찰하며 세션을 만들거나 닫지 않는다. 입장(`join`)은 호스트가 사용자 동작에 맞춰 부른다.
@@ -375,6 +375,7 @@ private fun CallContent(
             onCamera = { scope.launch { session.setCameraEnabled(!media.camera.desired) } },
             onFlip = { scope.launch { session.switchCamera() } },
             onAudio = { sheet = RoomSheet.AUDIO },
+            onEffects = { sheet = RoomSheet.EFFECTS },
             onShare = onShareScreen?.let { share ->
                 { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
             },
@@ -400,6 +401,7 @@ private fun CallContent(
                 })
                 RoomSheet.PEOPLE -> PeopleSheet(participants)
                 RoomSheet.QUALITY -> QualitySheet(session)
+                RoomSheet.EFFECTS -> EffectsSheet(media, onSelect = { effect -> scope.launch { session.setVideoEffect(effect) } })
                 RoomSheet.MORE -> MoreControlsSheet(overflowControls, onDone = { if (sheet == RoomSheet.MORE) sheet = RoomSheet.NONE })
                 RoomSheet.NONE -> Unit
             }
@@ -493,6 +495,7 @@ private fun CallDock(
     onCamera: () -> Unit,
     onFlip: () -> Unit,
     onAudio: () -> Unit,
+    onEffects: () -> Unit,
     onShare: (() -> Unit)?,
     onEnd: () -> Unit,
     onMore: (List<DockControl>) -> Unit,
@@ -530,6 +533,7 @@ private fun CallDock(
             if (media.canSwitchCamera) {
                 add(DockControl(VoxeraIcons.SwitchCamera, stringResource(R.string.voxera_control_flip), onFlip, essential = false, enabled = media.camera.actual))
             }
+            add(DockControl(VoxeraIcons.AutoFix, stringResource(R.string.voxera_control_effects), onEffects, essential = false, active = !media.videoEffect.isNone))
             if (onShare != null) {
                 add(
                     DockControl(

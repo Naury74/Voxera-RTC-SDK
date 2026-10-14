@@ -132,4 +132,15 @@
     <string name="voxera_share_active">You\'re sharing your screen. Everything on it is visible, including notifications.</string>
     <string name="voxera_share_stop">Stop sharing</string>
     <string name="voxera_share_label">%1$s · screen</string>
+
+    <string name="voxera_control_effects">Effects</string>
+    <string name="voxera_effects_title">Camera effects</string>
+    <string name="voxera_effect_none">None</string>
+    <string name="voxera_effect_bright">Brighter</string>
+    <string name="voxera_effect_vivid">Vivid</string>
+    <string name="voxera_effect_soft">Soft</string>
+    <string name="voxera_effect_mono">Mono</string>
+    <string name="voxera_effects_unsupported">Camera effects aren\'t available here.</string>
+    <string name="voxera_effects_throttled">Effects were turned off because this device couldn\'t keep up. Your call continues with the original video.</string>
+    <string name="voxera_effects_note">Applied to the video others see and to your preview. Nothing is uploaded for processing.</string>
 </resources>

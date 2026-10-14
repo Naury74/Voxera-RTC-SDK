@@ -1,6 +1,8 @@
 package com.naury.voxerartc.ui.room
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.voxerartc.api.AudioRoute
+import com.naury.voxerartc.api.EffectsAvailability
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.AudioRouteType
 import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MetricDirection
@@ -196,5 +200,53 @@ internal fun QualitySheet(session: VoxeraSession) {
             }
         }
         Text(stringResource(R.string.voxera_stats_rtt_note), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+    }
+}
+
+/** 효과 프리셋. 값은 [VideoEffect] 범위 안의 보수적인 값만 쓴다. */
+internal val EffectPresets: List<Pair<Int, VideoEffect>> = listOf(
+    R.string.voxera_effect_none to VideoEffect.None,
+    R.string.voxera_effect_bright to VideoEffect(brightness = 0.12f),
+    R.string.voxera_effect_vivid to VideoEffect(contrast = 1.1f, saturation = 1.35f),
+    R.string.voxera_effect_soft to VideoEffect(contrast = 0.88f, saturation = 0.9f),
+    R.string.voxera_effect_mono to VideoEffect(saturation = 0f),
+)
+
+/** 카메라 효과(U-10/G-11). 지원하지 않거나 성능 때문에 꺼졌으면 이유를 보여 주고 고를 수 없게 한다. */
+@Composable
+internal fun EffectsSheet(media: LocalMediaState, onSelect: (VideoEffect) -> Unit) {
+    val colors = VoxeraTheme.colors
+    SheetTitle(stringResource(R.string.voxera_effects_title))
+    when (media.effectsAvailability) {
+        EffectsAvailability.UNSUPPORTED -> {
+            Text(stringResource(R.string.voxera_effects_unsupported), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
+            return
+        }
+        EffectsAvailability.DISABLED_FOR_PERFORMANCE ->
+            Text(
+                stringResource(R.string.voxera_effects_throttled),
+                color = colors.warning,
+                style = VoxeraTheme.typography.body,
+                modifier = Modifier.padding(bottom = VoxeraSpacing.sm),
+            )
+        EffectsAvailability.AVAILABLE -> Unit
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), modifier = Modifier.selectableGroup()) {
+        EffectPresets.forEach { (label, effect) ->
+            val selected = media.videoEffect == effect
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .clip(RoundedCornerShape(VoxeraRadius.sm))
+                    .selectable(selected = selected, enabled = media.camera.actual, role = Role.RadioButton) { onSelect(effect) }
+                    .padding(horizontal = VoxeraSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(label), color = colors.foreground, style = VoxeraTheme.typography.body, modifier = Modifier.weight(1f))
+                if (selected) Icon(Icons.Filled.Check, contentDescription = null, tint = colors.primary)
+            }
+        }
+        Text(stringResource(R.string.voxera_effects_note), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
     }
 }
