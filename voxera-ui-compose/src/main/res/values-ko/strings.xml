@@ -28,6 +28,7 @@
     <string name="voxera_action_close">닫기</string>
     <string name="voxera_action_rejoin">다시 입장</string>
     <string name="voxera_action_retry">다시 시도</string>
+    <string name="voxera_action_save_report">진단 리포트 저장</string>
 
     <string name="voxera_end_title">통화 종료</string>
     <string name="voxera_end_duration">통화 시간 %1$s</string>

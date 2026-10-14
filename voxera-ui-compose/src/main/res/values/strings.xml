@@ -29,6 +29,7 @@
     <string name="voxera_action_close">Close</string>
     <string name="voxera_action_rejoin">Join again</string>
     <string name="voxera_action_retry">Try again</string>
+    <string name="voxera_action_save_report">Save diagnostic report</string>
 
     <string name="voxera_end_title">Call ended</string>
     <string name="voxera_end_duration">Duration %1$s</string>

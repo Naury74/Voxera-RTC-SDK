@@ -92,6 +92,7 @@ private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY }
  * @param onExit 종료·실패 화면에서 닫기를 누름. 호스트 내비게이션으로 돌아간다.
  * @param onRejoin `null`이 아니면 종료·실패 화면에 다시 입장 버튼을 보여 준다.
  * @param onEnd 종료·취소 버튼 동작. `null`이면 `session.leave()`. Call Mode에서는 `CallCoordinator.hangup`을 넘긴다.
+ * @param onSaveReport `null`이 아니면 종료·실패 화면에 진단 리포트 저장 버튼을 보여 준다. 저장 위치와 공유는 호스트가 정한다.
  */
 @Composable
 public fun VoxeraRoomScreen(
@@ -101,6 +102,7 @@ public fun VoxeraRoomScreen(
     theme: VoxeraThemeConfig = VoxeraThemeConfig(),
     onRejoin: (() -> Unit)? = null,
     onEnd: (() -> Unit)? = null,
+    onSaveReport: (() -> Unit)? = null,
 ) {
     VoxeraTheme(theme) {
         val state by session.state.collectAsStateWithLifecycle()
@@ -120,8 +122,8 @@ public fun VoxeraRoomScreen(
                 SessionState.Idle, is SessionState.Preparing, is SessionState.Connecting ->
                     ConnectingContent(current, simulated, onCancel = leave)
                 is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
-                is SessionState.Ended -> EndedContent(current.reason, current.durationMs, simulated, onExit, onRejoin)
-                is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin)
+                is SessionState.Ended -> EndedContent(current.reason, current.durationMs, simulated, onExit, onRejoin, onSaveReport)
+                is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
                 is SessionState.Connected -> CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, leave)
                 is SessionState.Reconnecting -> CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, leave)
             }
@@ -163,7 +165,14 @@ private fun ProgressContent(label: String, simulated: Boolean) {
 }
 
 @Composable
-private fun EndedContent(reason: EndReason, durationMs: Long?, simulated: Boolean, onExit: () -> Unit, onRejoin: (() -> Unit)?) {
+private fun EndedContent(
+    reason: EndReason,
+    durationMs: Long?,
+    simulated: Boolean,
+    onExit: () -> Unit,
+    onRejoin: (() -> Unit)?,
+    onSaveReport: (() -> Unit)?,
+) {
     CenteredColumn(simulated) {
         Text(
             stringResource(R.string.voxera_end_title),
@@ -178,12 +187,19 @@ private fun EndedContent(reason: EndReason, durationMs: Long?, simulated: Boolea
         Spacer(Modifier.height(VoxeraSpacing.xs))
         Text(stringResource(reason.messageRes()), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.body, textAlign = TextAlign.Center)
         Spacer(Modifier.height(VoxeraSpacing.xxl))
-        ExitActions(onExit, onRejoin, rejoinLabel = stringResource(R.string.voxera_action_rejoin))
+        ExitActions(onExit, onRejoin, rejoinLabel = stringResource(R.string.voxera_action_rejoin), onSaveReport)
     }
 }
 
 @Composable
-private fun FailedContent(error: VoxeraError, dropped: Boolean, simulated: Boolean, onExit: () -> Unit, onRejoin: (() -> Unit)?) {
+private fun FailedContent(
+    error: VoxeraError,
+    dropped: Boolean,
+    simulated: Boolean,
+    onExit: () -> Unit,
+    onRejoin: (() -> Unit)?,
+    onSaveReport: (() -> Unit)?,
+) {
     CenteredColumn(simulated) {
         Text(
             stringResource(if (dropped) R.string.voxera_dropped_title else R.string.voxera_failed_title),
@@ -200,14 +216,17 @@ private fun FailedContent(error: VoxeraError, dropped: Boolean, simulated: Boole
             }
         }
         Spacer(Modifier.height(VoxeraSpacing.xxl))
-        ExitActions(onExit, onRejoin.takeIf { error.isRetryable }, rejoinLabel = stringResource(R.string.voxera_action_retry))
+        ExitActions(onExit, onRejoin.takeIf { error.isRetryable }, rejoinLabel = stringResource(R.string.voxera_action_retry), onSaveReport)
     }
 }
 
 @Composable
-private fun ExitActions(onExit: () -> Unit, onRejoin: (() -> Unit)?, rejoinLabel: String) {
+private fun ExitActions(onExit: () -> Unit, onRejoin: (() -> Unit)?, rejoinLabel: String, onSaveReport: (() -> Unit)?) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
         if (onRejoin != null) VoxeraButton(rejoinLabel, onClick = onRejoin, modifier = Modifier.fillMaxWidth())
+        if (onSaveReport != null) {
+            VoxeraButton(stringResource(R.string.voxera_action_save_report), onClick = onSaveReport, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
+        }
         VoxeraButton(stringResource(R.string.voxera_action_close), onClick = onExit, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
     }
 }
