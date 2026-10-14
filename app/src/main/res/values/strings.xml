@@ -62,4 +62,6 @@
     <string name="scenario_call_incoming_body">Accept or decline, ring timeout</string>
     <string name="scenario_call_outgoing">Outgoing call (demo host)</string>
     <string name="scenario_call_outgoing_body">Ringing, then the other side answers</string>
+    <string name="report_saved">Report saved in app storage: %1$s</string>
+    <string name="report_failed">Couldn\'t save the report.</string>
 </resources>

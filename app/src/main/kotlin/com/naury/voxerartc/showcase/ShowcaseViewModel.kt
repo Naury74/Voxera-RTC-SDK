@@ -1,6 +1,10 @@
 package com.naury.voxerartc.showcase
 
 import android.app.Application
+import android.os.Build
+import com.naury.voxerartc.core.diagnostics.DiagnosticContext
+import com.naury.voxerartc.core.diagnostics.SessionDiagnostics
+import java.io.File
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.naury.voxerartc.api.CallMode
@@ -42,6 +46,7 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         val mode: CallMode,
         val coordinator: CallCoordinator? = null,
         val keepAlive: AutoCloseable? = null,
+        val diagnostics: SessionDiagnostics = SessionDiagnostics(session).also { it.start() },
     )
 
     private val _active = MutableStateFlow<ActiveCall?>(null)
@@ -107,6 +112,20 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         start(ActiveCall(session, roomId, choice.mode, keepAlive = keepAlive))
     }
 
+    /**
+     * 진단 리포트를 앱 내부 저장소(`files/diagnostic-exports`)에 JSON으로 저장하고 파일을 돌려준다. 네트워크로 보내지 않는다.
+     * 토큰·서버 주소·참가자 이름은 리포트에 들어가지 않는다.
+     */
+    fun saveReport(): File? {
+        val call = _active.value ?: return null
+        val app = getApplication<Application>()
+        val version = app.packageManager.getPackageInfo(app.packageName, 0).versionName.orEmpty()
+        val context = DiagnosticContext(appVersion = version, os = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})", device = Build.MODEL)
+        val json = call.diagnostics.snapshot(context, sdkVersion = version).toJson()
+        val dir = File(app.filesDir, "diagnostic-exports").apply { mkdirs() }
+        return File(dir, "voxera-${System.currentTimeMillis()}.json").apply { writeText(json) }
+    }
+
     /** 같은 세션으로 다시 입장한다. 끝난 세션은 새 세대로 연결된다. */
     fun rejoin() {
         _active.value?.let(::join)
@@ -125,6 +144,7 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         _active.value?.let { previous ->
             previous.coordinator?.close()
             previous.keepAlive?.close()
+            previous.diagnostics.close()
             previous.session.close()
         }
         _active.value = call

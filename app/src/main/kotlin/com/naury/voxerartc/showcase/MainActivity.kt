@@ -4,6 +4,7 @@ import android.Manifest
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -67,7 +68,17 @@ class MainActivity : ComponentActivity() {
                         if (coordinator != null) {
                             VoxeraCallScreen(coordinator = coordinator, session = call.session, onExit = viewModel::exit, theme = theme)
                         } else {
-                            VoxeraRoomScreen(session = call.session, onExit = viewModel::exit, theme = theme, onRejoin = viewModel::rejoin)
+                            VoxeraRoomScreen(
+                                session = call.session,
+                                onExit = viewModel::exit,
+                                theme = theme,
+                                onRejoin = viewModel::rejoin,
+                                onSaveReport = {
+                                    val file = viewModel.saveReport()
+                                    val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)
+                                    Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
+                                },
+                            )
                         }
                     }
                 }
