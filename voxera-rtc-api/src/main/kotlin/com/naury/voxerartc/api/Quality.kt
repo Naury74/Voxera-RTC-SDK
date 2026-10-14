@@ -4,7 +4,17 @@ package com.naury.voxerartc.api
 public enum class MetricDirection { SEND, RECEIVE, NONE }
 
 /** 측정 항목. 단위는 [unit]으로 함께 준다. */
-public enum class MetricKind { ROUND_TRIP_TIME, JITTER, PACKET_LOSS, BITRATE, FRAME_RATE, RESOLUTION_HEIGHT }
+public enum class MetricKind {
+    ROUND_TRIP_TIME,
+    JITTER,
+    PACKET_LOSS,
+    BITRATE,
+    FRAME_RATE,
+    RESOLUTION_HEIGHT,
+
+    /** 카메라 효과가 프레임 하나를 처리하는 데 걸린 평균 시간(ms, 송신). 효과가 꺼져 있으면 값이 없다. */
+    EFFECT_PROCESSING_TIME,
+}
 
 /** 측정 단위. */
 public enum class MetricUnit { MILLISECONDS, PERCENT, BITS_PER_SECOND, FRAMES_PER_SECOND, PIXELS }

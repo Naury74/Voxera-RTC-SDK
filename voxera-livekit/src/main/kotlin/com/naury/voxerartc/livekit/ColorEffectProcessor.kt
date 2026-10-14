@@ -47,10 +47,16 @@ internal class ColorEffectProcessor(private val onThrottled: () -> Unit) : NoDro
             lut = if (value.isNone) null else ColorLut(value)
             samples = 0
             totalNs = 0
+            lastAverageMs = null
         }
 
     private var samples = 0
     private var totalNs = 0L
+
+    /** 최근 측정 구간의 프레임당 평균 처리 시간(ms). 효과가 꺼져 있거나 아직 한 구간을 채우지 못했으면 `null`. */
+    @Volatile
+    var lastAverageMs: Double? = null
+        private set
     private var row = ByteArray(0)
 
     override fun setSink(sink: VideoSink?) {
@@ -121,6 +127,7 @@ internal class ColorEffectProcessor(private val onThrottled: () -> Unit) : NoDro
         val averageMs = totalNs / samples / 1_000_000.0
         samples = 0
         totalNs = 0
+        lastAverageMs = averageMs
         if (averageMs > BUDGET_MS) {
             effect = VideoEffect.None
             onThrottled()

@@ -130,7 +130,7 @@ internal class LiveKitRtcEngine(
             if (room.state != Room.State.CONNECTED) continue
             val publisher = withTimeoutOrNull(STATS_TIMEOUT_MS) { collectStats(room::getPublisherRTCStats) } ?: emptyList()
             val subscriber = withTimeoutOrNull(STATS_TIMEOUT_MS) { collectStats(room::getSubscriberRTCStats) } ?: emptyList()
-            _events.emit(RtcEngineEvent.QualitySampled(sampler.sample(System.nanoTime() / 1_000_000, publisher, subscriber)))
+            _events.emit(RtcEngineEvent.QualitySampled(sampler.sample(System.nanoTime() / 1_000_000, publisher, subscriber, effectProcessor.lastAverageMs)))
         }
     }
 

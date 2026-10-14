@@ -81,6 +81,7 @@
     <string name="voxera_metric_bitrate_send">Upload bitrate</string>
     <string name="voxera_metric_bitrate_receive">Download bitrate</string>
     <string name="voxera_metric_fps">Receive frame rate</string>
+    <string name="voxera_metric_effect_time">Effect processing (per frame)</string>
     <string name="voxera_metric_na">N/A</string>
 
     <string name="voxera_people_title">People (%1$d)</string>

@@ -80,6 +80,7 @@
     <string name="voxera_metric_bitrate_send">업로드 비트레이트</string>
     <string name="voxera_metric_bitrate_receive">다운로드 비트레이트</string>
     <string name="voxera_metric_fps">수신 프레임 레이트</string>
+    <string name="voxera_metric_effect_time">효과 처리 시간(프레임당)</string>
     <string name="voxera_metric_na">N/A</string>
 
     <string name="voxera_people_title">참가자 (%1$d)</string>

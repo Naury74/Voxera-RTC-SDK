@@ -24,7 +24,7 @@ internal class QualitySampler {
     private var previousLost: Double? = null
     private var previousPackets: Double? = null
 
-    fun sample(atMs: Long, publisher: List<StatEntry>, subscriber: List<StatEntry>): QualitySnapshot {
+    fun sample(atMs: Long, publisher: List<StatEntry>, subscriber: List<StatEntry>, effectProcessingMs: Double? = null): QualitySnapshot {
         val rtt = (publisher + subscriber).selectedPairRttMs()
         val inbound = subscriber.filter { it.type == "inbound-rtp" }
         val outbound = publisher.filter { it.type == "outbound-rtp" }
@@ -57,6 +57,7 @@ internal class QualitySampler {
                 QualityMetric(MetricKind.BITRATE, MetricDirection.RECEIVE, rate(received, previousReceived), MetricUnit.BITS_PER_SECOND),
                 QualityMetric(MetricKind.FRAME_RATE, MetricDirection.RECEIVE, fps, MetricUnit.FRAMES_PER_SECOND),
                 QualityMetric(MetricKind.RESOLUTION_HEIGHT, MetricDirection.RECEIVE, height, MetricUnit.PIXELS),
+                QualityMetric(MetricKind.EFFECT_PROCESSING_TIME, MetricDirection.SEND, effectProcessingMs, MetricUnit.MILLISECONDS),
             ),
         )
         previousAtMs = atMs

@@ -154,12 +154,14 @@ internal val QualityRows: List<Triple<MetricKind, MetricDirection, Int>> = listO
     Triple(MetricKind.BITRATE, MetricDirection.SEND, R.string.voxera_metric_bitrate_send),
     Triple(MetricKind.BITRATE, MetricDirection.RECEIVE, R.string.voxera_metric_bitrate_receive),
     Triple(MetricKind.FRAME_RATE, MetricDirection.RECEIVE, R.string.voxera_metric_fps),
+    Triple(MetricKind.EFFECT_PROCESSING_TIME, MetricDirection.SEND, R.string.voxera_metric_effect_time),
 )
 
 /** 측정값 문구. 값이 없으면 `null`이며 화면은 N/A를 쓴다(0으로 바꾸지 않는다). */
 internal fun formatMetric(kind: MetricKind, value: Double?): String? = value?.let {
     when (kind) {
         MetricKind.ROUND_TRIP_TIME, MetricKind.JITTER -> String.format(Locale.ROOT, "%.0f ms", it)
+        MetricKind.EFFECT_PROCESSING_TIME -> String.format(Locale.ROOT, "%.1f ms", it)
         MetricKind.PACKET_LOSS -> String.format(Locale.ROOT, "%.1f %%", it)
         MetricKind.BITRATE -> formatBitrate(it)
         MetricKind.FRAME_RATE -> String.format(Locale.ROOT, "%.1f", it)
