@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        LiveKit AAR은 화면 공유 서비스와 그 foreground service 권한을 함께 합친다. Voxera는 아직 화면 공유를 제공하지 않으므로
+        호스트 앱이 쓰지 않는 mediaProjection 서비스를 선언하지 않도록 제거한다. 화면 공유 모듈이 생기면 그 모듈이 다시 선언한다.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" tools:node="remove" />
+
+    <!-- Android 12+에서 블루투스 이어폰을 오디오 경로로 찾고 고르려면 필요하다. 런타임 요청은 호스트가 한다. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <application>
+        <service
+            android:name="io.livekit.android.room.track.screencapture.ScreenCaptureService"
+            tools:node="remove" />
+    </application>
+</manifest>
