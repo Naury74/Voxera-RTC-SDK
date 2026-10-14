@@ -13,6 +13,10 @@ internal class ColorLut(effect: VideoEffect) {
     val luma = ByteArray(256)
     val chroma = ByteArray(256)
 
+    /** 값이 바뀌지 않는 면은 조회 없이 통째로 복사한다(예: 흑백은 Y면, 밝기는 U/V면). */
+    val lumaIdentity: Boolean = effect.brightness == 0f && effect.contrast == 1f
+    val chromaIdentity: Boolean = effect.saturation == 1f
+
     init {
         for (value in 0..255) {
             val normalized = (value / 255f - 0.5f) * effect.contrast + 0.5f + effect.brightness
@@ -85,24 +89,26 @@ internal class ColorEffectProcessor(private val onThrottled: () -> Unit) : NoDro
             val width = source.width
             val height = source.height
             val out = JavaI420Buffer.allocate(width, height)
-            mapPlane(source.dataY, source.strideY, out.dataY, out.strideY, width, height, table.luma)
+            mapPlane(source.dataY, source.strideY, out.dataY, out.strideY, width, height, table.luma.takeUnless { table.lumaIdentity })
             val chromaWidth = (width + 1) / 2
             val chromaHeight = (height + 1) / 2
-            mapPlane(source.dataU, source.strideU, out.dataU, out.strideU, chromaWidth, chromaHeight, table.chroma)
-            mapPlane(source.dataV, source.strideV, out.dataV, out.strideV, chromaWidth, chromaHeight, table.chroma)
+            val chroma = table.chroma.takeUnless { table.chromaIdentity }
+            mapPlane(source.dataU, source.strideU, out.dataU, out.strideU, chromaWidth, chromaHeight, chroma)
+            mapPlane(source.dataV, source.strideV, out.dataV, out.strideV, chromaWidth, chromaHeight, chroma)
             return VideoFrame(out, frame.rotation, frame.timestampNs)
         } finally {
             source.release()
         }
     }
 
-    private fun mapPlane(src: ByteBuffer, srcStride: Int, dst: ByteBuffer, dstStride: Int, width: Int, height: Int, table: ByteArray) {
+    /** [table]이 `null`이면 값을 바꾸지 않고 행 단위로 복사만 한다. */
+    private fun mapPlane(src: ByteBuffer, srcStride: Int, dst: ByteBuffer, dstStride: Int, width: Int, height: Int, table: ByteArray?) {
         if (row.size < width) row = ByteArray(width)
         val line = row
         for (y in 0 until height) {
             src.position(y * srcStride)
             src.get(line, 0, width)
-            for (x in 0 until width) line[x] = table[line[x].toInt() and 0xFF]
+            if (table != null) for (x in 0 until width) line[x] = table[line[x].toInt() and 0xFF]
             dst.position(y * dstStride)
             dst.put(line, 0, width)
         }

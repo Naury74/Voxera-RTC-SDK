@@ -40,6 +40,13 @@ class ColorLutTest {
     }
 
     @Test
+    fun `바뀌지 않는 면은 복사만 하도록 표시한다`() {
+        assertThat(ColorLut(VideoEffect(saturation = 0f)).lumaIdentity).isTrue()
+        assertThat(ColorLut(VideoEffect(saturation = 0f)).chromaIdentity).isFalse()
+        assertThat(ColorLut(VideoEffect(brightness = 0.1f)).chromaIdentity).isTrue()
+    }
+
+    @Test
     fun `범위를 벗어난 효과는 만들 수 없다`() {
         val result = runCatching { VideoEffect(saturation = 3f) }
         assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
