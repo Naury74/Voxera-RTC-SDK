@@ -402,4 +402,31 @@ class DefaultVoxeraSessionTest {
         assertThat(session.startScreenShare(object : com.naury.voxerartc.api.ScreenShareConsent {}))
             .isEqualTo(MediaActionResult.Failed(VoxeraError.NotConnected))
     }
+
+    @Test
+    fun `영상 효과는 ack 뒤 반영되고 엔진이 성능 때문에 끄면 원본으로 돌아간다`() = runTest {
+        val factory = FakeRtcEngineFactory()
+        val session = sdk(factory).createSession(config())
+        session.join("room", CallMode.VIDEO)
+        advanceUntilIdle()
+        val vivid = com.naury.voxerartc.api.VideoEffect(contrast = 1.1f, saturation = 1.4f)
+        assertThat(session.setVideoEffect(vivid)).isEqualTo(MediaActionResult.Applied)
+        advanceUntilIdle()
+        assertThat(session.localMedia.value.videoEffect).isEqualTo(vivid)
+
+        factory.last.simulateEffectsThrottled()
+        advanceUntilIdle()
+        assertThat(session.localMedia.value.videoEffect.isNone).isTrue()
+        assertThat(session.localMedia.value.effectsAvailability)
+            .isEqualTo(com.naury.voxerartc.api.EffectsAvailability.DISABLED_FOR_PERFORMANCE)
+        assertThat(session.state.value).isInstanceOf(SessionState.Connected::class.java)
+    }
+
+    @Test
+    fun `효과를 지원하지 않는 엔진은 Unsupported`() = runTest {
+        val factory = FakeRtcEngineFactory { FakeRtcEngine(effects = com.naury.voxerartc.api.EffectsAvailability.UNSUPPORTED) }
+        val session = sdk(factory).createSession(config())
+        session.join("room", CallMode.VIDEO)
+        assertThat(session.setVideoEffect(com.naury.voxerartc.api.VideoEffect(saturation = 0f))).isEqualTo(MediaActionResult.Unsupported)
+    }
 }

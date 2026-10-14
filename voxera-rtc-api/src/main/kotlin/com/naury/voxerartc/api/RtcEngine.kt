@@ -78,6 +78,12 @@ public interface RtcEngine {
 
     public suspend fun stopScreenShare(): MediaActionResult = MediaActionResult.Unsupported
 
+    /**
+     * 카메라 색 효과를 바꾼다. 효과 처리에 실패하거나 너무 느리면 엔진이 원본으로 되돌리고
+     * [LocalMediaState.effectsAvailability]로 알린다. 통화를 끊지 않는다.
+     */
+    public suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult = MediaActionResult.Unsupported
+
     /** 연결·트랙·리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
     public suspend fun release()
 }

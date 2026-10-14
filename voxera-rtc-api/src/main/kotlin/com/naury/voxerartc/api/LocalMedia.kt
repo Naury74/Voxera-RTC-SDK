@@ -40,4 +40,7 @@ public data class LocalMediaState(
     val canSwitchCamera: Boolean = false,
     val audioRoutes: List<AudioRoute> = emptyList(),
     val selectedAudioRouteId: String? = null,
+    /** 지금 적용 중인 카메라 효과. */
+    val videoEffect: VideoEffect = VideoEffect.None,
+    val effectsAvailability: EffectsAvailability = EffectsAvailability.UNSUPPORTED,
 )

@@ -10,6 +10,7 @@ import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.QualitySnapshot
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.SessionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +63,9 @@ public interface VoxeraSession : AutoCloseable {
     public suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult
 
     public suspend fun stopScreenShare(): MediaActionResult
+
+    /** 카메라 색 효과를 바꾼다. 연결 중에만 쓸 수 있다. 지원하지 않으면 Unsupported. */
+    public suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult
 
     /** [LocalMediaState.audioRoutes]의 id 중 하나를 고른다. */
     public suspend fun selectAudioRoute(routeId: String): MediaActionResult

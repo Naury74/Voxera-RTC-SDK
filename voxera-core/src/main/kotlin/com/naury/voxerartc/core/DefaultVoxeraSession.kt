@@ -23,6 +23,7 @@ import com.naury.voxerartc.api.RtcEngineEvent
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.ServerUrlCheck
 import com.naury.voxerartc.api.SessionState
 import com.naury.voxerartc.api.VoxeraError
@@ -422,6 +423,13 @@ internal class DefaultVoxeraSession(
                     MediaActionResult.Unsupported -> MediaToggle(current.actual, current.actual)
                 },
             )
+        }
+    }
+
+    override suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult {
+        val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        return mediaMutex.withLock { engine.setVideoEffect(effect) }.also { result ->
+            if (result == MediaActionResult.Applied) _localMedia.update { it.copy(videoEffect = effect) }
         }
     }
 
