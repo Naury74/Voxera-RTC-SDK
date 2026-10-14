@@ -26,12 +26,14 @@ import io.livekit.android.LiveKit
 import io.livekit.android.events.RoomEvent
 import io.livekit.android.room.Room
 import io.livekit.android.room.track.CameraPosition
+import io.livekit.android.room.track.DataPublishReliability
 import io.livekit.android.room.track.LocalVideoTrack
 import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.VideoTrack
 import io.livekit.android.room.track.RemoteTrackPublication
 import io.livekit.android.room.track.TrackPublication
 import io.livekit.android.room.track.screencapture.ScreenCaptureParams
+import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.EffectsAvailability
 import com.naury.voxerartc.api.VideoEffect
@@ -186,6 +188,12 @@ internal class LiveKitRtcEngine(
             is RoomEvent.TrackUnpublished -> listOf(upsert(event.participant))
             is RoomEvent.TrackMuted -> listOf(upsert(event.participant))
             is RoomEvent.TrackUnmuted -> listOf(upsert(event.participant))
+            is RoomEvent.DataReceived -> {
+                // 반응 형식이 아니거나 보낸 사람을 모르면 버린다. 내용은 기록하지 않는다.
+                val from = event.participant
+                val reaction = ReactionWire.decode(event.topic, event.data)
+                if (from != null && reaction != null) listOf(RtcEngineEvent.ReactionReceived(from.voxeraId, reaction)) else emptyList()
+            }
             else -> emptyList()
         }
         mapped.forEach { _events.emit(it) }
@@ -279,6 +287,11 @@ internal class LiveKitRtcEngine(
         }
         emitLocalState()
         return if (applied) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.MediaDeviceUnavailable(device))
+    }
+
+    override suspend fun sendReaction(reaction: Reaction): MediaActionResult {
+        val sent = room.localParticipant.publishData(ReactionWire.encode(reaction), DataPublishReliability.RELIABLE, ReactionWire.TOPIC)
+        return if (sent.isSuccess) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.NotConnected)
     }
 
     override suspend fun switchCamera(): MediaActionResult {

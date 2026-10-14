@@ -75,6 +75,7 @@ internal fun CallDock(
     onFlip: () -> Unit,
     onAudio: () -> Unit,
     onEffects: () -> Unit,
+    onReact: (() -> Unit)?,
     onShare: (() -> Unit)?,
     onEnd: () -> Unit,
     onMore: (List<DockControl>) -> Unit,
@@ -126,6 +127,9 @@ internal fun CallDock(
                     ),
                 )
             }
+        }
+        if (onReact != null) {
+            add(DockControl(VoxeraIcons.Mood, stringResource(R.string.voxera_control_react), onReact, essential = false))
         }
         if (media.audioRoutes.isNotEmpty()) {
             add(DockControl(media.selectedRouteIcon(), stringResource(R.string.voxera_control_audio), onAudio, essential = false))

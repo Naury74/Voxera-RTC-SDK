@@ -11,6 +11,8 @@ import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.Reaction
+import com.naury.voxerartc.api.ReactionEvent
 import com.naury.voxerartc.api.SessionState
 import com.naury.voxerartc.api.VoxeraError
 import com.naury.voxerartc.core.MediaPreferences
@@ -148,6 +150,9 @@ public class VoxeraClient internal constructor(
     public fun selectAudioRoute(routeId: String, callback: VoxeraActionCallback?): VoxeraCancellable =
         action(callback) { session.selectAudioRoute(routeId) }
 
+    public fun sendReaction(reaction: Reaction, callback: VoxeraActionCallback?): VoxeraCancellable =
+        action(callback) { session.sendReaction(reaction) }
+
     /** 통화를 끝낸다. 끝나면 [onDone]이 불린다(없어도 된다). */
     public fun leave(onDone: Runnable?) {
         scope.launch {
@@ -165,6 +170,12 @@ public class VoxeraClient internal constructor(
     public fun addParticipantsListener(listener: VoxeraListener<List<Participant>>): VoxeraCancellable =
         launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
             session.participants.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
+        }
+
+    /** 등록한 뒤에 오는 반응만 받는다(지난 반응은 없다). */
+    public fun addReactionListener(listener: VoxeraListener<ReactionEvent>): VoxeraCancellable =
+        launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
+            session.reactions.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
         }
 
     private fun action(callback: VoxeraActionCallback?, block: suspend () -> MediaActionResult): VoxeraCancellable =

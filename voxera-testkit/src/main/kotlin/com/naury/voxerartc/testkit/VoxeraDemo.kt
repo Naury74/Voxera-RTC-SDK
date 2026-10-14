@@ -13,6 +13,7 @@ import com.naury.voxerartc.api.MonotonicClock
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.QualityMetric
 import com.naury.voxerartc.api.QualitySnapshot
+import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.RtcEngine
@@ -143,6 +144,10 @@ internal class DemoRtcEngine(
             tick++
             rotateSpeaker(tick)
             if (tick % 2 == 0) fake.emitQuality(sample())
+            // 가끔 원격 참가자가 반응을 보낸다. 데모에서 반응 표시를 볼 수 있게 한다.
+            if (tick % 9 == 4 && remotes.isNotEmpty()) {
+                fake.simulateReaction(remotes[random.nextInt(remotes.size)].id, Reaction.entries[random.nextInt(Reaction.entries.size)])
+            }
             if (scenario == DemoScenario.UNSTABLE_NETWORK) when (tick % 14) {
                 6 -> fake.simulateReconnecting()
                 9 -> fake.simulateReconnected()

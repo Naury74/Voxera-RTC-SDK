@@ -46,6 +46,9 @@ public sealed interface RtcEngineEvent {
     public data class Disconnected(val error: VoxeraError?) : RtcEngineEvent
 
     public data class QualitySampled(val snapshot: QualitySnapshot) : RtcEngineEvent
+
+    /** 원격 참가자가 반응을 보냈다. 엔진은 모르는 반응을 이 이벤트로 바꾸지 않는다. */
+    public data class ReactionReceived(val participantId: String, val reaction: Reaction) : RtcEngineEvent
 }
 
 /**
@@ -83,6 +86,9 @@ public interface RtcEngine {
      * [LocalMediaState.effectsAvailability]로 알린다. 통화를 끊지 않는다.
      */
     public suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult = MediaActionResult.Unsupported
+
+    /** 룸의 다른 참가자에게 반응을 보낸다. 지원하지 않는 엔진은 Unsupported. */
+    public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
 
     /** 연결·트랙·리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
     public suspend fun release()

@@ -165,4 +165,12 @@
     <string name="voxera_prejoin_level_unavailable">Can\'t read the microphone level right now.</string>
     <string name="voxera_interrupted_title">Another call is using the audio</string>
     <string name="voxera_interrupted_body">Others can\'t hear you until that call ends.</string>
+    <string name="voxera_control_react">React</string>
+    <string name="voxera_reactions_title">Send a reaction</string>
+    <string name="voxera_reaction_thumbs_up">Thumbs up</string>
+    <string name="voxera_reaction_heart">Heart</string>
+    <string name="voxera_reaction_laugh">Laugh</string>
+    <string name="voxera_reaction_clap">Clap</string>
+    <string name="voxera_reaction_surprised">Surprised</string>
+    <string name="voxera_reaction_celebrate">Celebrate</string>
 </resources>

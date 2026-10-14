@@ -162,4 +162,12 @@
     <string name="voxera_prejoin_level_unavailable">지금은 마이크 소리 크기를 읽을 수 없습니다.</string>
     <string name="voxera_interrupted_title">다른 통화가 오디오를 쓰고 있습니다</string>
     <string name="voxera_interrupted_body">그 통화가 끝날 때까지 상대에게 내 소리가 가지 않습니다.</string>
+    <string name="voxera_control_react">반응</string>
+    <string name="voxera_reactions_title">반응 보내기</string>
+    <string name="voxera_reaction_thumbs_up">좋아요</string>
+    <string name="voxera_reaction_heart">하트</string>
+    <string name="voxera_reaction_laugh">웃음</string>
+    <string name="voxera_reaction_clap">박수</string>
+    <string name="voxera_reaction_surprised">놀람</string>
+    <string name="voxera_reaction_celebrate">축하</string>
 </resources>

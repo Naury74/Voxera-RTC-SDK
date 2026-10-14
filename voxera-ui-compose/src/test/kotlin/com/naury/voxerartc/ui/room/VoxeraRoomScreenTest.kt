@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
 import com.naury.voxerartc.api.Participant
+import com.naury.voxerartc.api.Reaction
 import com.google.common.truth.Truth.assertThat
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.JoinResult
@@ -194,5 +195,15 @@ class VoxeraRoomScreenTest {
         factory.last.simulateLocalMedia { it.copy(audioInterrupted = false) }
         compose.waitForIdle()
         compose.onNodeWithText("Another call is using the audio").assertDoesNotExist()
+    }
+
+    @Test
+    fun `반응을 고르면 엔진으로 보낸다`() {
+        val session = connectedSession(CallMode.VOICE)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        compose.onNodeWithContentDescription("React").performClick()
+        compose.onNodeWithContentDescription("Heart").performClick()
+        compose.waitForIdle()
+        assertThat(factory.last.sentReactions).containsExactly(Reaction.HEART)
     }
 }

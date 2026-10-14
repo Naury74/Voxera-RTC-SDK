@@ -97,7 +97,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** 통화 화면에서 연 시트. */
-private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS }
+private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS, REACTIONS }
 
 /** 영상 통화에서 아무 조작이 없을 때 조작 막대를 숨기기까지 기다리는 시간. 접근성 서비스가 켜져 있으면 늘어나거나 숨기지 않는다. */
 private const val CHROME_TIMEOUT_MS = 4_000L
@@ -117,6 +117,7 @@ private const val CHROME_TIMEOUT_MS = 4_000L
  * @param pictureInPicture 호스트 Activity가 PiP 창에 있으면 `true`. 조작·시트·알림을 빼고 말하는 사람 하나만 작게 그린다.
  * @param onEnterPictureInPicture `null`이 아니면 상단에 PiP 버튼을 둔다. 호스트가 `enterPictureInPictureMode`를 부른다.
  * @param autoHideControls 영상 통화에서 4초 동안 조작이 없으면 상단 줄·조작 막대를 숨긴다. 화면을 누르면 다시 나온다.
+ * @param reactionsEnabled 반응 보내기 버튼과 떠오르는 반응을 보여 준다. 엔진이 지원하지 않으면 보내기는 아무 일도 하지 않는다.
  */
 @Composable
 public fun VoxeraRoomScreen(
@@ -131,6 +132,7 @@ public fun VoxeraRoomScreen(
     pictureInPicture: Boolean = false,
     onEnterPictureInPicture: (() -> Unit)? = null,
     autoHideControls: Boolean = true,
+    reactionsEnabled: Boolean = true,
 ) {
     VoxeraTheme(theme) {
         val state by session.state.collectAsStateWithLifecycle()
@@ -156,9 +158,9 @@ public fun VoxeraRoomScreen(
                     current is SessionState.Ended -> EndedContent(current.reason, current.durationMs, history, simulated, onExit, onRejoin, onSaveReport)
                     current is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
                     current is SessionState.Connected ->
-                        CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
+                        CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
                     current is SessionState.Reconnecting ->
-                        CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls)
+                        CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
                 }
             }
         }
@@ -192,6 +194,7 @@ private fun CallContent(
     onShareScreen: (() -> Unit)?,
     onEnterPictureInPicture: (() -> Unit)?,
     autoHideControls: Boolean,
+    reactionsEnabled: Boolean,
 ) {
     // 영상 통화 중에는 화면이 꺼지지 않게 한다. 음성 통화는 시스템 시간 초과를 따른다(근접 센서는 호스트·android 모듈 몫).
     val view = LocalView.current
@@ -357,6 +360,7 @@ private fun CallContent(
                 onFlip = { scope.launch { session.switchCamera() } },
                 onAudio = { sheet = RoomSheet.AUDIO },
                 onEffects = { sheet = RoomSheet.EFFECTS },
+                onReact = if (reactionsEnabled) ({ sheet = RoomSheet.REACTIONS }) else null,
                 onShare = onShareScreen?.let { share ->
                     { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
                 },
@@ -368,6 +372,16 @@ private fun CallContent(
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
+            )
+        }
+
+        if (reactionsEnabled) {
+            // 반응은 조작 막대를 숨겨도 보인다. 막대가 있으면 그 위에서 떠오른다.
+            ReactionOverlay(
+                session,
+                participants,
+                Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                bottomInset = if (chromeVisible) BottomReserve else VoxeraSpacing.xl,
             )
         }
 
@@ -389,6 +403,10 @@ private fun CallContent(
                 }
                 RoomSheet.QUALITY -> QualitySheet(history)
                 RoomSheet.EFFECTS -> EffectsSheet(media, onSelect = { effect -> scope.launch { session.setVideoEffect(effect) } })
+                RoomSheet.REACTIONS -> ReactionPicker(onPick = { reaction ->
+                    scope.launch { session.sendReaction(reaction) }
+                    sheet = RoomSheet.NONE
+                })
                 RoomSheet.MORE -> MoreControlsSheet(overflowControls, onDone = { if (sheet == RoomSheet.MORE) sheet = RoomSheet.NONE })
                 RoomSheet.NONE -> Unit
             }

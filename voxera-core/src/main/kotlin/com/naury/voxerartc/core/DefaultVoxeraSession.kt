@@ -18,16 +18,20 @@ import com.naury.voxerartc.api.MediaToggle
 import com.naury.voxerartc.api.MonotonicClock
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.QualitySnapshot
+import com.naury.voxerartc.api.Reaction
+import com.naury.voxerartc.api.ReactionEvent
 import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcEngine
 import com.naury.voxerartc.api.RtcEngineEvent
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
-import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.ServerUrlCheck
 import com.naury.voxerartc.api.SessionState
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VoxeraError
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -55,8 +59,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * [VoxeraSession] 구현. 상태 전이는 모두 [SessionReducer]를 거치고, 전이가 받아들여졌을 때만 부수 효과를 실행한다.
@@ -93,6 +95,25 @@ internal class DefaultVoxeraSession(
         extraBufferCapacity = 8,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
+
+    // 반응은 지나가면 의미가 없으므로 다시 보내지 않고, 화면이 늦게 받아도 막히지 않게 넘치면 오래된 것을 버린다.
+    private val _reactions = MutableSharedFlow<ReactionEvent>(extraBufferCapacity = 32, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    override val reactions: Flow<ReactionEvent> = _reactions.asSharedFlow()
+    private val reactionTimes = HashMap<String, ArrayDeque<Long>>()
+
+    /** 참가자별 최근 1초 반응 수를 세어 [VoxeraSession.REACTION_BURST]를 넘으면 버린다. */
+    private fun admitReaction(participantId: String, nowMs: Long): Boolean = synchronized(reactionTimes) {
+        val times = reactionTimes.getOrPut(participantId) { ArrayDeque() }
+        while (times.isNotEmpty() && nowMs - times.first() >= 1_000) times.removeFirst()
+        if (times.size >= VoxeraSession.REACTION_BURST) return false
+        times.addLast(nowMs)
+        true
+    }
+
+    private fun publishReaction(participantId: String, reaction: Reaction) {
+        val now = clock.nowMs()
+        if (admitReaction(participantId, now)) _reactions.tryEmit(ReactionEvent(participantId, reaction, now))
+    }
 
     override val engineKind: RtcEngineKind get() = engineFactory.kind
     override val state: StateFlow<SessionState> = _state.asStateFlow()
@@ -286,6 +307,7 @@ internal class DefaultVoxeraSession(
                 )
             }
             is RtcEngineEvent.QualitySampled -> _diagnostics.tryEmit(event.snapshot)
+            is RtcEngineEvent.ReactionReceived -> publishReaction(event.participantId, event.reaction)
             RtcEngineEvent.Reconnecting -> onReconnecting(generation)
             RtcEngineEvent.Reconnected -> if (dispatch(SessionAction.Reconnected(generation)).accepted) {
                 synchronized(lock) { connection?.reconnectDeadline?.cancel() }
@@ -361,6 +383,7 @@ internal class DefaultVoxeraSession(
         _participants.value = emptyList()
         _localMedia.value = LocalMediaState()
         _diagnostics.resetReplayCache()
+        synchronized(reactionTimes) { reactionTimes.clear() }
     }
 
     override suspend fun setMicrophoneEnabled(enabled: Boolean): MediaActionResult =
@@ -406,6 +429,16 @@ internal class DefaultVoxeraSession(
             }
             result
         }
+    }
+
+    override suspend fun sendReaction(reaction: Reaction): MediaActionResult {
+        val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val localId = _participants.value.firstOrNull { it.isLocal }?.id ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        // 내가 너무 빨리 누르면 보내지 않는다. 받는 쪽도 같은 기준으로 버리므로 보내 봐야 보이지 않는다.
+        if (!admitReaction(localId, clock.nowMs())) return MediaActionResult.Applied
+        val result = engine.sendReaction(reaction)
+        if (result is MediaActionResult.Applied) _reactions.tryEmit(ReactionEvent(localId, reaction, clock.nowMs()))
+        return result
     }
 
     override suspend fun switchCamera(): MediaActionResult {

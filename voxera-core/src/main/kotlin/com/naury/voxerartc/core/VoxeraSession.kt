@@ -8,12 +8,15 @@ import com.naury.voxerartc.api.MediaActionResult
 import com.naury.voxerartc.api.MonotonicClock
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.QualitySnapshot
+import com.naury.voxerartc.api.Reaction
+import com.naury.voxerartc.api.ReactionEvent
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
-import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.SessionState
+import com.naury.voxerartc.api.VideoEffect
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * 룸 하나의 미디어 연결과 참가자를 관리한다. 한 번에 하나의 연결만 가지며, 끝난 뒤 다시 `join`할 수 있다.
@@ -67,6 +70,15 @@ public interface VoxeraSession : AutoCloseable {
     /** 카메라 색 효과를 바꾼다. 연결 중에만 쓸 수 있다. 지원하지 않으면 Unsupported. */
     public suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult
 
+    /**
+     * 통화 중 주고받은 반응. 내가 보낸 반응도 엔진이 받아들이면 여기로 온다. 지난 반응은 다시 보내지 않는다.
+     * 한 참가자가 1초에 [REACTION_BURST]개 넘게 보내면 넘친 것은 버린다.
+     */
+    public val reactions: Flow<ReactionEvent> get() = emptyFlow()
+
+    /** 반응을 보낸다. 연결 중에만 쓸 수 있고, 엔진이 지원하지 않으면 Unsupported. */
+    public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
+
     /** [LocalMediaState.audioRoutes]의 id 중 하나를 고른다. */
     public suspend fun selectAudioRoute(routeId: String): MediaActionResult
 
@@ -75,4 +87,9 @@ public interface VoxeraSession : AutoCloseable {
 
     /** 진행 중인 통화를 끝내고 세션을 닫는다. 닫힌 세션의 `join`은 실패한다. */
     override fun close()
+
+    public companion object {
+        /** 한 참가자가 1초에 보낼 수 있는 반응 수. 넘치면 화면이 반응으로 덮이지 않게 버린다. */
+        public const val REACTION_BURST: Int = 5
+    }
 }

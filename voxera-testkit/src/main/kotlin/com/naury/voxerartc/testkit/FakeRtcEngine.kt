@@ -17,6 +17,7 @@ import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.EffectsAvailability
+import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
@@ -178,6 +179,21 @@ public class FakeRtcEngine(
     }
 
     /** 처리 시간 초과로 엔진이 효과를 끈 상황을 보낸다. */
+    private val _sentReactions = mutableListOf<Reaction>()
+
+    /** [sendReaction]으로 보낸 반응 순서. */
+    public val sentReactions: List<Reaction> get() = synchronized(_sentReactions) { _sentReactions.toList() }
+
+    override suspend fun sendReaction(reaction: Reaction): MediaActionResult {
+        synchronized(_sentReactions) { _sentReactions += reaction }
+        return MediaActionResult.Applied
+    }
+
+    /** 원격 참가자 [participantId]가 반응을 보낸 것처럼 이벤트를 낸다. */
+    public fun simulateReaction(participantId: String, reaction: Reaction) {
+        _events.tryEmit(RtcEngineEvent.ReactionReceived(participantId, reaction))
+    }
+
     public fun simulateEffectsThrottled() {
         media = media.copy(videoEffect = VideoEffect.None, effectsAvailability = EffectsAvailability.DISABLED_FOR_PERFORMANCE)
         _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
