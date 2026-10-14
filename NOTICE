@@ -1,0 +1,13 @@
+Voxera RTC SDK
+Copyright 2026 Naury74
+
+공개 라이선스는 아직 정하지 않았습니다. 배포 전에 LICENSE를 추가합니다.
+
+This project includes vector path data from Material Icons
+(https://github.com/google/material-design-icons), licensed under the
+Apache License, Version 2.0:
+
+  voxera-ui-compose/src/main/kotlin/com/naury/voxerartc/ui/component/VoxeraIcons.kt
+
+You may obtain a copy of the Apache License at
+http://www.apache.org/licenses/LICENSE-2.0
