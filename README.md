@@ -99,7 +99,8 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-017 | 카메라 색 효과(밝기·대비·채도) | 부분 | 에뮬레이터에서 게시·적용·폴백 확인. 에뮬레이터는 예산 초과로 폴백, 실제 폰 처리 시간 미측정 |
 | VOX-026 | 접근성·작은 화면·큰 글꼴 | 부분 | 320dp·200% 테스트와 에뮬레이터 확인, TalkBack 읽기 순서 지정. 실제 TalkBack 사용 점검은 안 함 |
 | VOX-028 | 배포 리허설 | 부분 | 로컬 Maven + `samples/consumer`. Maven Central 게시는 라이선스 결정 전이라 안 함 |
-| VOX-015, 027, 029 | 장치 전환 실기기 검증, 기기·API 매트릭스, 공개 문서·라이선스 | 미착수 | - |
+| VOX-027 | 기기·API 매트릭스 | 부분 | API 26·36 에뮬레이터 확인(API 26 크래시 1건 수정). 30·31·33~35와 실기기는 안 함 |
+| VOX-015, 029 | 장치 전환 실기기 검증, 공개 문서·라이선스 | 미착수 | - |
 
 ## 빌드
 

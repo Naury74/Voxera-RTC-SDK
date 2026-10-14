@@ -46,6 +46,18 @@
 | 효과 성능 폴백 | 예산(60프레임 평균 15ms) 초과 시 원본으로, 통화 유지 | 에뮬레이터(소프트웨어 GL)에서 수 초 안에 폴백·안내 문구, 통화 유지 | Pass |
 | 실제 폰의 효과 처리 시간 | 예산 안 | 측정 안 함 | NOT RUN |
 
+## API 26 (minSdk) — 2026-10-14, AVD `voxera_api26`(Pixel, API 26, google_apis arm64)
+
+| Scenario | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| debug 설치·홈 | 정상 표시 | 정상 | Pass |
+| 실통화 영상 입장 (5cc358a 이전) | 연결 | **크래시**: 에뮬레이터가 마이크를 열지 못하자 WebRtcAudioRecord가 AssertionError를 던져 프로세스 종료 | Fail → 수정 |
+| 실통화 영상 입장 (527331f) | 크래시 없이 마이크 없이 입장, 장치 안내 | 원격 영상·내 카메라 정상, CAMERA 트랙 게시, "마이크나 카메라를 쓸 수 없습니다" 배너 | Pass |
+| 통화 유지 서비스 | 타입 없이 foreground 시작 | isForeground=true | Pass |
+| release(R8) 데모 그룹·Call Mode 수락 | 크래시 없음 | 정상 | Pass |
+
+API 30·31·33·34·35 기기는 아직 확인하지 않았다. API 26에서 유리 표면 그림자가 안쪽에 한 겹 더 보이는 시각 차이가 있다.
+
 ## 아직 확인하지 않은 것
 
 실기기 2대 음성 송수신(소리가 실제로 들리는지), LiveKit Cloud(wss)와 개발 토큰 서버(Sandbox) 방식, release 빌드의 실통화(wss 필요),
