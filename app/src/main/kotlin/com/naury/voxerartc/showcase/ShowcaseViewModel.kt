@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.RtcCredentialsProvider
+import com.naury.voxerartc.android.VoxeraForegroundCall
 import com.naury.voxerartc.core.MediaPreferences
 import com.naury.voxerartc.core.Voxera
 import com.naury.voxerartc.core.VoxeraSession
@@ -35,7 +36,13 @@ import kotlinx.coroutines.launch
 class ShowcaseViewModel(application: Application) : AndroidViewModel(application) {
 
     /** [coordinator]가 있으면 Call Mode(초대 신호 + 룸 미디어)이고, 입장은 coordinator가 정한다. */
-    data class ActiveCall(val session: VoxeraSession, val roomId: String, val mode: CallMode, val coordinator: CallCoordinator? = null)
+    data class ActiveCall(
+        val session: VoxeraSession,
+        val roomId: String,
+        val mode: CallMode,
+        val coordinator: CallCoordinator? = null,
+        val keepAlive: AutoCloseable? = null,
+    )
 
     private val _active = MutableStateFlow<ActiveCall?>(null)
     val active: StateFlow<ActiveCall?> = _active.asStateFlow()
@@ -96,7 +103,8 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
                 serverUrlPolicy = form.serverUrlPolicy,
             ),
         )
-        start(ActiveCall(session, roomId, choice.mode))
+        val keepAlive = VoxeraForegroundCall.keepWhileConnected(getApplication(), session, title = "Voxera · $roomId")
+        start(ActiveCall(session, roomId, choice.mode, keepAlive = keepAlive))
     }
 
     /** 같은 세션으로 다시 입장한다. 끝난 세션은 새 세대로 연결된다. */
@@ -116,6 +124,7 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
     private fun replace(call: ActiveCall?) {
         _active.value?.let { previous ->
             previous.coordinator?.close()
+            previous.keepAlive?.close()
             previous.session.close()
         }
         _active.value = call

@@ -1,10 +1,14 @@
 package com.naury.voxerartc.showcase
 
+import android.Manifest
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -50,6 +54,9 @@ class MainActivity : ComponentActivity() {
             val active by viewModel.active.collectAsStateWithLifecycle()
             val form by viewModel.form.collectAsStateWithLifecycle()
 
+            // 진행 중 통화 알림용(Android 13+). 실제 통화에 들어갈 때 한 번 묻는다.
+            val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
             val call = active
             when {
                 call != null -> {
@@ -75,6 +82,7 @@ class MainActivity : ComponentActivity() {
                             showPrejoin = false
                             showSetup = false
                             viewModel.startLive(choice)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
                         },
                         onBack = { showPrejoin = false },
                         theme = theme,

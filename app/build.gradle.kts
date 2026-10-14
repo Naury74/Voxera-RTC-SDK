@@ -39,6 +39,8 @@ dependencies {
     implementation(project(":voxera-testkit"))
     // 실제 통화(BYO LiveKit)와 영상 렌더링. 사용자가 입력한 서버와 토큰으로만 연결한다.
     implementation(project(":voxera-livekit-compose"))
+    // 실제 통화 중 앱이 백그라운드로 가도 마이크·카메라를 유지한다.
+    implementation(project(":voxera-android"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
