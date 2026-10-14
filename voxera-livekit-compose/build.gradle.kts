@@ -31,4 +31,5 @@ dependencies {
     api(project(":voxera-ui-compose"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.activity.compose)
 }

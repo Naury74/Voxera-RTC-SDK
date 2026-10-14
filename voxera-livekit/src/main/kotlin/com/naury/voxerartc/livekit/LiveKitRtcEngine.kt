@@ -28,6 +28,8 @@ import io.livekit.android.room.track.CameraPosition
 import io.livekit.android.room.track.LocalVideoTrack
 import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.VideoTrack
+import io.livekit.android.room.track.screencapture.ScreenCaptureParams
+import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.VideoTrackHandle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -195,8 +197,7 @@ internal class LiveKitRtcEngine(
             // 다른 앱이 카메라를 쓰는 중이거나 장치를 열지 못함. 통화는 유지한다.
             false
         }
-        _events.emit(RtcEngineEvent.ParticipantUpserted(room.localParticipant.snapshot()))
-        _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia()))
+        emitLocalState()
         return if (applied) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.MediaDeviceUnavailable(device))
     }
 
@@ -208,6 +209,25 @@ internal class LiveKitRtcEngine(
         track.switchCamera(position = next)
         _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia()))
         return MediaActionResult.Applied
+    }
+
+    override suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult {
+        val data = (consent as? MediaProjectionConsent)?.resultData ?: return MediaActionResult.Unsupported
+        val params = ScreenCaptureParams(
+            mediaProjectionPermissionResultData = data,
+            // 사용자가 시스템 알림에서 멈추거나 화면이 잠겨 공유가 끝나면 상태를 되돌린다.
+            onStop = { scope.launch { emitLocalState() } },
+        )
+        return toggle(MediaDevice.SCREEN) { room.localParticipant.setScreenShareEnabled(true, params) }
+    }
+
+    override suspend fun stopScreenShare(): MediaActionResult =
+        toggle(MediaDevice.SCREEN) { room.localParticipant.setScreenShareEnabled(false) }
+
+    private suspend fun emitLocalState() {
+        if (released.get()) return
+        _events.emit(RtcEngineEvent.ParticipantUpserted(room.localParticipant.snapshot()))
+        _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia()))
     }
 
     override suspend fun selectAudioRoute(routeId: String): MediaActionResult {
@@ -226,6 +246,7 @@ internal class LiveKitRtcEngine(
         return LocalMediaState(
             microphone = MediaToggle(microphoneOn, microphoneOn),
             camera = MediaToggle(cameraOn, cameraOn),
+            screenShare = local.isPublishing(Track.Source.SCREEN_SHARE).let { MediaToggle(it, it) },
             cameraFacing = when (camera?.options?.position) {
                 CameraPosition.BACK -> CameraFacing.BACK
                 else -> CameraFacing.FRONT

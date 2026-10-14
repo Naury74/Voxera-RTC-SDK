@@ -3,6 +3,7 @@ package com.naury.voxerartc.livekit
 import android.content.Context
 import android.view.View
 import androidx.annotation.MainThread
+import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import io.livekit.android.renderer.TextureViewRenderer
 import livekit.org.webrtc.RendererCommon
@@ -39,7 +40,9 @@ public class LiveKitVideoTracks internal constructor() {
             val (room, track) = found
             val renderer = TextureViewRenderer(context)
             room.initVideoRenderer(renderer)
-            renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+            // 화면 공유는 글자가 잘리지 않게 전체를 보여 주고, 카메라는 타일을 채운다.
+            val scaling = if (handle.source == VideoSource.SCREEN_SHARE) RendererCommon.ScalingType.SCALE_ASPECT_FIT else RendererCommon.ScalingType.SCALE_ASPECT_FILL
+            renderer.setScalingType(scaling)
             renderer.setMirror(mirror)
             track.addRenderer(renderer)
             return LiveKitVideoView(renderer) {

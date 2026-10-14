@@ -1,5 +1,13 @@
 package com.naury.voxerartc.livekit.compose
 
+import android.app.Activity
+import android.media.projection.MediaProjectionManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import com.naury.voxerartc.core.VoxeraSession
+import com.naury.voxerartc.livekit.MediaProjectionConsent
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
@@ -38,4 +46,28 @@ public fun LiveKitCameraPreviewContent(modifier: Modifier = Modifier, fallback: 
     val video = remember { LiveKitCameraPreview.create(context) }
     DisposableEffect(Unit) { onDispose { video?.close() } }
     if (video != null) AndroidView(factory = { video.view }, modifier = modifier) else fallback()
+}
+
+/**
+ * 시스템 화면 공유 승인 대화상자를 띄우고, 허락하면 [session]에서 공유를 시작하는 함수를 돌려준다.
+ * 사용자가 거절하면 아무것도 하지 않으며 카메라 영상은 그대로다. `VoxeraRoomScreen(onShareScreen = ...)`에 넘긴다.
+ *
+ * Android 14+는 공유할 때마다 새로 승인을 받아야 하므로 승인 결과를 저장하지 않는다.
+ */
+@Composable
+public fun rememberScreenShareLauncher(session: VoxeraSession): () -> Unit {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val data = result.data
+        if (result.resultCode == Activity.RESULT_OK && data != null) {
+            scope.launch { session.startScreenShare(MediaProjectionConsent(data)) }
+        }
+    }
+    return remember(launcher) {
+        {
+            val manager = context.getSystemService(MediaProjectionManager::class.java)
+            launcher.launch(manager.createScreenCaptureIntent())
+        }
+    }
 }
