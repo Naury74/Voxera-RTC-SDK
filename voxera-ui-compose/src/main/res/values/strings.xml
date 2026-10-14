@@ -111,4 +111,16 @@
     <string name="voxera_call_end_expired">No answer.</string>
     <string name="voxera_call_end_elsewhere">Answered on another device.</string>
     <string name="voxera_call_end_failed">The call couldn\'t be connected.</string>
+
+    <string name="voxera_prejoin_title">Before you join</string>
+    <string name="voxera_prejoin_subtitle">Check your camera and microphone</string>
+    <string name="voxera_prejoin_join">Join room</string>
+    <string name="voxera_prejoin_mode_voice">Voice</string>
+    <string name="voxera_prejoin_mode_video">Video</string>
+    <string name="voxera_prejoin_camera_unavailable">Camera unavailable</string>
+    <string name="voxera_prejoin_mic_denied">You\'ll join with your microphone off.</string>
+    <string name="voxera_prejoin_camera_denied">You\'ll join with your camera off.</string>
+    <string name="voxera_prejoin_mic_blocked">Microphone access is off. Allow it in Settings to talk.</string>
+    <string name="voxera_prejoin_camera_blocked">Camera access is off. Allow it in Settings to share video.</string>
+    <string name="voxera_prejoin_open_settings">Open settings</string>
 </resources>

@@ -108,4 +108,16 @@
     <string name="voxera_call_end_expired">상대방이 받지 않았습니다.</string>
     <string name="voxera_call_end_elsewhere">다른 기기에서 받았습니다.</string>
     <string name="voxera_call_end_failed">통화를 연결하지 못했습니다.</string>
+
+    <string name="voxera_prejoin_title">입장 전 확인</string>
+    <string name="voxera_prejoin_subtitle">카메라와 마이크를 확인하세요</string>
+    <string name="voxera_prejoin_join">입장하기</string>
+    <string name="voxera_prejoin_mode_voice">음성</string>
+    <string name="voxera_prejoin_mode_video">영상</string>
+    <string name="voxera_prejoin_camera_unavailable">카메라를 열 수 없습니다</string>
+    <string name="voxera_prejoin_mic_denied">마이크를 끈 채로 입장합니다.</string>
+    <string name="voxera_prejoin_camera_denied">카메라를 끈 채로 입장합니다.</string>
+    <string name="voxera_prejoin_mic_blocked">마이크 권한이 꺼져 있습니다. 말하려면 설정에서 허용하세요.</string>
+    <string name="voxera_prejoin_camera_blocked">카메라 권한이 꺼져 있습니다. 영상을 보내려면 설정에서 허용하세요.</string>
+    <string name="voxera_prejoin_open_settings">설정 열기</string>
 </resources>
