@@ -64,4 +64,6 @@
     <string name="scenario_call_outgoing_body">벨이 울리다 상대가 받음</string>
     <string name="report_saved">앱 저장소에 리포트를 저장했습니다: %1$s</string>
     <string name="report_failed">리포트를 저장하지 못했습니다.</string>
+    <string name="scenario_screen_share">화면 공유</string>
+    <string name="scenario_screen_share_body">공유 화면 크게 보기, 내 공유 안내</string>
 </resources>

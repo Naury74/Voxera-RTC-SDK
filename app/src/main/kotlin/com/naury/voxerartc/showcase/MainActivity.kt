@@ -16,6 +16,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,6 +25,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
 import com.naury.voxerartc.livekit.compose.LiveKitCameraPreviewContent
+import com.naury.voxerartc.livekit.compose.rememberScreenShareLauncher
+import com.naury.voxerartc.testkit.DemoScreenShareConsent
+import kotlinx.coroutines.launch
 import com.naury.voxerartc.ui.call.VoxeraCallScreen
 import com.naury.voxerartc.ui.prejoin.VoxeraPrejoinScreen
 import com.naury.voxerartc.ui.room.VoxeraRoomScreen
@@ -68,11 +72,15 @@ class MainActivity : ComponentActivity() {
                         if (coordinator != null) {
                             VoxeraCallScreen(coordinator = coordinator, session = call.session, onExit = viewModel::exit, theme = theme)
                         } else {
+                            val live = call.session.engineKind == RtcEngineKind.LIVE
+                            val liveShare = if (live) rememberScreenShareLauncher(call.session) else null
+                            val scope = rememberCoroutineScope()
                             VoxeraRoomScreen(
                                 session = call.session,
                                 onExit = viewModel::exit,
                                 theme = theme,
                                 onRejoin = viewModel::rejoin,
+                                onShareScreen = liveShare ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) }; Unit },
                                 onSaveReport = {
                                     val file = viewModel.saveReport()
                                     val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)

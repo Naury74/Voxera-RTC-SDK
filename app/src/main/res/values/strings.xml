@@ -64,4 +64,6 @@
     <string name="scenario_call_outgoing_body">Ringing, then the other side answers</string>
     <string name="report_saved">Report saved in app storage: %1$s</string>
     <string name="report_failed">Couldn\'t save the report.</string>
+    <string name="scenario_screen_share">Screen share</string>
+    <string name="scenario_screen_share_body">Shared screen on stage, your own share banner</string>
 </resources>

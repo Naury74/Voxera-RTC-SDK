@@ -52,6 +52,7 @@ private val scenarios = listOf(
     ScenarioItem(DemoScenario.GROUP_FOUR, R.string.scenario_group_four, R.string.scenario_group_four_body),
     ScenarioItem(DemoScenario.GROUP_NINE, R.string.scenario_group_nine, R.string.scenario_group_nine_body),
     ScenarioItem(DemoScenario.UNSTABLE_NETWORK, R.string.scenario_unstable, R.string.scenario_unstable_body),
+    ScenarioItem(DemoScenario.SCREEN_SHARE, R.string.scenario_screen_share, R.string.scenario_screen_share_body),
 )
 
 /** 쇼케이스 홈(G-01). 오프라인 데모와 BYO LiveKit 연결을 서로 다른 카드로 나눈다. */
