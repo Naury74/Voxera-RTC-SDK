@@ -30,6 +30,8 @@ import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.VideoTrack
 import io.livekit.android.room.track.screencapture.ScreenCaptureParams
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.EffectsAvailability
+import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoTrackHandle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -185,7 +187,37 @@ internal class LiveKitRtcEngine(
             return MediaActionResult.Failed(VoxeraError.PermissionDenied(MediaPermission.CAMERA))
         }
         if (enabled && cameraCount() == 0) return MediaActionResult.Unsupported
-        return toggle(MediaDevice.CAMERA) { room.localParticipant.setCameraEnabled(enabled) }
+        val local = room.localParticipant
+        // 처음 켤 때만 색 효과 처리기를 단 카메라 트랙을 직접 만들어 게시한다. 이후 켜고 끄기는 LiveKit 기본 경로(음소거)를 쓴다.
+        if (enabled && local.getTrackPublication(Track.Source.CAMERA) == null) {
+            return toggle(MediaDevice.CAMERA) {
+                val track = local.createVideoTrack(name = "camera", videoProcessor = effectProcessor)
+                track.startCapture()
+                local.publishVideoTrack(track).also { published ->
+                    if (!published) {
+                        track.stopCapture()
+                        track.dispose()
+                    }
+                }
+            }
+        }
+        return toggle(MediaDevice.CAMERA) { local.setCameraEnabled(enabled) }
+    }
+
+    /** 성능 예산을 넘겨 효과가 꺼지면 true. 다시 켜려면 사용자가 효과를 새로 고른다. */
+    @Volatile
+    private var effectsThrottled = false
+
+    private val effectProcessor = ColorEffectProcessor(onThrottled = {
+        effectsThrottled = true
+        scope.launch { emitLocalState() }
+    })
+
+    override suspend fun setVideoEffect(effect: VideoEffect): MediaActionResult {
+        effectsThrottled = false
+        effectProcessor.effect = effect
+        emitLocalState()
+        return MediaActionResult.Applied
     }
 
     private suspend fun toggle(device: MediaDevice, action: suspend () -> Boolean): MediaActionResult {
@@ -254,6 +286,8 @@ internal class LiveKitRtcEngine(
             canSwitchCamera = cameraCount() > 1,
             audioRoutes = handler?.availableAudioDevices.orEmpty().map { it.toRoute() },
             selectedAudioRouteId = handler?.selectedAudioDevice?.routeId(),
+            videoEffect = effectProcessor.effect,
+            effectsAvailability = if (effectsThrottled) EffectsAvailability.DISABLED_FOR_PERFORMANCE else EffectsAvailability.AVAILABLE,
         )
     }
 
