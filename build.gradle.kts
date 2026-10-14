@@ -9,6 +9,7 @@ plugins {
 val sdkModules = mapOf(
     "voxera-rtc-api" to "엔진 중립 RTC 모델·오류·자격 증명 계약 (Kotlin JVM)",
     "voxera-core" to "Voxera 진입점, 세션 상태 머신과 명령 처리 (Kotlin JVM)",
+    "voxera-invitation" to "Call Mode 초대 계약(InvitationGateway)과 CallCoordinator (Kotlin JVM)",
     "voxera-livekit" to "LiveKit Android SDK 기반 실제 RtcEngine",
     "voxera-livekit-compose" to "LiveKit 영상 트랙을 VoxeraRoomScreen에 그리는 Compose 어댑터",
     "voxera-testkit" to "결정적 FakeRtcEngine과 오프라인 데모 시나리오",
