@@ -81,13 +81,14 @@ private fun OneOnOneStage(remote: Participant, local: Participant, renderer: Vox
                 bottom = insets.calculateBottomPadding() + BottomReserve,
             ),
         )
+        // 내 영상은 오른쪽 아래(조작 막대 위)에 둔다. 영상 View는 위에 그려지므로 상단 상태 배너와 겹치지 않게 한다.
         ParticipantTile(
             local,
             renderer,
             Modifier
-                .align(Alignment.TopEnd)
+                .align(Alignment.BottomEnd)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(top = TopReserve, end = VoxeraSpacing.md)
+                .padding(bottom = BottomReserve + VoxeraSpacing.xs, end = VoxeraSpacing.md)
                 .width(112.dp)
                 .aspectRatio(3f / 4f),
         )

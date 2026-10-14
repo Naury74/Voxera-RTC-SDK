@@ -116,4 +116,15 @@ class VoxeraRoomScreenTest {
         compose.onNodeWithText("Try again").assertIsDisplayed()
         session.close()
     }
+
+    @Test
+    fun `마이크를 켤 수 없으면 이유를 배너로 알린다`() {
+        val session = connectedSession(CallMode.VOICE)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        factory.last.failNextMediaAction(VoxeraError.PermissionDenied(com.naury.voxerartc.api.MediaPermission.MICROPHONE))
+        compose.onNodeWithContentDescription("Mic").performClick()
+        compose.waitUntil(5_000) { session.localMedia.value.microphone.lastError != null }
+        compose.onNodeWithText("Allow microphone access in Settings.").assertIsDisplayed()
+        session.close()
+    }
 }

@@ -275,6 +275,15 @@ private fun CallContent(
             verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
         ) {
             TopBar(participants.size, elapsed, simulated, onPeople = { sheet = RoomSheet.PEOPLE }, onQuality = { sheet = RoomSheet.QUALITY })
+            // 마이크·카메라 조작이 실패하면(권한 없음, 장치 점유) 이유와 할 일을 알린다. 다음 조작이 성공하면 사라진다.
+            val mediaError = media.microphone.lastError ?: media.camera.lastError
+            AnimatedVisibility(mediaError != null, enter = fadeIn(), exit = fadeOut()) {
+                if (mediaError != null) {
+                    GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+                        Text(stringResource(mediaError.messageRes()), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                    }
+                }
+            }
             AnimatedVisibility(reconnecting != null, enter = fadeIn(), exit = fadeOut()) {
                 GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Assertive }) {
                     Column {
