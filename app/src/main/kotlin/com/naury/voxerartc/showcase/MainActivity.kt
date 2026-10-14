@@ -102,7 +102,13 @@ class MainActivity : ComponentActivity() {
                                 onRejoin = viewModel::rejoin,
                                 pictureInPicture = inPip,
                                 onEnterPictureInPicture = enterPip,
-                                onShareScreen = liveShare ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) }; Unit },
+                                onShareScreen = liveShare?.let { share ->
+                                    {
+                                        // 승인 화면으로 넘어갈 때 Android 11 이하가 통화를 PiP로 줄이지 않게 한다.
+                                        pip.ignoreNextUserLeave()
+                                        share()
+                                    }
+                                } ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) }; Unit },
                                 onSaveReport = {
                                     val file = viewModel.saveReport()
                                     val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)

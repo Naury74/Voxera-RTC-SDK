@@ -65,6 +65,7 @@ class SessionSoakTest {
             assertThat(join.await()).isNotInstanceOf(JoinResult.Connected::class.java)
             assertThat(session.state.value).isEqualTo(SessionState.Ended(EndReason.CANCELLED, null))
         }
+        assertThat(factory.created).isNotEmpty()
         assertThat(factory.created.filter { it.releaseCount != 1 }).isEmpty()
         session.close()
     }

@@ -193,21 +193,24 @@ private fun FloatingTile(participant: Participant, renderer: VoxeraVideoRenderer
                 .offset { IntOffset(position.value.x.roundToInt(), position.value.y.roundToInt()) }
                 .size(width = tileWidth, height = tileHeight)
                 .pointerInput(maxX, maxY) {
+                    // 손을 떼거나 끌기가 취소되면 가장 가까운 모서리로 붙인다.
+                    val settle: () -> Unit = {
+                        val (x, y) = position.value
+                        val right = x > maxX / 2
+                        val lower = y > maxY / 2
+                        corner = when {
+                            !right && !lower -> Corner.TOP_START
+                            right && !lower -> Corner.TOP_END
+                            !right -> Corner.BOTTOM_START
+                            else -> Corner.BOTTOM_END
+                        }.ordinal
+                        scope.launch {
+                            position.animateTo(target(corner), spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
+                        }
+                    }
                     detectDragGestures(
-                        onDragEnd = {
-                            val (x, y) = position.value
-                            val right = x > maxX / 2
-                            val lower = y > maxY / 2
-                            corner = when {
-                                !right && !lower -> Corner.TOP_START
-                                right && !lower -> Corner.TOP_END
-                                !right -> Corner.BOTTOM_START
-                                else -> Corner.BOTTOM_END
-                            }.ordinal
-                            scope.launch {
-                                position.animateTo(target(corner), spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
-                            }
-                        },
+                        onDragEnd = settle,
+                        onDragCancel = settle,
                     ) { change, drag ->
                         change.consume()
                         scope.launch {

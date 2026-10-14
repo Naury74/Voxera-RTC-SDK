@@ -1,7 +1,12 @@
 package com.naury.voxerartc.ui.theme
 
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
@@ -15,4 +20,20 @@ public fun rememberReducedMotion(): Boolean {
     return remember(context) {
         runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) }.getOrDefault(1f) == 0f
     }
+}
+
+/**
+ * TalkBack 같은 터치 탐색이 켜져 있으면 `true`. 켜고 끄면 바로 반영된다.
+ */
+@Composable
+public fun rememberTouchExploration(): Boolean {
+    val context = LocalContext.current
+    val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
+    var enabled by remember(manager) { mutableStateOf(manager?.isTouchExplorationEnabled == true) }
+    DisposableEffect(manager) {
+        val listener = AccessibilityManager.TouchExplorationStateChangeListener { enabled = it }
+        manager?.addTouchExplorationStateChangeListener(listener)
+        onDispose { manager?.removeTouchExplorationStateChangeListener(listener) }
+    }
+    return enabled
 }

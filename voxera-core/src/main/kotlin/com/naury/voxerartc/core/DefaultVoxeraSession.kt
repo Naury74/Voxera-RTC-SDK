@@ -432,12 +432,19 @@ internal class DefaultVoxeraSession(
     }
 
     override suspend fun sendReaction(reaction: Reaction): MediaActionResult {
-        val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val (engine, generation) = synchronized(lock) {
+            val state = machine.state
+            val live = state is SessionState.Connected || state is SessionState.Reconnecting
+            (if (live) connection?.engine else null) to machine.generation
+        }
+        if (engine == null) return MediaActionResult.Failed(VoxeraError.NotConnected)
         val localId = _participants.value.firstOrNull { it.isLocal }?.id ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
-        // 내가 너무 빨리 누르면 보내지 않는다. 받는 쪽도 같은 기준으로 버리므로 보내 봐야 보이지 않는다.
-        if (!admitReaction(localId, clock.nowMs())) return MediaActionResult.Applied
+        // 너무 빨리 누르면 보내지 않는다. 받는 쪽도 같은 기준으로 버리므로 보내 봐야 보이지 않는다.
+        if (!admitReaction(localId, clock.nowMs())) return MediaActionResult.Unsupported
         val result = engine.sendReaction(reaction)
-        if (result is MediaActionResult.Applied) _reactions.tryEmit(ReactionEvent(localId, reaction, clock.nowMs()))
+        // 보내는 사이 통화가 끝나거나 새 통화가 시작되었으면 내 반응을 그 통화에 띄우지 않는다.
+        val sameCall = synchronized(lock) { machine.generation == generation && connection?.generation == generation }
+        if (result is MediaActionResult.Applied && sameCall) _reactions.tryEmit(ReactionEvent(localId, reaction, clock.nowMs()))
         return result
     }
 

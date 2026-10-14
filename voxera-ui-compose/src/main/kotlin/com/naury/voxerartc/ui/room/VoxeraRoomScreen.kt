@@ -87,6 +87,7 @@ import com.naury.voxerartc.ui.glass.GlassSurface
 import com.naury.voxerartc.ui.glass.voxeraBackdrop
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
+import com.naury.voxerartc.ui.theme.rememberTouchExploration
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.video.LocalSimulatedEffect
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
@@ -205,6 +206,8 @@ private fun CallContent(
     }
     var sheet by rememberSaveable { mutableStateOf(RoomSheet.NONE) }
     var overflowControls by remember { mutableStateOf(emptyList<DockControl>()) }
+    // 더보기 목록은 버튼 동작을 담아 저장할 수 없다. 화면이 다시 만들어져 비었으면 시트를 닫는다.
+    LaunchedEffect(sheet, overflowControls) { if (sheet == RoomSheet.MORE && overflowControls.isEmpty()) sheet = RoomSheet.NONE }
     var pinnedId by rememberSaveable { mutableStateOf<String?>(null) }
     val elapsed = rememberElapsed(session.clock, connectedAtMs)
     val window = LocalWindowInfo.current.containerSize
@@ -217,7 +220,9 @@ private fun CallContent(
     var chromeVisible by rememberSaveable { mutableStateOf(true) }
     var lastTouch by remember { mutableLongStateOf(0L) }
     val accessibility = LocalAccessibilityManager.current
-    val canHide = autoHideControls && mode == CallMode.VIDEO && sheet == RoomSheet.NONE && reconnecting == null &&
+    // TalkBack처럼 화면을 더듬어 쓰는 동안에는 숨기지 않는다. 그 방식으로는 손가락 터치가 오지 않아 다시 꺼낼 수 없다.
+    val touchExploration = rememberTouchExploration()
+    val canHide = autoHideControls && !touchExploration && mode == CallMode.VIDEO && sheet == RoomSheet.NONE && reconnecting == null &&
         mediaError == null && !media.screenShare.actual && !media.audioInterrupted && participants.any { !it.isLocal }
     LaunchedEffect(canHide) { if (!canHide) chromeVisible = true }
     LaunchedEffect(canHide, chromeVisible, lastTouch) {
@@ -502,6 +507,7 @@ private fun RoomSheetHost(visible: Boolean, onDismiss: () -> Unit, content: @Com
                             onDragEnd = {
                                 if (drag.value > 120.dp.toPx()) onDismiss() else scope.launch { drag.animateTo(0f) }
                             },
+                            onDragCancel = { scope.launch { drag.animateTo(0f) } },
                         ) { change, amount ->
                             change.consume()
                             scope.launch { drag.snapTo((drag.value + amount).coerceAtLeast(0f)) }

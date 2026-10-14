@@ -76,7 +76,7 @@ public interface VoxeraSession : AutoCloseable {
      */
     public val reactions: Flow<ReactionEvent> get() = emptyFlow()
 
-    /** 반응을 보낸다. 연결 중에만 쓸 수 있고, 엔진이 지원하지 않으면 Unsupported. */
+    /** 반응을 보낸다. 연결 중에만 쓸 수 있다. 엔진이 지원하지 않거나 1초에 [REACTION_BURST]개를 넘겨 보내지 않았으면 Unsupported. */
     public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
 
     /** [LocalMediaState.audioRoutes]의 id 중 하나를 고른다. */

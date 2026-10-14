@@ -61,15 +61,29 @@ public class VoxeraPictureInPicture private constructor(
 
     private val modeListener = Consumer<PictureInPictureModeChangedInfo> { info -> _isInPictureInPicture.value = info.isInPictureInPictureMode }
 
+    @Volatile
+    private var ignoreNextLeave = false
+
     private val leaveHintListener = Runnable {
-        // Android 11 이하는 auto-enter가 없으므로 홈으로 나갈 때 직접 들어간다.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && spec.active) enter()
+        // Android 11 이하는 auto-enter가 없으므로 홈으로 나갈 때 직접 들어간다. 앱이 스스로 화면을 띄운 경우는 건너뛴다.
+        val ignored = ignoreNextLeave
+        ignoreNextLeave = false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && spec.active && !ignored) enter()
+    }
+
+    /**
+     * 앱이 곧 다른 화면(화면 공유 승인, 권한 요청 등)을 띄울 때 부른다. Android 11 이하는 그 화면 전환도 "나가기"로 알려 오므로,
+     * 부르지 않으면 통화가 PiP로 줄어든다. 다음 한 번만 효과가 있다.
+     */
+    public fun ignoreNextUserLeave() {
+        ignoreNextLeave = true
     }
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                actionPrefix + ACTION_MIC -> scope.launch { session.setMicrophoneEnabled(!session.localMedia.value.microphone.desired) }
+                // 버튼 모양이 실제 상태를 따르므로 누르면 실제 상태의 반대로 바꾼다.
+                actionPrefix + ACTION_MIC -> scope.launch { session.setMicrophoneEnabled(!session.localMedia.value.microphone.actual) }
                 actionPrefix + ACTION_HANG_UP -> onHangUp()
             }
         }

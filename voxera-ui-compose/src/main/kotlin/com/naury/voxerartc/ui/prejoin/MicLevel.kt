@@ -6,7 +6,11 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import kotlin.math.log10
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
@@ -30,12 +34,20 @@ internal fun levelOf(samples: ShortArray, count: Int): Float {
 }
 
 /**
- * 입장 전 마이크 레벨(0~1). [enabled]이고 녹음 권한이 있을 때만 마이크를 열고, 화면에서 사라지거나 꺼지면 바로 닫는다.
+ * 입장 전 마이크 레벨(0~1). [enabled]이고 화면이 앞에 있을 때만 마이크를 열고, 화면에서 사라지거나 꺼지거나 홈으로 나가면 바로 닫는다.
  * 소리는 레벨 계산에만 쓰며 저장하거나 보내지 않는다. 마이크를 열 수 없으면 `null`.
  */
 @SuppressLint("MissingPermission")
 @Composable
-internal fun rememberMicLevel(enabled: Boolean): State<Float?> = produceState<Float?>(null, enabled) {
+internal fun rememberMicLevel(enabled: Boolean): State<Float?> {
+    // 화면이 앞에 있을 때만 마이크를 연다. 홈으로 나가면 바로 닫는다.
+    val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    return rememberMicLevelWhile(enabled && lifecycle.isAtLeast(Lifecycle.State.STARTED))
+}
+
+@SuppressLint("MissingPermission")
+@Composable
+private fun rememberMicLevelWhile(enabled: Boolean): State<Float?> = produceState<Float?>(null, enabled) {
     if (!enabled) {
         value = null
         return@produceState
