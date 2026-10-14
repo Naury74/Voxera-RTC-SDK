@@ -157,6 +157,7 @@ internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
             false
         }
         _events.emit(RtcEngineEvent.ParticipantUpserted(room.localParticipant.snapshot()))
+        _events.emit(RtcEngineEvent.LocalMediaChanged(localMedia()))
         return if (applied) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.MediaDeviceUnavailable(device))
     }
 
@@ -181,8 +182,8 @@ internal class LiveKitRtcEngine(private val context: Context) : RtcEngine {
         val local = room.localParticipant
         val camera = local.getTrackPublication(Track.Source.CAMERA)?.track as? LocalVideoTrack
         val handler = room.audioSwitchHandler
-        val microphoneOn = local.isMicrophoneEnabled
-        val cameraOn = local.isCameraEnabled
+        val microphoneOn = local.isPublishing(Track.Source.MICROPHONE)
+        val cameraOn = local.isPublishing(Track.Source.CAMERA)
         return LocalMediaState(
             microphone = MediaToggle(microphoneOn, microphoneOn),
             camera = MediaToggle(cameraOn, cameraOn),

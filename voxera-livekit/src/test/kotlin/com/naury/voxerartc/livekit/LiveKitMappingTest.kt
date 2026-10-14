@@ -36,6 +36,13 @@ class LiveKitMappingTest {
     }
 
     @Test
+    fun `평문 통신 차단은 안전하지 않은 주소 설정 오류`() {
+        val blocked = RoomException.ConnectException("x", java.net.UnknownServiceException("CLEARTEXT communication to 10.0.2.2 not permitted by network security policy"))
+        assertThat(classifyConnectFailure(blocked))
+            .isEqualTo(VoxeraError.InvalidConfiguration(com.naury.voxerartc.api.ConfigurationProblem.SERVER_URL_INSECURE))
+    }
+
+    @Test
     fun `WebSocket 업그레이드가 안 되면 호환되지 않는 서버`() {
         assertThat(classifyConnectFailure(RoomException.ConnectException("Expected HTTP 101 response but was '200 OK'", ProtocolException())))
             .isEqualTo(VoxeraError.ServerIncompatible)
@@ -43,8 +50,8 @@ class LiveKitMappingTest {
 
     @Test
     fun `알 수 없는 실패는 문구 없이 내부 코드만 남긴다`() {
-        val error = classifyConnectFailure(IllegalStateException("weird secret-looking text"))
-        assertThat(error).isEqualTo(VoxeraError.InternalFailure("LIVEKIT_CONNECT"))
+        val error = classifyConnectFailure(IllegalStateException("weird secret-looking text", IOException("eyJtoken")))
+        assertThat(error).isEqualTo(VoxeraError.InternalFailure("LIVEKIT_CONNECT:IllegalStateException>IOException"))
     }
 
     @Test

@@ -2,11 +2,13 @@ package com.naury.voxerartc.livekit
 
 import com.naury.voxerartc.api.AudioRoute
 import com.naury.voxerartc.api.AudioRouteType
+import com.naury.voxerartc.api.ConfigurationProblem
 import com.naury.voxerartc.api.ConnectionQuality
 import com.naury.voxerartc.api.VoxeraError
 import com.twilio.audioswitch.AudioDevice
 import io.livekit.android.events.DisconnectReason
 import java.net.NoRouteToHostException
+import java.net.UnknownServiceException
 import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -24,11 +26,15 @@ internal fun classifyConnectFailure(error: Throwable): VoxeraError {
     val text = chain.mapNotNull { it.message?.lowercase() }.joinToString(" ")
     val authWords = listOf("expired", "unauthorized", "invalid token", "invalid authorization", "token is", "401", "403", "permission denied")
     return when {
+        // Android 네트워크 보안 정책이 평문(ws://) 연결을 막음. SDK는 정책을 우회하지 않고 설정 오류로 알린다.
+        chain.any { it is UnknownServiceException } || "cleartext" in text ->
+            VoxeraError.InvalidConfiguration(ConfigurationProblem.SERVER_URL_INSECURE)
         authWords.any { it in text } -> VoxeraError.AuthenticationExpired
         chain.any { it is UnknownHostException || it is SocketTimeoutException || it is NoRouteToHostException || it is SSLException || it is java.net.ConnectException } ->
             VoxeraError.ServerUnreachable
         chain.any { it is ProtocolException } || "expected http 101" in text || "404" in text -> VoxeraError.ServerIncompatible
-        else -> VoxeraError.InternalFailure("LIVEKIT_CONNECT")
+        // 메시지는 비밀이 섞일 수 있어 버리고, 예외 종류 이름만 진단 코드로 남긴다.
+        else -> VoxeraError.InternalFailure("LIVEKIT_CONNECT:" + chain.joinToString(">") { it.javaClass.simpleName })
     }
 }
 

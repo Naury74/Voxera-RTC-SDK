@@ -23,3 +23,10 @@ SDK는 권한 대화상자를 직접 띄우지 않습니다. 호스트가 사용
 - 마이크 거부: 마이크 없이 입장하고, 마이크를 켜면 `VoxeraError.PermissionDenied(MICROPHONE)`.
 - 카메라 거부: 카메라 없이(음성으로) 입장하고, 카메라를 켜면 `VoxeraError.PermissionDenied(CAMERA)`.
 - 카메라가 없는 기기: 카메라 켜기가 `MediaActionResult.Unsupported`.
+
+## 로컬 개발 서버(`ws://`)
+
+Android 9 이상은 평문 통신을 기본으로 막습니다. `ServerUrlPolicy(allowInsecureLocalhost = true)`로 `ws://10.0.2.2:7880` 같은
+로컬 개발 서버를 허용해도, 호스트 앱의 network security config가 그 주소의 cleartext를 허용하지 않으면 연결은
+`InvalidConfiguration(SERVER_URL_INSECURE)`로 실패합니다. SDK는 네트워크 보안 정책이나 TLS 검증을 우회하지 않습니다.
+쇼케이스는 debug 빌드(`app/src/debug`)에서만 로컬 주소의 cleartext를 허용합니다.
