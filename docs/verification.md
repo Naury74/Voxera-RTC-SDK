@@ -44,7 +44,25 @@
 | 카메라 게시 새 경로 (fc6a57a) | 처리기 단 카메라 트랙 게시, 끄기=muted, 켜기=해제 | 별도 AVD `voxera_verify`(API 36)에서 CAMERA 게시·muted true→false 확인 | Pass |
 | 흑백 효과 적용 | 내 미리보기·송신 영상이 흑백 | 미리보기가 흑백으로 바뀜 | Pass |
 | 효과 성능 폴백 | 예산(60프레임 평균 15ms) 초과 시 원본으로, 통화 유지 | 에뮬레이터(소프트웨어 GL)에서 수 초 안에 폴백·안내 문구, 통화 유지 | Pass |
-| 실제 폰의 효과 처리 시간 | 예산 안 | 측정 안 함 | NOT RUN |
+| 실제 폰의 효과 처리 시간 | 예산 안 | 아래 Fold7 표 참고 | Pass |
+
+## 실기기 Galaxy Z Fold7 (SM-F966N, API 36, 접은 상태) — 2026-10-15
+
+로컬 livekit-server(`--dev`)를 adb reverse로 Fold7에, 에뮬레이터 `voxera_verify`에는 10.0.2.2로 연결했다. 토큰은 로컬 endpoint가 발급했다.
+
+| Scenario | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| 실카메라·마이크 영상 통화 | 두 트랙 게시, 상대 영상 표시 | MICROPHONE·CAMERA 게시, RTT 8ms, 30fps | Pass |
+| 흑백 효과 처리 시간 (eb2367f) | 프레임당 15ms 안, 폴백 없음 | 5.0ms | Pass |
+| 선명 효과 처리 시간 | 같음 | 7.4~7.8ms | Pass |
+| 양방향 음성 | 서로의 발화가 SFU를 거쳐 감지됨 | 서버 speakersChanged에 두 참가자 모두, 에뮬레이터에서 Fold7 말하기 링 표시, VOICE_COMMUNICATION 재생 생성 | Pass |
+| 음성 모드 원격 영상 수신 (c480523 이전) | 영상 받지 않음 | 1.8Mbps·25fps로 상대 카메라 수신 | Fail → 수정 |
+| 음성 모드 원격 영상 수신 (c480523) | 오디오만 | 수신 97kbps, 수신 프레임 N/A | Pass |
+| 오디오 출력 전환 | 스피커↔휴대전화가 실제 경로에 반영 | `dumpsys audio` 통신 장치가 speaker→earpiece→speaker | Pass |
+| 백그라운드 마이크 | 홈으로 나가도 녹음 유지 | 20초 뒤 silenced:false, 통화 서비스 0xC0 | Pass |
+| 화면 공유(전체 화면) | 승인→공유→상대 수신→중지 | 경고 배너, 공유 서비스 0x20, 에뮬레이터에 "Fold7 · screen" 표시, 중지 후 서비스·타일 정리 | Pass |
+| 입장 전 화면 → 입장 | 권한 허용 상태에서 바로 입장 | 정상 | Pass |
+| 블루투스 헤드셋 전환 | - | 연결된 블루투스 기기 없음 | NOT RUN |
 
 ## API 26 (minSdk) — 2026-10-14, AVD `voxera_api26`(Pixel, API 26, google_apis arm64)
 
@@ -60,5 +78,5 @@ API 30·31·33·34·35 기기는 아직 확인하지 않았다. API 26에서 유
 
 ## 아직 확인하지 않은 것
 
-실기기 2대 음성 송수신(소리가 실제로 들리는지), LiveKit Cloud(wss)와 개발 토큰 서버(Sandbox) 방식, release 빌드의 실통화(wss 필요),
-블루투스·유선 이어폰 전환, 와이파이↔LTE 전환, API 26/30 기기, TalkBack, 장시간 통화, 실제 호스트 서버·푸시로 하는 Call Mode.
+사람 귀로 듣는 음성 품질(실기기 2대), LiveKit Cloud(wss)와 개발 토큰 서버(Sandbox) 방식, release 빌드의 실통화(wss 필요),
+블루투스·유선 이어폰 전환, 펼친 화면(Fold7 안쪽), 와이파이↔LTE 전환, API 26/30 기기, TalkBack, 장시간 통화, 실제 호스트 서버·푸시로 하는 Call Mode.
