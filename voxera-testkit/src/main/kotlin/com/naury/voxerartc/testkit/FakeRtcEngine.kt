@@ -57,6 +57,9 @@ public class FakeRtcEngine(
     /** `true`면 [connect]가 끝나지 않고 취소될 때까지 기다린다. */
     public var hangOnConnect: Boolean = false
 
+    /** `true`면 입장할 때 마이크를 열지 못한 것처럼 마이크 없이 연결된다. */
+    public var failMicrophoneOnConnect: Boolean = false
+
     private val pendingMediaFailures = ArrayDeque<VoxeraError>()
     private val _receivedCredentials = mutableListOf<RtcCredentials>()
     private val _connectRequests = mutableListOf<ConnectOptions>()
@@ -97,12 +100,13 @@ public class FakeRtcEngine(
         if (hangOnConnect) delay(Long.MAX_VALUE)
         delay(connectDelayMs)
         connectResults.removeFirstOrNull()?.let { return ConnectOutcome.Failed(it) }
+        val microphone = options.startWithMicrophone && !failMicrophoneOnConnect
         localState = localState.copy(
-            isMicrophoneEnabled = options.startWithMicrophone,
+            isMicrophoneEnabled = microphone,
             camera = if (options.startWithCamera) nextCameraHandle() else null,
         )
         media = media.copy(
-            microphone = MediaToggle(options.startWithMicrophone, options.startWithMicrophone),
+            microphone = MediaToggle(microphone, microphone),
             camera = MediaToggle(options.startWithCamera, options.startWithCamera),
         )
         _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))

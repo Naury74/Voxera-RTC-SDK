@@ -429,4 +429,18 @@ class DefaultVoxeraSessionTest {
         session.join("room", CallMode.VIDEO)
         assertThat(session.setVideoEffect(com.naury.voxerartc.api.VideoEffect(saturation = 0f))).isEqualTo(MediaActionResult.Unsupported)
     }
+
+    @Test
+    fun `켜려던 마이크가 입장 때 켜지지 않으면 장치 실패를 남긴다`() = runTest {
+        val factory = FakeRtcEngineFactory()
+        val session = sdk(factory).createSession(config())
+        session.join("room", CallMode.VOICE)
+        assertThat(session.localMedia.value.microphone.lastError).isNull()
+
+        val missing = FakeRtcEngineFactory { FakeRtcEngine().apply { failMicrophoneOnConnect = true } }
+        val other = sdk(missing).createSession(config())
+        other.join("room", CallMode.VOICE)
+        assertThat(other.localMedia.value.microphone.actual).isFalse()
+        assertThat(other.localMedia.value.microphone.lastError).isEqualTo(VoxeraError.MediaDeviceUnavailable(MediaDevice.MICROPHONE))
+    }
 }

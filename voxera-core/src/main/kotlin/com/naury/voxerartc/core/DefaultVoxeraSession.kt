@@ -13,6 +13,7 @@ import com.naury.voxerartc.api.JoinResult
 import com.naury.voxerartc.api.LeaveReason
 import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MediaActionResult
+import com.naury.voxerartc.api.MediaDevice
 import com.naury.voxerartc.api.MediaToggle
 import com.naury.voxerartc.api.MonotonicClock
 import com.naury.voxerartc.api.Participant
@@ -183,10 +184,21 @@ internal class DefaultVoxeraSession(
                 }
                 val local = outcome.local
                 upsertParticipant(local)
+                // 켜려던 장치가 켜지지 못했으면(장치 없음·점유) 실패를 남겨 UI가 이유를 알릴 수 있게 한다.
+                val micMissing = options.startWithMicrophone && !local.isMicrophoneEnabled
+                val cameraMissing = options.startWithCamera && local.camera == null
                 _localMedia.update {
                     it.copy(
-                        microphone = MediaToggle(local.isMicrophoneEnabled, local.isMicrophoneEnabled),
-                        camera = MediaToggle(local.camera != null, local.camera != null),
+                        microphone = MediaToggle(
+                            local.isMicrophoneEnabled,
+                            local.isMicrophoneEnabled,
+                            VoxeraError.MediaDeviceUnavailable(MediaDevice.MICROPHONE).takeIf { micMissing },
+                        ),
+                        camera = MediaToggle(
+                            local.camera != null,
+                            local.camera != null,
+                            VoxeraError.MediaDeviceUnavailable(MediaDevice.CAMERA).takeIf { cameraMissing },
+                        ),
                     )
                 }
                 JoinResult.Connected(UUID.randomUUID().toString())
