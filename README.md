@@ -30,6 +30,8 @@
 | `voxera-core` | Kotlin JVM | `Voxera.create`, `VoxeraSession`, 세대 기반 상태 reducer |
 | `voxera-livekit` | Android | LiveKit Android 2.29.0 기반 `LiveKitRtcEngineFactory`, 토큰 공급자(`LiveKitTokenSources`), 영상 트랙 조회 |
 | `voxera-livekit-compose` | Compose | LiveKit 영상을 `VoxeraRoomScreen`에 그리는 렌더러 |
+| `voxera-invitation` | Kotlin JVM | Call Mode: `InvitationGateway` 계약, `CallCoordinator`, 푸시 payload 파서 |
+| `voxera-android` | Android | 통화 중 백그라운드 유지(`VoxeraForegroundCall`, foreground service·알림) |
 | `voxera-testkit` | Kotlin JVM | `FakeRtcEngine`(가상 시간), `VoxeraDemo`·`DemoScenario` 오프라인 데모 |
 | `voxera-ui-compose` | Compose | `VoxeraTheme`(Light/Dark Glass 토큰), `VoxeraRoomScreen`, 조작 막대·참가자 타일 |
 | `app` | Showcase | 오프라인 쇼케이스. 배포하지 않음 |
@@ -84,11 +86,15 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-006 | 자격 증명·URL 검사 | 완료 | JVM 단위 테스트 |
 | VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 대비 테스트 통과. API 26/30 실기기 확인 안 함 |
 | VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터+로컬 LiveKit 실통화 |
-| VOX-010 | BYO 설정(개발 토큰 서버·기존 토큰·endpoint) | 부분 | 기존 토큰 방식만 실서버 확인. 나머지 두 방식은 확인 안 함 |
+| VOX-010 | BYO 설정(개발 토큰 서버·기존 토큰·endpoint) | 부분 | 기존 토큰·endpoint는 로컬 서버로 확인. 개발 토큰 서버(LiveKit Cloud)는 확인 안 함 |
+| VOX-011 | 입장 전 대기(권한·카메라 미리보기) | 완료 | 거부·영구 거부·설정 복귀를 에뮬레이터에서 확인. 마이크 레벨 표시는 없음 |
+| VOX-019 | 백그라운드 통화 유지(foreground service) | 부분 | 홈 이동 시 녹음 유지 확인. PiP·Telecom 연동은 없음 |
+| VOX-022~024 | Call Mode 계약·가짜 호스트 샘플·수신 화면 | 완료 | 경합 JVM 테스트, 데모 화면 확인. 실제 호스트 서버·푸시는 확인 안 함 |
+| VOX-025 | Java facade | 완료 | Java 소스 테스트 |
 | VOX-014 | 실제 영상 렌더링 | 완료 | 에뮬레이터에서 원격·로컬 영상 확인 |
 | VOX-016 | 재연결·오류 화면 | 완료 | 서버 강제 종료 후 Reconnecting → Failed, 다시 시도 |
 | VOX-020 | 품질 진단(실제 통계) | 완료 | 샘플러 JVM 테스트, 실통화 값 표시 |
-| VOX-011, 015, 017~019, 021~029 | 사전 대기, 장치 전환 검증, 효과, 화면 공유, PiP, 초대, Java 등 | 미착수 | - |
+| VOX-015, 017, 018, 021, 026~029 | 장치 전환 실기기 검증, 효과, 화면 공유, 리포트 내보내기, 접근성 점검, 배포 등 | 미착수 | - |
 
 ## 빌드
 
