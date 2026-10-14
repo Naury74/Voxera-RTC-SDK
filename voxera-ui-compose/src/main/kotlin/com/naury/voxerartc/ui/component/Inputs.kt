@@ -1,6 +1,21 @@
 package com.naury.voxerartc.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import com.naury.voxerartc.ui.glass.GlassLevel
+import com.naury.voxerartc.ui.glass.voxeraGlass
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -19,14 +34,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -38,8 +52,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
@@ -66,7 +80,7 @@ public fun VoxeraTextField(
     val colors = VoxeraTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(VoxeraRadius.sm)
+    val shape = RoundedCornerShape(VoxeraRadius.md)
     val borderColor = when {
         error != null -> colors.danger
         focused -> colors.focusRing
@@ -102,7 +116,7 @@ public fun VoxeraTextField(
                         .fillMaxWidth()
                         .heightIn(min = 52.dp)
                         .clip(shape)
-                        .background(colors.surfaceElevated)
+                        .background(if (colors.isDark) colors.surfaceElevated.copy(alpha = 0.85f) else colors.surface)
                         .border(if (focused || error != null) 2.dp else 1.dp, borderColor, shape)
                         .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.sm),
                     contentAlignment = Alignment.CenterStart,
@@ -121,7 +135,10 @@ public fun VoxeraTextField(
     }
 }
 
-/** 하나만 고르는 알약 묶음. 항목마다 최소 48dp이며 TalkBack에서 라디오 버튼으로 읽힌다. */
+/**
+ * 하나만 고르는 알약 묶음. 유리 홈 위로 밝은 선택 알약이 튕기듯 옮겨 간다. 항목 폭은 모두 같고 최소 48dp이며
+ * TalkBack에서 라디오 버튼으로 읽힌다.
+ */
 @Composable
 public fun <T> VoxeraSegmentedControl(
     options: List<Pair<T, String>>,
@@ -130,27 +147,53 @@ public fun <T> VoxeraSegmentedControl(
     modifier: Modifier = Modifier,
 ) {
     val colors = VoxeraTheme.colors
-    Row(
+    val reduced = rememberReducedMotion()
+    val index = options.indexOfFirst { it.first == selected }.coerceAtLeast(0)
+    BoxWithConstraints(
         modifier
-            .selectableGroup()
-            .clip(CircleShape)
-            .background(colors.surfaceElevated)
+            .heightIn(min = 48.dp)
+            .voxeraGlass(CircleShape, GlassLevel.Low)
             .padding(VoxeraSpacing.xxs),
-        horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs),
     ) {
-        options.forEach { (value, label) ->
-            val isSelected = value == selected
+        val segment = maxWidth / options.size.coerceAtLeast(1)
+        val offset by animateDpAsState(
+            segment * index,
+            if (reduced) snap() else spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
+            label = "segment",
+        )
+        // 선택 알약. 밝은 면과 그림자로 홈 위에 떠 있는 것처럼 보인다.
+        Box(Modifier.matchParentSize()) {
             Box(
                 Modifier
-                    .weight(1f)
-                    .heightIn(min = 48.dp)
+                    .offset { IntOffset(offset.roundToPx(), 0) }
+                    .width(segment)
+                    .fillMaxHeight()
+                    .shadow(3.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.25f))
                     .clip(CircleShape)
-                    .background(if (isSelected) colors.primary else colors.surfaceElevated)
-                    .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(value) })
-                    .padding(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xs),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(label, color = if (isSelected) colors.onPrimary else colors.foreground, style = VoxeraTheme.typography.label, maxLines = 2, textAlign = TextAlign.Center)
+                    .background(if (colors.isDark) colors.primary.copy(alpha = 0.32f) else colors.surface)
+                    .border(1.dp, if (colors.isDark) colors.primary.copy(alpha = 0.5f) else colors.glassStroke, CircleShape),
+            )
+        }
+        Row(Modifier.fillMaxWidth().selectableGroup()) {
+            options.forEach { (value, label) ->
+                val isSelected = value == selected
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .heightIn(min = 40.dp)
+                        .clip(CircleShape)
+                        .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(value) })
+                        .padding(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xs),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        label,
+                        color = if (isSelected) colors.foreground else colors.foregroundSecondary,
+                        style = VoxeraTheme.typography.label,
+                        maxLines = 2,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }
@@ -180,13 +223,31 @@ public fun VoxeraToggleRow(
             Text(label, color = colors.foreground, style = VoxeraTheme.typography.body)
             if (description != null) Text(description, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
         }
+        VoxeraSwitch(checked)
+    }
+}
+
+/** 켜짐/꺼짐 스위치 그림. 색과 함께 손잡이 위치로도 상태를 보여 준다. 누르기·읽기는 감싼 줄이 맡는다. */
+@Composable
+private fun VoxeraSwitch(checked: Boolean) {
+    val colors = VoxeraTheme.colors
+    val reduced = rememberReducedMotion()
+    val knob by animateDpAsState(if (checked) 20.dp else 0.dp, if (reduced) snap() else spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium), label = "knob")
+    val track by animateColorAsState(if (checked) colors.primary else colors.foreground.copy(alpha = 0.18f), label = "track")
+    Box(
+        Modifier
+            .size(width = 51.dp, height = 31.dp)
+            .clip(CircleShape)
+            .background(track)
+            .padding(2.dp),
+    ) {
         Box(
             Modifier
+                .offset { IntOffset(knob.roundToPx(), 0) }
+                .size(27.dp)
+                .shadow(2.dp, CircleShape)
                 .clip(CircleShape)
-                .background(if (checked) colors.primary else colors.foreground.copy(alpha = 0.16f))
-                .padding(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xxs),
-        ) {
-            Text(stringResource(if (checked) R.string.voxera_control_on else R.string.voxera_control_off), color = if (checked) colors.onPrimary else colors.foreground, style = VoxeraTheme.typography.caption)
-        }
+                .background(Color.White),
+        )
     }
 }

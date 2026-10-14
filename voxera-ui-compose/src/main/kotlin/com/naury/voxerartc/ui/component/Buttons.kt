@@ -2,7 +2,10 @@ package com.naury.voxerartc.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,10 +21,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -37,6 +44,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.ui.glass.voxeraGlass
 import com.naury.voxerartc.ui.glass.GlassLevel
+import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
@@ -44,7 +52,11 @@ import com.naury.voxerartc.ui.theme.VoxeraTheme
 /** 버튼 강조 단계. [Danger]는 종료·거절에만 쓴다. */
 public enum class VoxeraButtonTone { Primary, Secondary, Danger }
 
-/** 높이 56dp(최소 48dp) 버튼. 글자가 커져도 높이가 늘어나 잘리지 않는다. */
+/**
+ * 높이 56dp(최소 48dp) 캡슐 버튼. 글자가 커져도 높이가 늘어나 잘리지 않는다. 누르면 살짝 작아졌다 돌아온다.
+ *
+ * @param icon 글자 앞에 둘 아이콘. 뜻은 [text]가 전하므로 아이콘은 읽지 않는다.
+ */
 @Composable
 public fun VoxeraButton(
     text: String,
@@ -52,23 +64,33 @@ public fun VoxeraButton(
     modifier: Modifier = Modifier,
     tone: VoxeraButtonTone = VoxeraButtonTone.Primary,
     enabled: Boolean = true,
+    icon: ImageVector? = null,
 ) {
     val colors = VoxeraTheme.colors
-    val shape = RoundedCornerShape(VoxeraRadius.md)
+    val shape = CircleShape
+    val interaction = remember { MutableInteractionSource() }
     val (container, content) = when (tone) {
         VoxeraButtonTone.Primary -> colors.primary to colors.onPrimary
         VoxeraButtonTone.Danger -> colors.danger to colors.onDanger
         VoxeraButtonTone.Secondary -> Color.Transparent to colors.foreground
     }
-    Box(
+    // 채움 버튼은 위쪽을 조금 밝게 해 빛을 받는 면처럼 보이게 한다. 글자 대비는 아래쪽 원색 기준으로 지켜진다.
+    val fill = Brush.verticalGradient(listOf(lerp(container, Color.White, 0.14f), container))
+    Row(
         modifier = modifier
+            .pressScale(interaction)
             .heightIn(min = 56.dp)
             .alpha(if (enabled) 1f else 0.4f)
-            .then(if (tone == VoxeraButtonTone.Secondary) Modifier.voxeraGlass(shape, GlassLevel.Low) else Modifier.clip(shape).background(container))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .then(
+                if (tone == VoxeraButtonTone.Secondary) Modifier.voxeraGlass(shape, GlassLevel.Low)
+                else Modifier.shadow(6.dp, shape, ambientColor = container.copy(alpha = 0.5f), spotColor = container.copy(alpha = 0.5f)).clip(shape).background(fill)
+            )
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = VoxeraSpacing.lg, vertical = VoxeraSpacing.sm),
-        contentAlignment = Alignment.Center,
+        horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (icon != null) Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
         Text(text, color = content, style = VoxeraTheme.typography.label.copy(fontSize = VoxeraTheme.typography.body.fontSize), textAlign = TextAlign.Center)
     }
 }
@@ -96,19 +118,22 @@ public fun CallControlButton(
     circleSize: Dp = 52.dp,
 ) {
     val colors = VoxeraTheme.colors
+    val interaction = remember { MutableInteractionSource() }
     val (container, tint) = when {
         danger -> colors.danger to colors.onDanger
         accent -> colors.primary to colors.onPrimary
         active -> colors.foreground.copy(alpha = 0.92f) to colors.canvas
-        else -> colors.foreground.copy(alpha = 0.10f) to colors.foreground
+        else -> colors.foreground.copy(alpha = if (colors.isDark) 0.14f else 0.08f) to colors.foreground
     }
+    // 꺼진 버튼은 막대 위 유리 알갱이처럼 위쪽에 얇은 반사광을 둔다.
+    val rim = Brush.verticalGradient(listOf(Color.White.copy(alpha = if (colors.isDark) 0.30f else 0.9f), Color.White.copy(alpha = 0f)))
     Column(
         modifier = modifier
             .width(circleSize.coerceAtLeast(48.dp) + 8.dp)
             .sizeIn(minHeight = 48.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(RoundedCornerShape(VoxeraRadius.sm))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
             .clearAndSetSemantics {
                 role = Role.Button
                 contentDescription = label
@@ -122,10 +147,13 @@ public fun CallControlButton(
     ) {
         Box(
             modifier = Modifier
+                .pressScale(interaction, pressed = 0.9f)
                 .size(circleSize.coerceAtLeast(48.dp))
                 .clip(CircleShape)
                 .background(container)
-                .then(if (pending) Modifier.border(2.dp, colors.secondary, CircleShape) else Modifier),
+                .then(if (!active && !danger && !accent) Modifier.border(1.dp, rim, CircleShape) else Modifier)
+                .then(if (pending) Modifier.border(2.dp, colors.secondary, CircleShape) else Modifier)
+                .indication(interaction, LocalIndication.current),
             contentAlignment = Alignment.Center,
         ) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp).alpha(if (pending) 0.6f else 1f))

@@ -19,12 +19,13 @@ public data class VoxeraTypography(
     public companion object {
         /** [fontFamily]를 넘기면 모든 단계에 같은 글꼴을 쓴다. 기본은 시스템 글꼴이며 번들 글꼴은 없다. */
         public fun default(fontFamily: FontFamily = FontFamily.Default): VoxeraTypography {
-            fun style(size: Int, line: Int, weight: Int) =
-                TextStyle(fontFamily = fontFamily, fontSize = size.sp, lineHeight = line.sp, fontWeight = FontWeight(weight))
+            // 큰 글자는 자간을 조금 좁혀 단단해 보이게 하고, 작은 글자는 그대로 둔다.
+            fun style(size: Int, line: Int, weight: Int, tracking: Float = 0f) =
+                TextStyle(fontFamily = fontFamily, fontSize = size.sp, lineHeight = line.sp, fontWeight = FontWeight(weight), letterSpacing = tracking.sp)
             return VoxeraTypography(
-                display = style(32, 40, 700),
-                headline = style(24, 32, 700),
-                title = style(20, 28, 600),
+                display = style(32, 40, 700, -0.6f),
+                headline = style(24, 32, 700, -0.4f),
+                title = style(20, 28, 600, -0.2f),
                 body = style(16, 24, 400),
                 label = style(14, 20, 600),
                 caption = style(12, 16, 500),
