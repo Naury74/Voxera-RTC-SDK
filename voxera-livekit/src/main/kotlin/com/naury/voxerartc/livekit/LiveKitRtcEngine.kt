@@ -115,6 +115,8 @@ internal class LiveKitRtcEngine(
 
     override suspend fun connect(credentials: RtcCredentials, options: ConnectOptions): ConnectOutcome {
         receiveVideo = options.mode == CallMode.VIDEO
+        // 음성 통화는 전화처럼 수화부로, 영상 통화는 스피커로 시작한다. 이어폰이 있으면 둘 다 이어폰이 먼저다.
+        room.audioSwitchHandler?.preferredDeviceList = preferredRoutes(options.mode)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             room.events.events.collect { event -> onRoomEvent(event) }
         }
@@ -369,6 +371,15 @@ internal class LiveKitRtcEngine(
         (context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager)?.cameraIdList?.size ?: 0
 
     private companion object {
+        fun preferredRoutes(mode: CallMode): List<Class<out AudioDevice>> = listOf(
+            AudioDevice.BluetoothHeadset::class.java,
+            AudioDevice.WiredHeadset::class.java,
+        ) + if (mode == CallMode.VOICE) {
+            listOf(AudioDevice.Earpiece::class.java, AudioDevice.Speakerphone::class.java)
+        } else {
+            listOf(AudioDevice.Speakerphone::class.java, AudioDevice.Earpiece::class.java)
+        }
+
         const val QUALITY_INTERVAL_MS = 2_000L
         const val STATS_TIMEOUT_MS = 1_000L
     }
