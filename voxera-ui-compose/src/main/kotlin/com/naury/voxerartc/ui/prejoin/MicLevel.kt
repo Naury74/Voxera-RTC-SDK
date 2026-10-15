@@ -56,8 +56,9 @@ private fun rememberMicLevelWhile(enabled: Boolean): State<Float?> = produceStat
         val rate = 16_000
         val minBuffer = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuffer <= 0) return@withContext
+        // 통화 모드가 아닐 때 VOICE_COMMUNICATION 입력은 일부 기기(Galaxy)에서 0만 돌려준다. 레벨 확인용이라 일반 마이크 입력을 쓴다.
         val record = runCatching {
-            AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBuffer * 2)
+            AudioRecord(MediaRecorder.AudioSource.MIC, rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBuffer * 2)
         }.getOrNull()
         if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
             record?.release()

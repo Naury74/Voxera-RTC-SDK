@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -505,12 +506,14 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
     val (shown, hidden) = visibleTiles(participants)
     val columns = if (shown.size <= 4) 2 else 3
     BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = VoxeraSpacing.md)) {
-        val avatar = ((maxWidth - VoxeraSpacing.md * (columns - 1)) / columns * 0.6f).coerceIn(56.dp, 120.dp)
+        val cellWidth = (maxWidth - VoxeraSpacing.md * (columns - 1)) / columns
+        val avatar = (cellWidth * 0.6f).coerceIn(56.dp, 120.dp)
         Column(Modifier.align(Alignment.Center), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.lg)) {
             shown.chunked(columns).forEach { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                // 덜 찬 마지막 줄도 가운데로 모은다.
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.md, Alignment.CenterHorizontally)) {
                     row.forEach { participant ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(cellWidth)) {
                             Box(contentAlignment = Alignment.Center) {
                                 SpeakingRipple(participant.isSpeaking, participant.audioLevel, avatar)
                                 VoxeraAvatar(participant.id, participant.displayName, size = avatar, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
@@ -528,7 +531,6 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                             }
                         }
                     }
-                    repeat(columns - row.size) { Box(Modifier.weight(1f)) }
                 }
             }
             if (hidden > 0) {

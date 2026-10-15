@@ -88,6 +88,8 @@ class RoomLogicTest {
         assertThat(pipFocus(listOf(me, a, person("b")), null)?.id).isEqualTo("a")
         assertThat(pipFocus(listOf(me, a, c, person("s", share = true)), null)?.id).isEqualTo("s")
         assertThat(pipFocus(listOf(me), null)?.id).isEqualTo("me")
+        // 통화 화면에서 크게 보던 사람이 있으면 말하는 사람보다 먼저.
+        assertThat(pipFocus(listOf(me, a, b, c), null, pinnedId = "a")?.id).isEqualTo("a")
     }
 
     @Test

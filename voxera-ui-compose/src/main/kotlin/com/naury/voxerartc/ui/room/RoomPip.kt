@@ -37,12 +37,13 @@ import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 
 /**
- * PiP 창에서 크게 보일 사람. 화면을 공유하는 사람 → 지금 말하는 원격 참가자 → 마지막으로 말한 사람 → 카메라가 켜진 원격 참가자
+ * PiP 창에서 크게 보일 사람. 화면을 공유하는 사람 → 통화 화면에서 크게 보던(고정한) 사람 → 지금 말하는 원격 참가자 → 마지막으로 말한 사람 → 카메라가 켜진 원격 참가자
  * → 첫 원격 참가자 → 나. 말이 잠깐 끊겨도 [lastSpeakerId]를 써서 창이 깜빡이며 바뀌지 않게 한다.
  */
-internal fun pipFocus(participants: List<Participant>, lastSpeakerId: String?): Participant? {
+internal fun pipFocus(participants: List<Participant>, lastSpeakerId: String?, pinnedId: String? = null): Participant? {
     val remotes = participants.filterNot { it.isLocal }
     return remotes.firstOrNull { it.screenShare != null }
+        ?: participants.firstOrNull { it.id == pinnedId }
         ?: remotes.filter { it.isSpeaking }.maxByOrNull { it.audioLevel }
         ?: remotes.firstOrNull { it.id == lastSpeakerId }
         ?: remotes.firstOrNull { it.camera != null }
@@ -61,11 +62,12 @@ internal fun PictureInPictureContent(
     media: LocalMediaState,
     renderer: VoxeraVideoRenderer?,
     mode: CallMode,
+    pinnedId: String? = null,
 ) {
     var lastSpeakerId by remember(session) { mutableStateOf<String?>(null) }
     val speaker = participants.filter { !it.isLocal && it.isSpeaking }.maxByOrNull { it.audioLevel }?.id
     SideEffect { if (speaker != null) lastSpeakerId = speaker }
-    val focus = pipFocus(participants, lastSpeakerId)
+    val focus = pipFocus(participants, lastSpeakerId, pinnedId)
     Box(Modifier.fillMaxSize()) {
         if (focus != null) {
             if (mode == CallMode.VIDEO) {

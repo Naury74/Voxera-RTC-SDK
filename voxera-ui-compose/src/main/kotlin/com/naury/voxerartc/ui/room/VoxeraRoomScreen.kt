@@ -49,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -163,6 +164,8 @@ public fun VoxeraRoomScreen(
             Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = speaking)) {
                 // 연결 중 → 통화 → 종료처럼 단계가 바뀔 때만 화면을 바꾼다. 같은 단계 안의 변화(참가자, 재연결)는 그대로 이어진다.
                 val phase = state.phase(pictureInPicture)
+                // 크게 보는 사람과 보기 방식은 PiP에 들어갔다 나와도(통화 화면이 다시 만들어져도) 이어지게 여기서 들고 있는다.
+                val stage = rememberStageSelection()
                 val reduced = rememberReducedMotion()
                 AnimatedContent(
                     targetState = phase,
@@ -179,8 +182,8 @@ public fun VoxeraRoomScreen(
                     val current = state
                     when (target) {
                         RoomPhase.PIP_CALL -> when (current) {
-                            is SessionState.Connected -> PictureInPictureContent(session, participants, media, renderer, current.mode)
-                            is SessionState.Reconnecting -> PictureInPictureContent(session, participants, media, renderer, current.mode)
+                            is SessionState.Connected -> PictureInPictureContent(session, participants, media, renderer, current.mode, stage.pinnedId.value)
+                            is SessionState.Reconnecting -> PictureInPictureContent(session, participants, media, renderer, current.mode, stage.pinnedId.value)
                             else -> PictureInPictureStatus(current)
                         }
                         RoomPhase.PIP_STATUS -> PictureInPictureStatus(current)
@@ -194,9 +197,9 @@ public fun VoxeraRoomScreen(
                         }
                         RoomPhase.CALL -> when (current) {
                             is SessionState.Connected ->
-                                CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
+                                CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage)
                             is SessionState.Reconnecting ->
-                                CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
+                                CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage)
                             else -> Unit
                         }
                     }
@@ -209,6 +212,16 @@ public fun VoxeraRoomScreen(
 /** 안내 줄은 위에서 펼쳐지며 나타나 아래 내용을 부드럽게 밀어낸다. */
 private val BannerEnter = expandVertically(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Top) + fadeIn()
 private val BannerExit = shrinkVertically(spring(stiffness = Spring.StiffnessMediumLow), shrinkTowards = Alignment.Top) + fadeOut()
+
+/** 영상 무대에서 고른 것: 크게 보는 사람(고정)과 보기 방식. */
+internal class StageSelection(val pinnedId: MutableState<String?>, val view: MutableState<StageView>)
+
+@Composable
+private fun rememberStageSelection(): StageSelection {
+    val pinned = rememberSaveable { mutableStateOf<String?>(null) }
+    val view = rememberSaveable { mutableStateOf(StageView.GALLERY) }
+    return remember(pinned, view) { StageSelection(pinned, view) }
+}
 
 /** 화면 전환 단위. 이 값이 바뀔 때만 화면 전체가 바뀌는 효과를 준다. */
 private enum class RoomPhase { CONNECTING, CALL, ENDING, ENDED, FAILED, PIP_CALL, PIP_STATUS }
@@ -252,6 +265,7 @@ private fun CallContent(
     onEnterPictureInPicture: (() -> Unit)?,
     autoHideControls: Boolean,
     reactionsEnabled: Boolean,
+    stage: StageSelection,
 ) {
     // 영상 통화 중에는 화면이 꺼지지 않게 한다. 음성 통화는 시스템 시간 초과를 따른다(근접 센서는 호스트·android 모듈 몫).
     val view = LocalView.current
@@ -264,8 +278,8 @@ private fun CallContent(
     var overflowControls by remember { mutableStateOf(emptyList<DockControl>()) }
     // 더보기 목록은 버튼 동작을 담아 저장할 수 없다. 화면이 다시 만들어져 비었으면 시트를 닫는다.
     LaunchedEffect(sheet, overflowControls) { if (sheet == RoomSheet.MORE && overflowControls.isEmpty()) sheet = RoomSheet.NONE }
-    var pinnedId by rememberSaveable { mutableStateOf<String?>(null) }
-    var stageView by rememberSaveable { mutableStateOf(StageView.GALLERY) }
+    var pinnedId by stage.pinnedId
+    var stageView by stage.view
     // 크게 보던 사람이 나가면 고정을 푼다.
     LaunchedEffect(participants, pinnedId) { if (pinnedId != null && participants.none { it.id == pinnedId }) pinnedId = null }
     val elapsed = rememberElapsed(session.clock, connectedAtMs)
