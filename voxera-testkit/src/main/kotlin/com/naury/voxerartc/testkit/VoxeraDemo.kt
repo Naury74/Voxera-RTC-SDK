@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 /**
- * 오프라인 데모 상황. 서버·계정 없이 화면과 상태 변화를 보여 주며 실제 통화가 아니다.
+ * 오프라인 데모 시나리오. 서버나 계정 없이 화면과 상태 변화를 보여 줄 뿐 실제 통화는 아니다.
  *
  * @property mode 이 상황을 시작할 때 권장하는 모드.
  * @property remoteNames 들어오는 원격 참가자 표시 이름. 인물 사진 대신 이니셜 아바타로 보인다.
@@ -58,7 +58,7 @@ public enum class DemoScenario(public val mode: CallMode, public val remoteNames
 /** 오프라인 데모의 화면 공유 승인. 실제 화면을 캡처하지 않으며 가짜 엔진만 받아들인다. */
 public object DemoScreenShareConsent : ScreenShareConsent
 
-/** 데모에서 공유하는 화면의 가짜 트랙 id. UI는 이 id로 가짜 문서 화면을 그린다. */
+/** 데모 화면 공유에 쓰는 가짜 트랙 id의 접두사. UI는 이 id로 가짜 문서 화면을 그린다. */
 public const val DEMO_SCREEN_TRACK_PREFIX: String = "demo-screen-"
 
 /** 오프라인 데모 진입점. 만든 세션의 [VoxeraSession.engineKind]는 항상 [RtcEngineKind.SIMULATED]다. */

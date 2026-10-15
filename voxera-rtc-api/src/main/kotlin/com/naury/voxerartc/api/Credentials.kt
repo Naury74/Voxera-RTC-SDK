@@ -39,8 +39,8 @@ public data class CredentialRequest(val roomId: String, val reason: CredentialRe
 /**
  * 호스트가 구현하는 자격 증명 공급자. 보통 호스트 백엔드의 인증된 token endpoint를 부른다.
  *
- * 실패는 [CredentialsUnavailableException]으로 알리면 오류 종류가 정확히 분류된다. 그 밖의 예외는
- * [VoxeraError.InternalFailure]로 처리한다. 호출은 SDK 세션 코루틴에서 일어나고 사용자가 나가면 취소된다.
+ * 실패는 [CredentialsUnavailableException]을 던져 알려야 오류 종류가 정확히 분류된다. 다른 예외는
+ * [VoxeraError.InternalFailure]로 처리한다. 호출은 SDK 세션 코루틴에서 일어나며, 사용자가 나가면 취소된다.
  */
 public fun interface RtcCredentialsProvider {
     public suspend fun getCredentials(request: CredentialRequest): RtcCredentials

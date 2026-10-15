@@ -59,7 +59,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 
 /**
- * 한 줄 입력칸. [secure]면 글자를 가리고 키보드 학습·자동 완성을 끈다(토큰 입력용). 가린 칸은 복사·잘라내기가 막힌다.
+ * 한 줄 입력칸. [secure]면 토큰 입력용으로 글자를 가리고 키보드 학습과 자동 완성을 끈다. 가린 칸에서는 복사와 잘라내기를 할 수 없다.
  *
  * @param error 값이 있으면 입력칸 아래에 오류로 보여 주고 TalkBack에도 오류로 알린다.
  * @param supportingText 오류가 없을 때 보여 줄 도움말.
@@ -136,8 +136,8 @@ public fun VoxeraTextField(
 }
 
 /**
- * 하나만 고르는 알약 묶음. 유리 홈 위로 밝은 선택 알약이 튕기듯 옮겨 간다. 항목 폭은 모두 같고 최소 48dp이며
- * TalkBack에서 라디오 버튼으로 읽힌다.
+ * 하나만 고르는 알약 모양 선택 묶음. 고르면 밝은 선택 알약이 유리 홈 위로 튕기듯 옮겨 간다. 항목 폭은 모두 같고 최소 48dp다.
+ * TalkBack에서는 라디오 버튼으로 읽힌다.
  */
 @Composable
 public fun <T> VoxeraSegmentedControl(

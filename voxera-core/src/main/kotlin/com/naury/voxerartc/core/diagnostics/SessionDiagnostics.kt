@@ -17,18 +17,18 @@ import java.security.MessageDigest
 import java.util.Locale
 
 /**
- * 진단 리포트를 만들 때 호스트가 넘기는 기기·앱 정보. 사용자 식별자를 넣지 않는다.
+ * 진단 리포트를 만들 때 호스트가 넘기는 기기와 앱 정보. 사용자 식별자는 넣지 않는다.
  *
  * @property appVersion 호스트 앱 버전 이름.
  * @property os 예: "Android 16 (API 36)".
- * @property device 예: 제조사·모델. 넣고 싶지 않으면 빈 문자열.
+ * @property device 예: 제조사와 모델명. 넣고 싶지 않으면 빈 문자열.
  */
 public data class DiagnosticContext(val appVersion: String, val os: String, val device: String)
 
-/** 리포트의 상태 기록. [code]는 실패일 때의 `VoxeraError.code`다. */
+/** 리포트에 남는 상태 기록 하나. [code]는 실패했을 때의 `VoxeraError.code`다. */
 public data class DiagnosticEvent(val atMs: Long, val state: String, val code: String? = null)
 
-/** 품질 표본 하나에서 고른 값. 값이 없으면 `null`로 둔다. */
+/** 품질 표본 하나에서 추린 값. 없는 값은 `null`이다. */
 public data class DiagnosticQuality(
     val atMs: Long,
     val source: MetricSource,
@@ -41,9 +41,9 @@ public data class DiagnosticQuality(
 )
 
 /**
- * 통화 진단 리포트. 토큰, 서버 주소, 참가자 이름·id, 미디어는 담지 않는다. 룸 이름은 SHA-256 앞 12자리로만 남긴다.
+ * 통화 진단 리포트. 토큰, 서버 주소, 참가자 이름과 id, 미디어는 담지 않는다. 룸 이름은 SHA-256 해시의 앞 12자리만 남긴다.
  *
- * 시간 값은 첫 기록을 0으로 한 상대 ms다.
+ * 시간 값은 첫 기록을 0으로 둔 상대 시간(ms)이다.
  */
 public data class DiagnosticBundle(
     val sdkVersion: String,
@@ -52,7 +52,7 @@ public data class DiagnosticBundle(
     val events: List<DiagnosticEvent>,
     val quality: List<DiagnosticQuality>,
 ) {
-    /** 사람이 읽을 수 있는 JSON. 외부 라이브러리 없이 만든다. */
+    /** 사람이 읽기 쉬운 JSON 문자열로 만든다. 외부 라이브러리는 쓰지 않는다. */
     public fun toJson(): String = buildString {
         append("{\n")
         append("  \"format\": 1,\n")
@@ -86,7 +86,7 @@ public data class DiagnosticBundle(
     }
 }
 
-/** 리포트를 호스트가 정한 곳으로 보낸다. 기본으로 SDK는 네트워크로 보내지 않는다. 사용자 동의는 호스트가 받는다. */
+/** 리포트를 호스트가 정한 곳으로 내보낸다. SDK는 기본적으로 리포트를 네트워크로 보내지 않으며, 사용자 동의는 호스트가 받는다. */
 public fun interface DiagnosticExporter {
     public suspend fun export(bundle: DiagnosticBundle): ExportResult
 }
@@ -98,8 +98,8 @@ public sealed interface ExportResult {
 }
 
 /**
- * 세션의 상태 전이와 품질 표본을 메모리에 모은다. 크기는 [maxEvents]·[maxQuality]로 제한하며 오래된 것부터 버린다.
- * 디스크에 쓰지 않으며 [snapshot]을 불렀을 때만 리포트가 만들어진다.
+ * 세션의 상태 전이와 품질 표본을 메모리에 모은다. 크기는 [maxEvents]와 [maxQuality]로 제한하고, 넘치면 오래된 것부터 버린다.
+ * 디스크에는 쓰지 않으며, 리포트는 [snapshot]을 부를 때만 만든다.
  */
 public class SessionDiagnostics(
     private val session: VoxeraSession,

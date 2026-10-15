@@ -119,20 +119,20 @@ private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS, REAC
 private const val CHROME_TIMEOUT_MS = 4_000L
 
 /**
- * 룸 통화 화면. [session]의 상태만 관찰하며 세션을 만들거나 닫지 않는다. 입장(`join`)은 호스트가 사용자 동작에 맞춰 부른다.
+ * 룸 통화 화면. [session] 상태를 관찰만 하고 세션을 만들거나 닫지 않는다. 입장(`join`)은 사용자 동작에 맞춰 호스트가 부른다.
  *
- * 화면이 사라져도 세션은 유지되므로, 통화를 끝내려면 호스트가 `leave`/`close`를 부르거나 사용자가 종료 버튼을 누른다.
+ * 화면이 사라져도 세션은 남는다. 통화를 끝내려면 호스트가 `leave`/`close`를 부르거나 사용자가 종료 버튼을 눌러야 한다.
  * [VoxeraRoomScreen]은 [VoxeraTheme]을 직접 적용하므로 호스트 `MaterialTheme` 안에 두어도 색이 섞이지 않는다.
  *
- * @param onExit 종료·실패 화면에서 닫기를 누름. 호스트 내비게이션으로 돌아간다.
- * @param onRejoin `null`이 아니면 종료·실패 화면에 다시 입장 버튼을 보여 준다.
- * @param onEnd 종료·취소 버튼 동작. `null`이면 `session.leave()`. Call Mode에서는 `CallCoordinator.hangup`을 넘긴다.
+ * @param onExit 종료나 실패 화면에서 닫기를 누르면 불린다. 호스트 내비게이션으로 돌아갈 때 쓴다.
+ * @param onRejoin `null`이 아니면 종료나 실패 화면에 다시 입장 버튼을 보여 준다.
+ * @param onEnd 종료/취소 버튼을 눌렀을 때의 동작. `null`이면 `session.leave()`. Call Mode에서는 `CallCoordinator.hangup`을 넘긴다.
  * @param onShareScreen `null`이 아니면 영상 통화에 화면 공유 버튼을 보여 준다. 호스트가 시스템 화면 공유 승인 대화상자를 띄우고
  *   승인 결과로 `session.startScreenShare`를 부른다(예: voxera-livekit-compose의 `rememberScreenShareLauncher`).
- * @param onSaveReport `null`이 아니면 종료·실패 화면에 진단 리포트 저장 버튼을 보여 준다. 저장 위치와 공유는 호스트가 정한다.
- * @param pictureInPicture 호스트 Activity가 PiP 창에 있으면 `true`. 조작·시트·알림을 빼고 말하는 사람 하나만 작게 그린다.
+ * @param onSaveReport `null`이 아니면 종료나 실패 화면에 진단 리포트 저장 버튼을 보여 준다. 저장 위치와 공유는 호스트가 정한다.
+ * @param pictureInPicture 호스트 Activity가 PiP 창에 있으면 `true`. 조작 버튼, 시트, 알림을 빼고 말하는 사람 한 명만 작게 그린다.
  * @param onEnterPictureInPicture `null`이 아니면 상단에 PiP 버튼을 둔다. 호스트가 `enterPictureInPictureMode`를 부른다.
- * @param autoHideControls 영상 통화에서 4초 동안 조작이 없으면 상단 줄·조작 막대를 숨긴다. 화면을 누르면 다시 나온다.
+ * @param autoHideControls 영상 통화에서 4초 동안 조작이 없으면 상단 줄과 조작 막대를 숨긴다. 화면을 누르면 다시 나온다.
  * @param reactionsEnabled 반응 보내기 버튼과 떠오르는 반응을 보여 준다. 엔진이 지원하지 않으면 보내기는 아무 일도 하지 않는다.
  */
 @Composable

@@ -32,14 +32,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** 성공·실패 콜백. 한 번의 요청에 둘 중 하나만 한 번 불린다. */
+/** 성공/실패 콜백. 요청 하나에 둘 중 하나가 딱 한 번 불린다. */
 public interface VoxeraCallback<T> {
     public fun onSuccess(value: T)
 
     public fun onError(error: VoxeraError)
 }
 
-/** 마이크·카메라 조작 결과 콜백. */
+/** 마이크나 카메라를 조작한 결과를 받는 콜백. */
 public fun interface VoxeraActionCallback {
     public fun onComplete(result: MediaActionResult)
 }
@@ -67,7 +67,7 @@ public fun interface JavaCredentialsProvider {
 }
 
 /**
- * Java·View 기반 호스트용 진입점. suspend 함수와 Flow 대신 콜백과 [VoxeraCancellable]을 쓴다.
+ * Java나 View 기반 호스트를 위한 진입점. suspend 함수와 Flow 대신 콜백과 [VoxeraCancellable]을 쓴다.
  *
  * ```java
  * VoxeraClient client = VoxeraJava.create(new LiveKitRtcEngineFactory(context), provider, ContextCompat.getMainExecutor(context));
@@ -77,7 +77,7 @@ public fun interface JavaCredentialsProvider {
  */
 public object VoxeraJava {
     /**
-     * @param callbackExecutor 모든 콜백·리스너가 실행될 곳. Android에서는 main executor를 넘긴다.
+     * @param callbackExecutor 모든 콜백과 리스너를 실행할 executor. Android에서는 main executor를 넘긴다.
      */
     @JvmStatic
     @JvmOverloads
@@ -112,11 +112,11 @@ private suspend fun JavaCredentialsProvider.await(request: CredentialRequest): R
     }
 
 /**
- * [VoxeraSession]을 콜백으로 감싼다. 모든 메서드는 바로 돌아오며 메인 스레드를 막지 않는다.
- * 콜백은 취소한 뒤에는 불리지 않는다.
+ * [VoxeraSession]을 콜백으로 감싼다. 모든 메서드는 바로 반환하므로 메인 스레드를 막지 않는다.
+ * 취소한 뒤에는 콜백이 불리지 않는다.
  */
 public class VoxeraClient internal constructor(
-    /** Kotlin·Compose 코드와 함께 쓸 때(예: `VoxeraRoomScreen`)의 원래 세션. */
+    /** 감싸고 있는 원래 세션. Kotlin이나 Compose 코드(예: `VoxeraRoomScreen`)와 함께 쓸 때 넘긴다. */
     public val session: VoxeraSession,
     private val executor: Executor,
 ) : AutoCloseable {
@@ -153,7 +153,7 @@ public class VoxeraClient internal constructor(
     public fun sendReaction(reaction: Reaction, callback: VoxeraActionCallback?): VoxeraCancellable =
         action(callback) { session.sendReaction(reaction) }
 
-    /** 통화를 끝낸다. 끝나면 [onDone]이 불린다(없어도 된다). */
+    /** 통화를 끝낸다. 끝나면 [onDone]을 부른다. [onDone]은 `null`이어도 된다. */
     public fun leave(onDone: Runnable?) {
         scope.launch {
             session.leave(LeaveReason.USER)
@@ -161,7 +161,7 @@ public class VoxeraClient internal constructor(
         }
     }
 
-    /** 등록하는 순간의 상태를 먼저 받고, 이후 바뀔 때마다 받는다. 같은 값이 연달아 바뀌면 합쳐질 수 있다. */
+    /** 등록하는 순간의 상태를 먼저 받고, 이후 바뀔 때마다 받는다. 값이 연달아 빠르게 바뀌면 중간 값은 건너뛸 수 있다. */
     public fun addStateListener(listener: VoxeraListener<SessionState>): VoxeraCancellable =
         launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
             session.state.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
@@ -172,7 +172,7 @@ public class VoxeraClient internal constructor(
             session.participants.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
         }
 
-    /** 등록한 뒤에 오는 반응만 받는다(지난 반응은 없다). */
+    /** 등록한 뒤에 오는 반응만 받는다. 지난 반응은 다시 오지 않는다. */
     public fun addReactionListener(listener: VoxeraListener<ReactionEvent>): VoxeraCancellable =
         launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
             session.reactions.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }

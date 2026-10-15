@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * 호스트 서버를 흉내 내는 [InvitationGateway]. 테스트와 오프라인 데모에서 초대 이벤트를 직접 보내고, 받은 요청을 기록한다.
  *
- * revision은 이 객체가 1씩 늘려 붙인다. 실제 서버처럼 중복·역순을 만들려면 [deliver]에 직접 이벤트를 넣는다.
+ * revision은 이 객체가 1씩 늘려 붙인다. 실제 서버에서처럼 이벤트를 중복시키거나 순서를 뒤집으려면 [deliver]로 직접 넣는다.
  *
  * @param answer 발신 뒤 상대 응답을 흉내 낼 때 쓴다. `null`이면 아무 응답도 보내지 않는다.
  */
@@ -29,7 +29,7 @@ public class FakeInvitationGateway(
     public var answer: Answer? = null,
 ) : InvitationGateway {
 
-    /** 발신 뒤 [delayMs] 지나 [type] 이벤트를 보낸다. */
+    /** 발신하고 [delayMs]가 지나면 [type] 이벤트를 보낸다. */
     public data class Answer(val type: InvitationEventType, val delayMs: Long)
 
     private val events = MutableSharedFlow<InvitationEvent>(extraBufferCapacity = 64)
@@ -48,7 +48,7 @@ public class FakeInvitationGateway(
         )
     }
 
-    /** 수락·거절·취소·종료 결과. 기본은 모두 반영. */
+    /** 수락, 거절, 취소, 종료 요청에 돌려줄 결과. 기본은 모두 반영이다. */
     public var decision: (action: String, callId: String) -> InvitationDecision = { _, _ -> InvitationDecision.Applied(nextRevision()) }
 
     private fun record(entry: String) {
@@ -81,12 +81,12 @@ public class FakeInvitationGateway(
 
     override fun observeInvitations(): Flow<InvitationEvent> = events.asSharedFlow()
 
-    /** 이벤트를 그대로 보낸다(중복·역순 시험용). */
+    /** 이벤트를 그대로 보낸다. 중복이나 역순 도착을 시험할 때 쓴다. */
     public fun deliver(event: InvitationEvent) {
         events.tryEmit(event)
     }
 
-    /** 새 revision을 붙인 이벤트. */
+    /** 새 revision을 붙인 이벤트를 만든다. */
     public fun event(callId: String, type: InvitationEventType, call: CallInfo? = null, revision: Long = nextRevision()): InvitationEvent =
         InvitationEvent("evt-${eventSerial.incrementAndGet()}", callId, revision, type, "2026-10-14T00:00:00Z", call)
 

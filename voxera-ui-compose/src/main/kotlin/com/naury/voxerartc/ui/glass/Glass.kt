@@ -47,8 +47,8 @@ import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 
 /**
- * 반투명 표면 단계. 채움 불투명도: [Low] 0.92(설정 카드·대화상자), [Medium] 0.80(통화 조작 막대·영상 위 배지),
- * [High] 0.96(바텀 시트, 글자가 많아 뒤 화면이 비치지 않게 높였다). 글자가 잘 읽히지 않으면 흐림 대신 불투명도를 올린다.
+ * 반투명 표면 단계. 채움 불투명도는 [Low] 0.92(설정 카드, 대화상자), [Medium] 0.80(통화 조작 막대, 영상 위 배지),
+ * [High] 0.96(바텀 시트. 글자가 많아 뒤 화면이 비치지 않게 높였다)이다. 글자가 잘 읽히지 않으면 흐림 대신 불투명도를 올린다.
  */
 public enum class GlassLevel(internal val alpha: Float, internal val shadow: Dp) {
     Low(0.92f, 4.dp),
@@ -86,8 +86,8 @@ internal fun glassRim(colors: VoxeraColors, size: Size): Brush {
 /**
  * Voxera 유리 질감. 층 순서는 그림자 → 반투명 단색 채움 → 1dp 외곽선 → 안쪽 테두리 반사광이다. 면 자체에는 그라디언트를 칠하지 않는다.
  *
- * 뒤 배경을 흐리게 하지 않는다. `Modifier.blur`는 대상 자체를 흐리게 하므로 쓰지 않으며, 영상 Surface 위에서는
- * 이 반투명 채움이 대체 표현이다. 불투명(OFF) 품질에서는 반사광을 그리지 않고 외곽선만 남긴다.
+ * 뒤 배경은 흐리게 하지 않는다. `Modifier.blur`는 뒤가 아니라 대상 자체를 흐리게 하므로 쓰지 않고, 영상 Surface 위에서는
+ * 반투명 채움으로 대신한다. 품질이 불투명(OFF)이면 반사광 없이 외곽선만 남긴다.
  */
 @Composable
 public fun Modifier.voxeraGlass(shape: Shape, level: GlassLevel = GlassLevel.Medium): Modifier {
@@ -125,7 +125,7 @@ public fun GlassSurface(
     Box(modifier.voxeraGlass(shape, level).padding(contentPadding), content = content)
 }
 
-/** 통화 조작 막대. 양 끝이 둥근 캡슐, [GlassLevel.Medium]. 위치는 화면이 하단 안전 영역 안에 고정한다. */
+/** 통화 조작 막대. 양 끝이 둥근 캡슐 모양이고 [GlassLevel.Medium]을 쓴다. 위치는 이 막대를 쓰는 화면이 하단 안전 영역 안에 고정한다. */
 @Composable
 public fun GlassDock(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
@@ -138,7 +138,7 @@ public fun GlassDock(modifier: Modifier = Modifier, content: @Composable RowScop
 }
 
 /**
- * 영상 위 이름·상태 알약. 흰 벽 같은 밝은 영상에서도 [VoxeraColors.onScrim] 글자가 읽히도록 불투명도를 0.75 이상으로 둔다.
+ * 영상 위에 이름이나 상태를 띄우는 알약. 흰 벽처럼 밝은 영상 위에서도 [VoxeraColors.onScrim] 글자가 읽히도록 불투명도를 0.75 이상으로 둔다.
  */
 @Composable
 public fun GlassPill(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
@@ -166,7 +166,7 @@ internal const val PILL_MIN_ALPHA = 0.75f
 /**
  * 영상이 없는 화면의 배경. [VoxeraColors.canvas] 단색이다. 위에 올린 유리 표면은 외곽선과 그림자로 떠 보인다.
  *
- * @param emphasis 예전 호환용. 지금은 쓰지 않는다.
+ * @param emphasis 이전 버전 호환용으로 남겨 둔 값. 지금은 쓰지 않는다.
  */
 @Suppress("UNUSED_PARAMETER")
 @Composable

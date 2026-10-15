@@ -68,12 +68,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Call Mode 화면(G-08 수신, 발신 중, 종료 사유). 미디어가 연결되면 [VoxeraRoomScreen]을 그리고, 종료 버튼은 [CallCoordinator.hangup]을 부른다.
+ * Call Mode 화면. 수신(G-08), 발신 중, 종료 사유를 그린다. 미디어가 연결되면 [VoxeraRoomScreen]을 그리고, 종료 버튼은 [CallCoordinator.hangup]을 부른다.
  *
- * 실제 수신 알림(잠금 화면, 앱 종료 상태 푸시)은 호스트가 띄운다. 이 화면은 앱이 앞에 있을 때의 통화 UI다.
+ * 잠금 화면이나 앱이 꺼진 상태에서 받는 실제 수신 알림(푸시)은 호스트가 띄운다. 이 화면은 앱이 앞에 있을 때 보이는 통화 UI다.
  *
  * @param session [coordinator]가 쓰는 세션과 같아야 한다.
- * @param onExit 종료 화면에서 닫기를 누름.
+ * @param onExit 종료 화면에서 닫기를 누르면 불린다.
  * @param pictureInPicture·onEnterPictureInPicture 통화 중 화면에 그대로 넘긴다([VoxeraRoomScreen] 참고).
  */
 @Composable

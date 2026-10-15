@@ -12,12 +12,12 @@ import java.io.IOException
 /**
  * LiveKit 표준 토큰 공급 방식을 [RtcCredentialsProvider]로 감싼다. 받은 토큰은 메모리에만 두며 저장하지 않는다.
  *
- * 운영 환경에서는 호스트가 자기 인증을 거치는 [RtcCredentialsProvider]를 직접 구현하는 것이 기본이다.
+ * 운영 환경에서는 호스트 인증을 거치는 [RtcCredentialsProvider]를 직접 구현해 쓰는 것을 기본으로 한다.
  */
 public object LiveKitTokenSources {
 
     /**
-     * LiveKit Cloud 개발 토큰 서버(Sandbox). **개발·테스트 전용**이며 누구나 ID만 알면 토큰을 받을 수 있다.
+     * LiveKit Cloud 개발 토큰 서버(Sandbox). **개발과 테스트 전용**이다. ID만 알면 누구나 토큰을 받을 수 있다.
      * 공개 앱에 기본 ID를 넣지 않는다.
      *
      * @param tokenServerId 사용자가 직접 입력한 토큰 서버 ID.
@@ -31,8 +31,8 @@ public object LiveKitTokenSources {
     }
 
     /**
-     * LiveKit 표준 token endpoint 형식(`room_name`, `participant_name`을 POST하고 `server_url`, `participant_token`을 받음)을
-     * 따르는 호스트 endpoint.
+     * LiveKit 표준 token endpoint 형식을 따르는 호스트 endpoint. `room_name`, `participant_name`을 POST로 보내고
+     * `server_url`, `participant_token`을 받는다.
      *
      * @param headers 호스트 인증 헤더 등. 로그에 남기지 않는다.
      */
@@ -43,7 +43,7 @@ public object LiveKitTokenSources {
         }
     }
 
-    /** 이미 발급받은 토큰. 새 토큰을 받을 수 없으므로 만료되면 다시 입력해야 한다. */
+    /** 이미 발급받은 토큰을 그대로 쓴다. 새 토큰을 받아 올 수 없으므로 만료되면 다시 입력해야 한다. */
     public fun literal(serverUrl: String, accessToken: String): RtcCredentialsProvider {
         val credentials = RtcCredentials(serverUrl.trim(), accessToken.trim())
         return RtcCredentialsProvider { credentials }

@@ -18,7 +18,7 @@ import livekit.org.webrtc.RendererCommon
 public object LiveKitCameraPreview {
 
     /**
-     * 전면 카메라 미리보기 View. 카메라 권한이 없거나 다른 앱이 카메라를 쓰는 중이면 `null`.
+     * 전면 카메라 미리보기 View를 만든다. 카메라 권한이 없거나 다른 앱이 카메라를 쓰는 중이면 `null`.
      */
     @MainThread
     public fun create(context: Context): LiveKitVideoView? {

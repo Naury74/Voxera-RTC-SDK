@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * [VideoTrackHandle]로 LiveKit 영상 트랙을 찾아 화면에 붙인다. LiveKit 트랙 객체는 밖으로 내보내지 않고 View만 준다.
  *
- * [LiveKitRtcEngineFactory.videoTracks]로 얻으며, 그 factory가 만든 연결 중인 엔진에서만 트랙을 찾는다.
+ * [LiveKitRtcEngineFactory.videoTracks]로 얻는다. 트랙은 그 factory가 만든 엔진 중 연결되어 있는 것에서만 찾는다.
  */
 public class LiveKitVideoTracks internal constructor() {
 

@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Voxera 화면에서 쓰는 아이콘. Material Icons(Apache-2.0)의 24dp 경로를 그대로 옮겼다. material-icons-extended 전체를
- * 의존성으로 넣지 않기 위해 필요한 것만 둔다. 호스트가 Voxera 화면과 같은 모양의 조작을 만들 때 써도 된다.
+ * 의존성으로 넣지 않으려고 필요한 것만 골라 두었다. 호스트가 Voxera 화면과 같은 모양의 조작을 만들 때 써도 된다.
  */
 public object VoxeraIcons {
     public val Mic: ImageVector = icon(

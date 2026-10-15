@@ -22,7 +22,7 @@ import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 /**
  * LiveKit 영상 트랙을 그리는 [VoxeraVideoRenderer]. `LocalVoxeraVideoRenderer`로 넘기면 `VoxeraRoomScreen`이 실제 영상을 그린다.
  *
- * 트랙 핸들이 바뀌면(재게시) 이전 렌더러를 떼고 새로 붙이며, 타일이 화면에서 사라지면 렌더러와 EGL 자원을 해제한다.
+ * 트랙이 다시 게시되어 핸들이 바뀌면 이전 렌더러를 떼고 새로 붙인다. 타일이 화면에서 사라지면 렌더러와 EGL 자원을 해제한다.
  */
 public fun LiveKitVideoTracks.asComposeRenderer(): VoxeraVideoRenderer {
     val tracks = this

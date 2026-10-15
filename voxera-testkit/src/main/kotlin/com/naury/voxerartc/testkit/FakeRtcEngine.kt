@@ -28,13 +28,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * 네트워크 없이 동작하는 결정적 [RtcEngine]. 테스트에서 연결 결과·지연·미디어 실패를 정하고, 참가자·재연결 이벤트를
- * 직접 보낼 수 있다. 지연은 `delay`를 쓰므로 `kotlinx-coroutines-test`의 가상 시간으로 제어된다.
+ * 네트워크 없이 결정적으로 동작하는 [RtcEngine]. 테스트에서 연결 결과, 지연, 미디어 실패를 정하고 참가자나 재연결 이벤트를
+ * 직접 보낼 수 있다. 지연은 `delay`로 구현하므로 `kotlinx-coroutines-test`의 가상 시간으로 조절할 수 있다.
  *
  * 실제 미디어를 다루지 않으며 [kind]는 항상 [RtcEngineKind.SIMULATED]다.
  *
- * @param connectDelayMs [connect]가 결과를 돌려주기까지의 지연(ms).
- * @param mediaAckDelayMs 마이크·카메라·장치 조작이 반영되기까지의 지연(ms).
+ * @param connectDelayMs [connect]가 결과를 돌려주기까지 걸리는 시간(ms).
+ * @param mediaAckDelayMs 마이크, 카메라, 장치 조작이 반영되기까지 걸리는 시간(ms).
  * @param cameras 기기에 있는 카메라. 2개 미만이면 전환은 [MediaActionResult.Unsupported].
  * @param audioRoutes 선택할 수 있는 오디오 경로. 첫 번째가 기본 선택이다.
  */
@@ -52,7 +52,7 @@ public class FakeRtcEngine(
     private val _events = MutableSharedFlow<RtcEngineEvent>(extraBufferCapacity = 256)
     override val events: Flow<RtcEngineEvent> = _events.asSharedFlow()
 
-    /** 차례로 꺼내 쓰는 연결 결과. `null`이면 성공, 비어 있으면 성공이다. */
+    /** 연결할 때마다 앞에서부터 하나씩 꺼내 쓰는 결과. `null`이면 성공이고, 비어 있어도 성공한다. */
     public val connectResults: ArrayDeque<VoxeraError?> = ArrayDeque()
 
     /** `true`면 [connect]가 끝나지 않고 취소될 때까지 기다린다. */
@@ -77,11 +77,11 @@ public class FakeRtcEngine(
         effectsAvailability = effects,
     )
 
-    /** [connect]에 전달된 자격 증명. */
+    /** [connect]가 받은 자격 증명. */
     public val receivedCredentials: List<RtcCredentials> get() = _receivedCredentials.toList()
     public val connectRequests: List<ConnectOptions> get() = _connectRequests.toList()
 
-    /** 엔진에 실제로 전달된 마이크 요청 순서. */
+    /** 엔진까지 실제로 전달된 마이크 요청을 순서대로 담는다. */
     public val microphoneRequests: List<Boolean> get() = _microphoneRequests.toList()
     public val cameraRequests: List<Boolean> get() = _cameraRequests.toList()
 
@@ -228,7 +228,7 @@ public class FakeRtcEngine(
         _events.tryEmit(RtcEngineEvent.Reconnected)
     }
 
-    /** 엔진 쪽 종료. [error]가 `null`이면 상대·서버의 정상 종료다. */
+    /** 엔진 쪽에서 연결을 끝낸다. [error]가 `null`이면 상대나 서버가 정상적으로 끝낸 것으로 본다. */
     public fun simulateDisconnect(error: VoxeraError?) {
         _events.tryEmit(RtcEngineEvent.Disconnected(error))
     }
@@ -246,7 +246,7 @@ public class FakeRtcEngine(
     private fun nextCameraHandle() = VideoTrackHandle(localState.id, "local-camera-${++cameraTrackSerial}", VideoSource.CAMERA)
 
     public companion object {
-        /** 이어피스·스피커·블루투스가 있는 기본 경로 목록. */
+        /** 이어피스, 스피커, 블루투스로 이루어진 기본 경로 목록. */
         public val DefaultAudioRoutes: List<AudioRoute> = listOf(
             AudioRoute("earpiece", "Phone", AudioRouteType.EARPIECE),
             AudioRoute("speaker", "Speaker", AudioRouteType.SPEAKER),
@@ -265,7 +265,7 @@ public class FakeRtcEngineFactory(
 
     public val created: List<FakeRtcEngine> get() = synchronized(_created) { _created.toList() }
 
-    /** 마지막으로 만든 엔진. 아직 없으면 예외. */
+    /** 마지막으로 만든 엔진. 아직 하나도 없으면 예외를 던진다. */
     public val last: FakeRtcEngine get() = created.last()
 
     override fun create(): FakeRtcEngine = newEngine().also { synchronized(_created) { _created += it } }

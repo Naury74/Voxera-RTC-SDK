@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 public enum class RtcEngineKind { LIVE, SIMULATED }
 
 /**
- * 화면 공유 승인 결과를 가리키는 불투명 값. Android `MediaProjection` 결과 Intent 같은 플랫폼 값은 provider 모듈의 구현이 담는다.
- * 한 번 승인한 값은 한 번의 공유에만 쓴다(Android 14+는 공유할 때마다 새 승인이 필요하다).
+ * 화면 공유 승인 결과를 가리키는 불투명 값. Android `MediaProjection` 결과 Intent 같은 플랫폼 값은 provider 모듈의 구현체가 담는다.
+ * 승인 값 하나는 공유 한 번에만 쓴다(Android 14+는 공유할 때마다 새 승인이 필요하다).
  */
 public interface ScreenShareConsent
 
@@ -27,22 +27,22 @@ public sealed interface ConnectOutcome {
     public data class Failed(val error: VoxeraError) : ConnectOutcome
 }
 
-/** 엔진이 연결된 뒤 보내는 이벤트. 순서는 보장하지만 중복이나 늦은 도착이 있을 수 있다. */
+/** 엔진이 연결된 뒤 보내는 이벤트. 순서는 보장하지만 중복되거나 늦게 도착할 수 있다. */
 public sealed interface RtcEngineEvent {
-    /** 참가자가 들어오거나 상태가 바뀜. 같은 [Participant.id]면 덮어쓴다. */
+    /** 참가자가 들어왔거나 상태가 바뀌었다. 같은 [Participant.id]면 덮어쓴다. */
     public data class ParticipantUpserted(val participant: Participant) : RtcEngineEvent
 
     public data class ParticipantLeft(val participantId: String) : RtcEngineEvent
 
-    /** 로컬 미디어가 엔진 쪽에서 바뀜(시스템이 카메라를 끊은 경우 등). */
+    /** 시스템이 카메라를 끊는 등 엔진 쪽에서 로컬 미디어가 바뀌었다. */
     public data class LocalMediaChanged(val state: LocalMediaState) : RtcEngineEvent
 
-    /** 연결이 끊겨 엔진이 스스로 복구를 시작함. SDK는 따로 재연결 루프를 돌리지 않는다. */
+    /** 연결이 끊겨 엔진이 스스로 복구를 시작했다. SDK는 별도의 재연결 루프를 돌리지 않는다. */
     public data object Reconnecting : RtcEngineEvent
 
     public data object Reconnected : RtcEngineEvent
 
-    /** 엔진 연결이 끝남. [error]가 `null`이면 서버·상대가 정상 종료한 것이다. */
+    /** 엔진 연결이 끝났다. [error]가 `null`이면 서버나 상대가 정상적으로 끝낸 것이다. */
     public data class Disconnected(val error: VoxeraError?) : RtcEngineEvent
 
     public data class QualitySampled(val snapshot: QualitySnapshot) : RtcEngineEvent
@@ -52,9 +52,9 @@ public sealed interface RtcEngineEvent {
 }
 
 /**
- * RTC provider 포트. Voxera 세션이 이 인터페이스만 사용하므로 LiveKit 타입은 공개 API에 드러나지 않는다.
+ * RTC provider 포트. Voxera 세션은 이 인터페이스만 쓰므로 LiveKit 타입이 공개 API에 드러나지 않는다.
  *
- * 하나의 인스턴스는 연결 한 번에만 쓰인다. 세션은 [release] 뒤 같은 인스턴스를 다시 쓰지 않는다.
+ * 인스턴스 하나는 연결 한 번에만 쓴다. 세션은 [release] 뒤 같은 인스턴스를 다시 쓰지 않는다.
  * 모든 suspend 함수는 main-safe여야 하고, 취소되면 진행 중인 연결을 정리해야 한다.
  */
 public interface RtcEngine {
@@ -74,8 +74,8 @@ public interface RtcEngine {
     public suspend fun selectAudioRoute(routeId: String): MediaActionResult
 
     /**
-     * 화면 공유를 시작한다. [consent]는 사용자가 시스템 화면 공유 승인 대화상자에서 허락한 결과다(provider 모듈이 정의).
-     * 시스템이 공유를 멈추면(사용자가 알림에서 중지, 화면 잠금 등) [RtcEngineEvent.LocalMediaChanged]로 알린다.
+     * 화면 공유를 시작한다. [consent]는 사용자가 시스템 화면 공유 승인 대화상자에서 허락한 결과이며, 구체 타입은 provider 모듈이 정의한다.
+     * 사용자가 알림에서 멈추거나 화면이 잠기는 등 시스템이 공유를 멈추면 [RtcEngineEvent.LocalMediaChanged]로 알린다.
      */
     public suspend fun startScreenShare(consent: ScreenShareConsent): MediaActionResult = MediaActionResult.Unsupported
 
@@ -90,7 +90,7 @@ public interface RtcEngine {
     /** 룸의 다른 참가자에게 반응을 보낸다. 지원하지 않는 엔진은 Unsupported. */
     public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
 
-    /** 연결·트랙·리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
+    /** 연결, 트랙, 리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
     public suspend fun release()
 }
 

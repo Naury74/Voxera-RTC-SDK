@@ -33,16 +33,16 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * 통화 중 PiP(화면 속 화면) 창 관리. 통화가 연결된 동안에만 PiP를 허용하고, 홈으로 나가면 자동으로 PiP에 들어간다.
- * PiP 창에는 마이크 끄기/켜기와 통화 종료 버튼을 둔다.
+ * 통화 중 PiP(화면 속 화면) 창을 관리한다. PiP는 통화가 연결된 동안에만 허용하며, 사용자가 홈으로 나가면 자동으로 PiP로 바뀐다.
+ * PiP 창에는 마이크 켜기/끄기 버튼과 통화 종료 버튼이 있다.
  *
- * - 호스트 Activity의 매니페스트에 `android:supportsPictureInPicture="true"`와, PiP 전환에 Activity가 다시 만들어지지 않도록
- *   `android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"`가 있어야 한다.
- * - Android 12+는 시스템이 홈 제스처에 맞춰 자연스럽게 들어가고(auto-enter), 그 아래 버전은 `onUserLeaveHint`에서 들어간다.
- * - PiP 창 안의 화면은 [isInPictureInPicture]를 보고 호스트가 그린다(예: `VoxeraRoomScreen(pictureInPicture = ...)`).
- * - 사용자가 PiP 창을 닫으면 [onDismissed]를 부른다. 기본은 아무것도 하지 않으며 통화는 foreground service로 이어진다.
+ * - 호스트 Activity 매니페스트에 `android:supportsPictureInPicture="true"`가 있어야 하고, PiP로 바뀔 때 Activity가 다시 만들어지지 않도록
+ *   `android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"`도 선언해야 한다.
+ * - Android 12+에서는 시스템이 홈 제스처에 맞춰 매끄럽게 전환하고(auto-enter), 그보다 낮은 버전은 `onUserLeaveHint`에서 전환한다.
+ * - PiP 창 안의 화면은 호스트가 [isInPictureInPicture]를 보고 그린다(예: `VoxeraRoomScreen(pictureInPicture = ...)`).
+ * - 사용자가 PiP 창을 닫으면 [onDismissed]를 부른다. 기본 동작은 없고, 통화는 foreground service로 계속 이어진다.
  *
- * Activity가 없어지면 저절로 정리되며, 그 전에 그만 쓰려면 [close]를 부른다.
+ * Activity가 소멸하면 자동으로 정리된다. 그 전에 그만 쓰려면 [close]를 부른다.
  */
 public class VoxeraPictureInPicture private constructor(
     private val activity: ComponentActivity,
@@ -72,8 +72,8 @@ public class VoxeraPictureInPicture private constructor(
     }
 
     /**
-     * 앱이 곧 다른 화면(화면 공유 승인, 권한 요청 등)을 띄울 때 부른다. Android 11 이하는 그 화면 전환도 "나가기"로 알려 오므로,
-     * 부르지 않으면 통화가 PiP로 줄어든다. 다음 한 번만 효과가 있다.
+     * 화면 공유 승인이나 권한 요청처럼 앱이 곧 다른 화면을 띄울 때 부른다. Android 11 이하는 이런 전환도 "나가기"로 알리기 때문에
+     * 부르지 않으면 통화 화면이 PiP로 줄어든다. 바로 다음 한 번에만 적용된다.
      */
     public fun ignoreNextUserLeave() {
         ignoreNextLeave = true
@@ -194,7 +194,7 @@ public class VoxeraPictureInPicture private constructor(
         private const val REQUEST_MIC = 0x5601
         private const val REQUEST_HANG_UP = 0x5602
 
-        /** 기기가 PiP를 지원하는지. 저사양 기기나 일부 Android TV·Go 기기는 지원하지 않는다. */
+        /** 기기가 PiP를 지원하는지. 저사양 기기나 일부 Android TV, Android Go 기기는 지원하지 않는다. */
         public fun isSupported(context: Context): Boolean =
             context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
@@ -202,7 +202,7 @@ public class VoxeraPictureInPicture private constructor(
          * [activity]에 PiP를 붙인다. Activity의 `onCreate`에서 부른다.
          *
          * @param onHangUp PiP 창의 종료 버튼. 보통 `session.leave()`, Call Mode면 `CallCoordinator.hangup()`.
-         * @param onDismissed 사용자가 PiP 창을 닫음. 통화를 끝낼지 이어 갈지는 호스트가 정한다.
+         * @param onDismissed 사용자가 PiP 창을 닫으면 불린다. 통화를 끝낼지 이어 갈지는 호스트가 정한다.
          */
         public fun attach(
             activity: ComponentActivity,

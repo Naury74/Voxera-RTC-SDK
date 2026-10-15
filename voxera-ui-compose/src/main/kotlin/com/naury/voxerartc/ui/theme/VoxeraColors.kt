@@ -6,13 +6,13 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 
 /**
- * Voxera Glass 의미 색상. 모든 화면과 컴포넌트는 이 토큰만 쓰며 화면별 색을 따로 두지 않는다.
- * 바탕은 무채색 단색이고 색은 강조색 하나로만 쓴다. 표면을 그라디언트로 칠하지 않는다.
+ * Voxera Glass의 의미 색상 토큰. 모든 화면과 컴포넌트가 이 토큰만 쓰고, 화면마다 색을 따로 두지 않는다.
+ * 바탕은 무채색 단색이고 유채색은 강조색 하나뿐이다. 표면에 그라디언트를 칠하지 않는다.
  *
  * - [canvas]: 영상이 없는 화면 배경. [surface]/[surfaceElevated]: 설정·목록·카드.
  * - [glassTint]/[glassStroke]/[glassHighlight]: 영상 위 조작 패널의 반투명 채움, 1dp 테두리, 위쪽 반사광.
- * - [scrim]: 영상 위 글자를 읽히게 하는 어두운 막. [onScrim]은 그 위 글자색으로 두 테마 모두 밝은 색이다.
- * - [warning]: "테스트 전용" 같은 주의 문구. 상태는 색만으로 전달하지 않고 글자·아이콘을 함께 쓴다.
+ * - [scrim]: 영상 위 글자가 잘 읽히도록 까는 어두운 막. [onScrim]은 그 위에 쓰는 글자색이며 두 테마 모두 밝은 색이다.
+ * - [warning]: "테스트 전용" 같은 주의 문구. 상태는 색만으로 전달하지 않고 글자나 아이콘을 함께 쓴다.
  */
 @Immutable
 public data class VoxeraColors(

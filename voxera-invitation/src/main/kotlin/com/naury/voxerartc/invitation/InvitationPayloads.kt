@@ -6,10 +6,10 @@ import com.naury.voxerartc.api.CallMode
 public sealed interface PayloadParseResult {
     public data class Parsed(val event: InvitationEvent) : PayloadParseResult
 
-    /** 필수 키가 없거나 값이 맞지 않음. [field]는 문제 키 이름이다. */
+    /** 필수 키가 없거나 값 형식이 맞지 않는다. [field]는 문제가 된 키 이름이다. */
     public data class Invalid(val field: String) : PayloadParseResult
 
-    /** 토큰·비밀 값으로 보이는 키가 들어 있음. 호스트 서버가 payload에서 빼야 한다. 값은 읽지 않는다. */
+    /** 토큰이나 비밀 값으로 보이는 키가 들어 있다. 호스트 서버가 payload에서 빼야 한다. 해당 값은 읽지 않는다. */
     public data class ContainsSecret(val field: String) : PayloadParseResult
 }
 

@@ -40,7 +40,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.readableOn
 
-/** 둥근 사각 단색 안에 아이콘을 담은 타일. 목록 행 앞이나 기능 소개에 쓴다. 아이콘은 장식이라 읽지 않는다. */
+/** 둥근 사각형 단색 바탕에 아이콘을 얹은 타일. 목록 행 앞이나 기능 소개에 쓴다. 아이콘은 장식이므로 TalkBack이 읽지 않는다. */
 @Composable
 public fun VoxeraIconTile(icon: ImageVector, color: Color, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 32.dp) {
     val tint = readableOn(color)
@@ -55,7 +55,7 @@ public fun VoxeraIconTile(icon: ImageVector, color: Color, modifier: Modifier = 
     }
 }
 
-/** 행을 한 장의 유리 카드에 모은다. 행 사이에는 아이콘 뒤부터 시작하는 가는 구분선을 둔다. */
+/** 여러 행을 유리 카드 한 장에 모은다. 행 사이 구분선은 아이콘 뒤에서 시작하는 가는 선이다. */
 @Composable
 public fun GlassListGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.xl), contentPadding = PaddingValues(vertical = VoxeraSpacing.xxs), modifier = modifier) {
@@ -76,7 +76,7 @@ public fun GlassListDivider(inset: androidx.compose.ui.unit.Dp = 60.dp) {
 }
 
 /**
- * 목록 한 줄. 앞쪽 색 타일, 제목·설명, 뒤쪽 화살표(또는 [trailing]). 최소 높이 56dp, 누르면 살짝 눌린다.
+ * 목록 한 줄. 앞에 색 타일, 가운데 제목과 설명, 끝에 화살표(또는 [trailing])를 둔다. 최소 높이는 56dp이고 누르면 살짝 눌린다.
  *
  * @param tileColor 앞쪽 타일 색. `null`이면 [VoxeraTheme] 강조색.
  */

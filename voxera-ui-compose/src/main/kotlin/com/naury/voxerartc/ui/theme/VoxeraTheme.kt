@@ -21,9 +21,9 @@ public enum class VoxeraThemeMode { SYSTEM, LIGHT, DARK }
 /**
  * 반투명 조작 패널 품질.
  *
- * - [AUTO]: 배터리 절약·고대비에서는 [REDUCED]로 낮춘다.
- * - [FULL]: 반투명 tint·테두리·반사광. 배경 흐림(backdrop blur)은 어떤 단계에서도 하지 않는다. 영상 Surface 뒤를
- *   흐리게 하는 보편적인 방법이 Android에 없으므로 흐린 척하지 않는다.
+ * - [AUTO]: 배터리 절약 모드나 고대비 설정에서는 [REDUCED]로 낮춘다.
+ * - [FULL]: 반투명 tint, 테두리, 반사광을 모두 그린다. 배경 흐림(backdrop blur)은 어느 단계에서도 쓰지 않는다. Android에는 영상 Surface 뒤를
+ *   흐리게 하는 범용 방법이 없으므로 흐린 것처럼 흉내 내지도 않는다.
  * - [REDUCED]: 불투명도를 높여 영상 위 글자 대비를 우선한다.
  * - [OFF]: 불투명 표면.
  */
@@ -45,8 +45,8 @@ public data class VoxeraPaletteOverride(
 )
 
 /**
- * Voxera UI 테마 설정. 호스트의 `MaterialTheme`는 바꾸지 않으며 Voxera 화면 안에서만 쓰인다.
- * 설정을 바꾸면 UI만 다시 그리며 세션·영상 트랙은 다시 만들지 않는다.
+ * Voxera UI 테마 설정. 호스트의 `MaterialTheme`는 바꾸지 않으며 Voxera 화면 안에서만 적용된다.
+ * 설정을 바꾸면 UI만 다시 그리고 세션과 영상 트랙은 다시 만들지 않는다.
  *
  * @property highContrast `true`면 보조 글자색을 기본 글자색으로 올리고 패널을 불투명하게 한다.
  */
@@ -63,8 +63,8 @@ public data class VoxeraThemeConfig(
 public data class ResolvedVoxeraColors(val colors: VoxeraColors, val rejected: List<String>)
 
 /**
- * [base]에 [override]를 적용한다. 글자와 그 배경이 일반 글자 기준 4.5:1, 강조 버튼은 3:1 대비에 못 미치면
- * 해당 항목을 버리고 기본값을 쓴다.
+ * [base]에 [override]를 적용한다. 글자와 배경의 대비가 일반 글자는 4.5:1, 강조 버튼은 3:1에 못 미치면
+ * 그 항목은 버리고 기본값을 쓴다.
  */
 public fun resolveVoxeraColors(base: VoxeraColors, override: VoxeraPaletteOverride?, highContrast: Boolean): ResolvedVoxeraColors {
     val rejected = mutableListOf<String>()
@@ -163,7 +163,7 @@ public object VoxeraTheme {
     public val typography: VoxeraTypography
         @Composable get() = LocalVoxeraTokens.current.typography
 
-    /** AUTO가 풀린 실제 품질. 컴포넌트는 이 값으로 투명도를 정한다. */
+    /** AUTO를 실제 값으로 풀어 낸 품질. 컴포넌트는 이 값을 보고 투명도를 정한다. */
     public val glassQuality: VoxeraGlassQuality
         @Composable get() = LocalVoxeraTokens.current.glassQuality
 

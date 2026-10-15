@@ -13,9 +13,9 @@ public sealed interface ServerUrlCheck {
 }
 
 /**
- * 토큰을 함께 보낼 서버 주소를 고르는 규칙. 기본은 TLS(`wss://`)만 허용한다.
+ * 토큰을 보내도 되는 서버 주소인지 가리는 규칙. 기본은 TLS(`wss://`)만 허용한다.
  *
- * @property allowInsecureLocalhost `true`면 에뮬레이터·로컬 개발 서버(`localhost`, `127.0.0.1`, `10.0.2.2`)에 한해
+ * @property allowInsecureLocalhost `true`면 에뮬레이터와 로컬 개발 서버(`localhost`, `127.0.0.1`, `10.0.2.2`)에 한해
  *   `ws://`를 허용한다. 공개 배포 앱에서는 켜지 않는다.
  * @property allowedHosts 비어 있지 않으면 이 호스트 이름(정확히 일치하거나 하위 도메인)만 허용한다.
  */
@@ -23,7 +23,7 @@ public data class ServerUrlPolicy(
     val allowInsecureLocalhost: Boolean = false,
     val allowedHosts: Set<String> = emptySet(),
 ) {
-    /** [raw]를 검사한다. 네트워크에 접속하지 않으며, 서버가 실제로 LiveKit 호환인지는 연결할 때 확인된다. */
+    /** [raw]를 검사한다. 네트워크에 접속하지 않으며, 서버가 실제로 LiveKit 호환인지는 연결할 때 확인한다. */
     public fun check(raw: String): ServerUrlCheck {
         val trimmed = raw.trim().trimEnd('/')
         if (trimmed.isEmpty()) return ServerUrlCheck.Invalid(ConfigurationProblem.SERVER_URL_BLANK)

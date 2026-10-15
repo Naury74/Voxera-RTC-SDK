@@ -1,7 +1,7 @@
 package com.naury.voxerartc.api
 
 /**
- * 내 카메라 영상의 색 효과(v1, 저비용). 상대에게 보내는 영상과 내 미리보기에 함께 적용된다.
+ * 내 카메라 영상에 입히는 색 효과(v1, 저비용). 상대에게 가는 영상과 내 미리보기에 함께 적용된다.
  *
  * @property brightness -0.5~0.5. 0이면 그대로.
  * @property contrast 0.5~1.5. 1이면 그대로.

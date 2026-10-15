@@ -1,8 +1,8 @@
 package com.naury.voxerartc.api
 
 /**
- * 사용자의 의도([desired])와 엔진이 실제로 반영한 상태([actual])를 함께 둔다. 둘이 다르면 반영 중이다.
- * UI는 [actual]을 확정 상태로 보여 주고, [isPending]이면 진행 표시를 한다.
+ * 사용자가 원하는 상태([desired])와 엔진이 실제로 반영한 상태([actual])를 함께 담는다. 둘이 다르면 아직 반영 중이다.
+ * UI는 [actual]을 확정된 상태로 보여 주고, [isPending]이면 진행 중 표시를 한다.
  */
 public data class MediaToggle(
     val desired: Boolean,
@@ -27,7 +27,7 @@ public data class AudioRoute(
     val isSelectable: Boolean = true,
 )
 
-/** 카메라 방향. 기기에 해당 카메라가 없으면 전환이 [MediaActionResult.Unsupported]가 된다. */
+/** 카메라 방향. 기기에 그 카메라가 없으면 전환 결과는 [MediaActionResult.Unsupported]다. */
 public enum class CameraFacing { FRONT, BACK, EXTERNAL }
 
 /** 로컬 미디어 상태. */

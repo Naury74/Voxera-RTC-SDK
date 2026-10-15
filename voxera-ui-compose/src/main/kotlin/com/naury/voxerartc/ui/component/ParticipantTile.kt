@@ -57,17 +57,17 @@ import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 
 /**
  * 참가자 타일. 카메라가 켜져 있고 [renderer]가 있으면 영상, 아니면 이니셜 아바타를 보여 준다. 카메라를 끄면
- * 마지막 프레임 대신 아바타로 바뀐다. 이름표는 12dp 안쪽에 고정한다.
+ * 마지막 프레임을 남기지 않고 아바타로 바뀐다. 이름표는 가장자리에서 12dp 안쪽에 고정한다.
  *
- * 누르면 [onTap](예: 이 사람 크게 보기, 조작 막대 보이기/숨기기), 길게 누르면 [onTogglePin]. 누르는 동안 살짝 작아진다.
- * 고정된 타일에는 오른쪽 위에 고정 해제 버튼이 생긴다. TalkBack에서는 두 번 탭이 [onTap]([tapLabel]), 없으면 고정/해제다.
+ * 누르면 [onTap](예: 이 사람 크게 보기, 조작 막대 보이기/숨기기)을, 길게 누르면 [onTogglePin]을 부른다. 누르는 동안 살짝 작아진다.
+ * 고정된 타일은 오른쪽 위에 고정 해제 버튼이 생긴다. TalkBack에서는 두 번 탭하면 [onTap]을 부르고 [tapLabel]로 읽으며, [onTap]이 없으면 고정/해제한다.
  *
  * @param onTogglePin `null`이 아니면 길게 눌러 고정/해제한다. [onTap]이 없으면 짧게 눌러도 고정/해제한다.
- * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대·시스템 막대를 피할 때 쓴다.
+ * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대나 시스템 막대를 피할 때 쓴다.
  * @param showScreenShare `true`면 카메라 대신 화면 공유 트랙을 그리고 이름표에 "화면"을 붙인다.
  * @param tapLabel [onTogglePin]이 없을 때 TalkBack 두 번 탭으로 [onTap]을 부르게 하고 그 동작 이름으로 읽는다.
  * @param shape 타일 모서리. 기본은 24dp.
- * @param speakingOutline 말할 때 테두리를 그린다. 화면 전체를 채운 타일은 끄고 이름표의 막대만 남긴다.
+ * @param speakingOutline 말하는 동안 테두리를 그린다. 화면을 꽉 채운 타일에서는 끄고 이름표의 막대만 남긴다.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

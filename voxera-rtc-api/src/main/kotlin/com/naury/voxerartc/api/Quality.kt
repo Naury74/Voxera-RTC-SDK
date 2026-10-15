@@ -40,7 +40,7 @@ public data class QualitySnapshot(
     val source: MetricSource,
     val metrics: List<QualityMetric>,
 ) {
-    /** 해당 항목·방향의 값. 없거나 측정되지 않았으면 `null`. */
+    /** [kind]와 [direction]에 해당하는 값. 없거나 측정되지 않았으면 `null`. */
     public fun valueOf(kind: MetricKind, direction: MetricDirection): Double? =
         metrics.firstOrNull { it.kind == kind && it.direction == direction }?.value
 }

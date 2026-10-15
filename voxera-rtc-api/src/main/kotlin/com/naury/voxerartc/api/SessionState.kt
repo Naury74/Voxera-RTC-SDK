@@ -17,7 +17,7 @@ public sealed interface SessionState {
     /** 연결됨. [connectedAtMs]부터 통화 시간을 잰다. */
     public data class Connected(val roomId: String, val mode: CallMode, val connectedAtMs: Long) : SessionState
 
-    /** 연결이 끊겨 엔진이 복구 중. [sinceMs]부터 [deadlineMs]까지 복구되지 않으면 [Failed]가 된다. */
+    /** 연결이 끊겨 엔진이 복구하는 중. [sinceMs]부터 [deadlineMs]까지 복구되지 않으면 [Failed]로 바뀐다. */
     public data class Reconnecting(
         val roomId: String,
         val mode: CallMode,
@@ -32,7 +32,7 @@ public sealed interface SessionState {
     /** 정상 종료. 통화한 시간이 있으면 [durationMs]에 담긴다. */
     public data class Ended(val reason: EndReason, val durationMs: Long?) : SessionState
 
-    /** 실패. 자원은 이미 정리되었고 [error]는 사용자 안내에 쓴다. 다시 `join`하거나 나갈 수 있다. */
+    /** 실패했다. 자원은 이미 정리되었으며 [error]는 사용자 안내에 쓴다. 다시 `join`하거나 나갈 수 있다. */
     public data class Failed(val error: VoxeraError, val durationMs: Long?) : SessionState
 }
 
@@ -56,7 +56,7 @@ public fun interface MonotonicClock {
     public fun nowMs(): Long
 
     public companion object {
-        /** JVM 단조 시계. Android의 `SystemClock.elapsedRealtime`과 기준점은 다르지만 차이 계산에는 같다. */
+        /** JVM 단조 시계. Android의 `SystemClock.elapsedRealtime`과 기준점은 다르지만 두 시점 사이의 차이는 똑같이 계산된다. */
         public val System: MonotonicClock = MonotonicClock { java.lang.System.nanoTime() / 1_000_000 }
     }
 }

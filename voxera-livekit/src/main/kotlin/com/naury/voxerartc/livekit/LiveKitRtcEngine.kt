@@ -63,7 +63,7 @@ import io.livekit.android.room.participant.Participant as LiveKitParticipant
 /**
  * 실제 LiveKit 룸에 연결하는 [RtcEngineFactory]. 연결마다 새 `Room`을 만들고, 세션이 끝나면 `Room.release`로 해제한다.
  *
- * 마이크·카메라 권한은 호스트가 입장 전에 요청해야 한다. 권한이 없으면 해당 미디어 없이 입장하고, 조작하면
+ * 마이크와 카메라 권한은 호스트가 입장 전에 요청해야 한다. 권한이 없으면 그 미디어 없이 입장하며, 이후 조작하면
  * [VoxeraError.PermissionDenied]를 돌려준다.
  *
  * @param context Activity가 아닌 application context를 보관한다.

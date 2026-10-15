@@ -19,13 +19,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * 통화가 연결된 동안(재연결 포함) foreground service와 진행 중 알림을 유지한다. 앱이 백그라운드로 가도 상대에게 내 소리가 계속 간다.
+ * 통화가 연결되어 있는 동안(재연결 중 포함) foreground service와 진행 중 알림을 띄워 둔다. 앱이 백그라운드로 가도 상대는 내 목소리를 계속 듣는다.
  *
- * - 사용자가 입장한 직후(앱이 앞에 있을 때) 불러야 한다. Android 12+는 백그라운드에서 foreground service를 시작할 수 없다.
- * - 알림은 Android 13+에서 `POST_NOTIFICATIONS`가 있어야 보인다. 없어도 서비스는 동작한다(호스트가 요청한다).
- * - 카메라를 켜고 끄면 서비스 타입을 맞춰 바꾼다.
+ * - 입장 직후, 앱이 아직 앞에 있을 때 불러야 한다. Android 12+에서는 백그라운드에서 foreground service를 시작할 수 없다.
+ * - Android 13+에서는 `POST_NOTIFICATIONS` 권한이 있어야 알림이 보인다. 권한은 호스트가 요청하며, 권한이 없어도 서비스는 동작한다.
+ * - 카메라를 켜거나 끄면 서비스 타입도 그에 맞게 바꾼다.
  *
- * - 알림에는 통화 경과 시간과 종료 버튼이 있다. 종료 버튼은 [onHangUp]을 부른다(기본은 `session.leave()`).
+ * - 알림에는 통화 시간과 종료 버튼이 표시된다. 종료 버튼은 [onHangUp]을 부른다(기본은 `session.leave()`).
  *
  * 반환한 [AutoCloseable]을 닫거나 통화가 끝나면 서비스를 멈춘다.
  *

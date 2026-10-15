@@ -51,8 +51,8 @@ public enum class CallEndReason {
 }
 
 /**
- * Call Mode 상태. 문서의 `Draft → Dialing → Ringing → Accepted → ConnectingMedia → Active → Ended`를 따르며,
- * Declined·Missed·Busy·Cancelled·Expired·Failed는 [Ended]의 [CallEndReason]으로 나타낸다.
+ * Call Mode 상태. 문서의 `Draft → Dialing → Ringing → Accepted → ConnectingMedia → Active → Ended` 흐름을 따른다.
+ * Declined, Missed, Busy, Cancelled, Expired, Failed는 따로 두지 않고 [Ended]의 [CallEndReason]으로 나타낸다.
  */
 public sealed interface CallState {
     public data object Idle : CallState
@@ -63,10 +63,10 @@ public sealed interface CallState {
     /** 벨이 울리는 중. [deadlineMs]가 지나면 로컬에서도 끝낸다([MonotonicClock] 기준). */
     public data class Ringing(val call: CallInfo, val direction: CallDirection, val deadlineMs: Long) : CallState
 
-    /** 수락되어 룸 미디어에 연결하는 중. */
+    /** 수락된 뒤 룸 미디어에 연결하는 중. */
     public data class ConnectingMedia(val call: CallInfo, val direction: CallDirection) : CallState
 
-    /** 미디어가 연결됨. 화면은 [VoxeraSession] 상태로 그린다. */
+    /** 미디어가 연결된 상태. 화면은 [VoxeraSession] 상태를 보고 그린다. */
     public data class Active(val call: CallInfo, val direction: CallDirection) : CallState
 
     public data class Ended(val call: CallInfo?, val reason: CallEndReason) : CallState
@@ -76,7 +76,7 @@ public sealed interface CallState {
 public enum class CallActionResult { APPLIED, NOT_ALLOWED_IN_STATE }
 
 /**
- * @property ringTimeoutMs 서버의 EXPIRED가 오지 않을 때를 대비한 로컬 벨 제한 시간(ms, 1 이상).
+ * @property ringTimeoutMs 서버에서 EXPIRED가 오지 않을 때를 대비한 로컬 벨 제한 시간(ms, 1 이상).
  */
 public data class CallPolicy(val ringTimeoutMs: Long = 45_000) {
     init {
@@ -85,14 +85,14 @@ public data class CallPolicy(val ringTimeoutMs: Long = 45_000) {
 }
 
 /**
- * 초대 신호([InvitationGateway])와 룸 미디어([VoxeraSession])를 묶는다. Room Mode만 쓰는 앱은 필요 없다.
+ * 초대 신호([InvitationGateway])와 룸 미디어([VoxeraSession])를 묶는다. Room Mode만 쓰는 앱에는 필요 없다.
  *
- * - 같은 `callId`의 이벤트는 revision이 커질 때만 반영하므로 중복·역순 푸시가 무해하다.
- * - 수락·취소가 겹치면 서버의 더 큰 revision을 따르고, 최종 상태가 종료면 룸에서 나간다.
- * - 이미 통화 중에 새 초대가 오면 `BUSY`로 거절한다.
+ * - 같은 `callId`의 이벤트는 revision이 커질 때만 반영하므로, 푸시가 중복되거나 순서가 뒤바뀌어도 문제없다.
+ * - 수락과 취소가 엇갈리면 revision이 더 큰 서버 상태를 따르고, 최종 상태가 종료면 룸에서 나간다.
+ * - 통화 중에 새 초대가 오면 `BUSY`로 거절한다.
  * - 수락 뒤 미디어 연결이 실패하면 `hangup`으로 상대에게 알린다.
  *
- * [start]를 불러야 이벤트를 받기 시작하고, 다 쓰면 [close]한다. [close]는 세션을 닫지 않는다.
+ * 이벤트는 [start]를 불러야 받기 시작한다. 다 쓰면 [close]를 부르며, [close]가 세션까지 닫지는 않는다.
  */
 public class CallCoordinator internal constructor(
     private val gateway: InvitationGateway,
@@ -116,8 +116,8 @@ public class CallCoordinator internal constructor(
     public val state: StateFlow<CallState> = _state.asStateFlow()
 
     /**
-     * 초대 이벤트와 세션 종료를 관찰하기 시작한다. 한 번만 부른다. 돌아올 때 이미 구독되어 있으므로, 그 뒤에 들어온 초대는
-     * 유실되지 않는다(호스트의 Flow가 구독 전 이벤트를 버리는 SharedFlow여도).
+     * 초대 이벤트와 세션 종료를 관찰하기 시작한다. 한 번만 부른다. 반환할 때는 이미 구독을 시작한 상태이므로 그 뒤에 들어온 초대는
+     * 놓치지 않는다. 호스트의 Flow가 구독 전 이벤트를 버리는 SharedFlow여도 마찬가지다.
      */
     public fun start() {
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -130,7 +130,7 @@ public class CallCoordinator internal constructor(
         }
     }
 
-    /** 발신한다. 이미 통화 중이거나 벨이 울리는 중이면 [CallActionResult.NOT_ALLOWED_IN_STATE]. */
+    /** 발신한다. 이미 통화 중이거나 벨이 울리는 중이면 [CallActionResult.NOT_ALLOWED_IN_STATE]를 돌려준다. */
     public suspend fun call(recipientIds: List<String>, mode: CallMode): CallActionResult {
         val requestId = UUID.randomUUID().toString()
         mutex.withLock {

@@ -71,13 +71,13 @@ import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 
-/** 버튼 강조 단계. [Danger]는 종료·거절에만 쓴다. */
+/** 버튼 강조 단계. [Danger]는 종료와 거절에만 쓴다. */
 public enum class VoxeraButtonTone { Primary, Secondary, Danger }
 
 /**
  * 높이 56dp(최소 48dp) 캡슐 버튼. 글자가 커져도 높이가 늘어나 잘리지 않는다. 누르면 살짝 작아졌다 돌아온다.
  *
- * @param icon 글자 앞에 둘 아이콘. 뜻은 [text]가 전하므로 아이콘은 읽지 않는다.
+ * @param icon 글자 앞에 둘 아이콘. 뜻은 [text]가 전하므로 TalkBack은 아이콘을 읽지 않는다.
  */
 @Composable
 public fun VoxeraButton(
@@ -116,11 +116,11 @@ public fun VoxeraButton(
 }
 
 /**
- * 통화 조작 버튼(원 52dp + 아래 이름표). 켜짐/꺼짐은 아이콘·글자·stateDescription으로 함께 알린다.
+ * 통화 조작 버튼(원 52dp + 아래 이름표). 켜짐/꺼짐은 아이콘, 글자, stateDescription으로 함께 알린다.
  *
  * @param stateLabel TalkBack이 읽을 현재 상태. 예: "꺼짐", "적용 중…". `null`이면 상태가 없는 동작 버튼이다.
- * @param active `true`면 강조 채움(예: 마이크 켜짐). 동작의 결과가 엔진에서 확인되기 전에는 [pending]으로 표시한다.
- * @param accent `true`면 주 강조색(예: 통화 수락).
+ * @param active `true`면 강조색으로 채운다(예: 마이크 켜짐). 엔진이 결과를 확인하기 전에는 [pending]으로 표시한다.
+ * @param accent `true`면 주 강조색을 쓴다(예: 통화 수락).
  * @param circleSize 원 크기. 버튼이 많아 폭이 좁으면 48dp(최소 터치 크기)까지 줄인다.
  */
 @Composable

@@ -81,20 +81,20 @@ import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.enterOnAppear
 
 /**
- * 입장 전 선택. 권한이 거부된 미디어는 꺼진 값으로 온다.
+ * 입장 전 화면에서 고른 값. 권한이 거부된 미디어는 꺼진 상태로 들어온다.
  *
- * @property microphone 마이크를 켠 채 입장할지(권한 허용됨).
- * @property camera 카메라를 켠 채 입장할지(영상 모드이고 권한 허용됨).
+ * @property microphone 마이크를 켠 채 입장할지. `true`면 권한도 허용된 상태다.
+ * @property camera 카메라를 켠 채 입장할지. `true`면 영상 모드이고 권한도 허용된 상태다.
  */
 public data class PrejoinChoice(val mode: CallMode, val microphone: Boolean, val camera: Boolean)
 
 /**
- * 입장 전 대기 화면(U-03/G-03). 마이크·카메라를 켤 때와 입장할 때만 권한을 묻고, 거부하면 그 미디어 없이 입장한다.
- * "다시 묻지 않음" 상태면 시스템 대화상자를 반복하지 않고 설정 화면으로 안내한다.
+ * 입장 전 대기 화면(U-03/G-03). 권한은 마이크나 카메라를 켤 때와 입장할 때만 묻고, 거부하면 그 미디어 없이 입장한다.
+ * "다시 묻지 않음" 상태면 시스템 대화상자를 다시 띄우지 않고 설정 화면으로 안내한다.
  *
  * SDK는 이 화면에서만 권한을 요청한다. 호스트가 권한 흐름을 직접 다루려면 이 화면 대신 `VoxeraSession.join`을 바로 부른다.
  *
- * @param preview 카메라가 켜져 있고 권한이 있을 때 그릴 미리보기(예: `LiveKitCameraPreviewContent`). `null`이면 아바타.
+ * @param preview 카메라가 켜져 있고 권한이 있을 때 그릴 미리보기(예: `LiveKitCameraPreviewContent`). `null`이면 아바타를 그린다.
  */
 @Composable
 public fun VoxeraPrejoinScreen(

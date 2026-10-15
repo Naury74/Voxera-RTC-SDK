@@ -23,7 +23,7 @@ import com.naury.voxerartc.ui.theme.VoxeraTheme
 
 /**
  * [VideoTrackHandle]을 화면에 그리는 어댑터. RTC provider 모듈(예: voxera-livekit)이 구현해
- * [LocalVoxeraVideoRenderer]로 넘긴다. 구현은 Composable이 사라질 때 렌더러·Surface·트랙 리스너를 해제해야 한다.
+ * [LocalVoxeraVideoRenderer]로 넘긴다. 구현체는 Composable이 사라질 때 렌더러, Surface, 트랙 리스너를 해제해야 한다.
  */
 public fun interface VoxeraVideoRenderer {
     @Composable
