@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
+import com.naury.voxerartc.ui.component.HandBadge
 import com.naury.voxerartc.ui.component.VoxeraAvatar
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
@@ -51,20 +53,24 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import kotlinx.coroutines.delay
 
-/** 참가자 입장·퇴장 알림 하나. */
-internal data class RoomNotice(val id: Long, val participantId: String, val name: String, val joined: Boolean)
+internal enum class NoticeKind { JOINED, LEFT, HAND_RAISED }
+
+/** 참가자 입장·퇴장·손들기 알림 하나. */
+internal data class RoomNotice(val id: Long, val participantId: String, val name: String, val kind: NoticeKind)
 
 /**
- * 이전·현재 원격 참가자 목록을 비교해 들어온 사람과 나간 사람을 알림으로 만든다. 처음 목록(입장 직후)은 알리지 않는다.
- * 로컬 참가자는 알리지 않는다.
+ * 이전·현재 원격 참가자 목록을 비교해 들어온 사람, 나간 사람, 새로 손을 든 사람을 알림으로 만든다.
+ * 처음 목록(입장 직후)은 알리지 않는다. 로컬 참가자는 알리지 않는다. 손을 든 채로 들어온 사람은 입장만 알린다.
  */
 internal fun noticesBetween(previous: List<Participant>?, current: List<Participant>, nextId: () -> Long): List<RoomNotice> {
     if (previous == null) return emptyList()
     val before = previous.filterNot { it.isLocal }.associateBy { it.id }
     val after = current.filterNot { it.isLocal }.associateBy { it.id }
-    val joined = after.values.filter { it.id !in before }.map { RoomNotice(nextId(), it.id, it.displayName, joined = true) }
-    val left = before.values.filter { it.id !in after }.map { RoomNotice(nextId(), it.id, it.displayName, joined = false) }
-    return joined + left
+    val joined = after.values.filter { it.id !in before }.map { RoomNotice(nextId(), it.id, it.displayName, NoticeKind.JOINED) }
+    val left = before.values.filter { it.id !in after }.map { RoomNotice(nextId(), it.id, it.displayName, NoticeKind.LEFT) }
+    val hands = after.values.filter { it.isHandRaised && before[it.id]?.isHandRaised == false }
+        .map { RoomNotice(nextId(), it.id, it.displayName, NoticeKind.HAND_RAISED) }
+    return joined + left + hands
 }
 
 /**
@@ -101,7 +107,14 @@ internal fun ParticipantNotices(participants: List<Participant>, modifier: Modif
         modifier = modifier,
     ) {
         val notice = current ?: return@AnimatedVisibility
-        val text = stringResource(if (notice.joined) R.string.voxera_notice_joined else R.string.voxera_notice_left, notice.name)
+        val text = stringResource(
+            when (notice.kind) {
+                NoticeKind.JOINED -> R.string.voxera_notice_joined
+                NoticeKind.LEFT -> R.string.voxera_notice_left
+                NoticeKind.HAND_RAISED -> R.string.voxera_notice_hand
+            },
+            notice.name,
+        )
         GlassSurface(
             level = GlassLevel.Medium,
             shape = CircleShape,
@@ -109,7 +122,10 @@ internal fun ParticipantNotices(participants: List<Participant>, modifier: Modif
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-                VoxeraAvatar(notice.participantId, notice.name, size = 32.dp)
+                Box {
+                    VoxeraAvatar(notice.participantId, notice.name, size = 32.dp)
+                    if (notice.kind == NoticeKind.HAND_RAISED) HandBadge(Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp), size = 18.dp)
+                }
                 Text(text, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }

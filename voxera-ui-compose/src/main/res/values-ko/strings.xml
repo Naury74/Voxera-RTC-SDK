@@ -178,4 +178,20 @@
     <string name="voxera_route_notice_now">지금 출력: %1$s</string>
     <string name="voxera_route_notice_undo">되돌리기</string>
     <string name="voxera_route_notice_switch">전환</string>
+    <string name="voxera_notice_hand">%1$s 님이 손을 들었습니다</string>
+    <string name="voxera_hand_raised">손 들었음</string>
+    <string name="voxera_hand_raise">손 들기</string>
+    <string name="voxera_hand_lower">손 내리기</string>
+    <string name="voxera_hand_you_raised">손을 들었어요</string>
+    <string name="voxera_control_chat">채팅</string>
+    <string name="voxera_chat_title">채팅</string>
+    <string name="voxera_chat_empty">아직 메시지가 없어요. 먼저 인사해 보세요.</string>
+    <string name="voxera_chat_placeholder">메시지 입력</string>
+    <string name="voxera_chat_send">보내기</string>
+    <string name="voxera_chat_someone">나간 참가자</string>
+    <string name="voxera_chat_from">%1$s: %2$s</string>
+    <string name="voxera_chat_open">채팅 열기</string>
+    <plurals name="voxera_chat_unread">
+        <item quantity="other">읽지 않은 메시지 %d개</item>
+    </plurals>
 </resources>

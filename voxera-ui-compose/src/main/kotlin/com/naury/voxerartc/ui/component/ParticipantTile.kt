@@ -1,5 +1,8 @@
 package com.naury.voxerartc.ui.component
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -92,6 +95,7 @@ public fun ParticipantTile(
     val description = buildList {
         add(name)
         if (pinned) add(stringResource(R.string.voxera_tile_pinned))
+        if (participant.isHandRaised) add(stringResource(R.string.voxera_hand_raised))
         if (participant.isSpeaking) add(stringResource(R.string.voxera_speaking))
         if (!participant.isMicrophoneEnabled) add(stringResource(R.string.voxera_mic_off))
         if (participant.camera == null) add(stringResource(R.string.voxera_camera_off))
@@ -166,6 +170,12 @@ public fun ParticipantTile(
                 if (weak) SignalBars(participant.connectionQuality, Modifier.size(width = 14.dp, height = 12.dp))
             }
         }
+        // 손을 든 사람은 왼쪽 위에 손 배지가 통 튀어나온다.
+        PoppingHandBadge(
+            participant.isHandRaised,
+            Modifier.align(Alignment.TopStart).padding(if (compact) VoxeraSpacing.xs else VoxeraSpacing.sm),
+            size = if (compact) 24.dp else 32.dp,
+        )
         // 고정된 타일은 오른쪽 위 버튼으로 바로 풀 수 있다(48dp 터치 영역).
         if (pinned && onTogglePin != null) {
             Box(
@@ -228,5 +238,39 @@ internal fun SignalBars(quality: ConnectionQuality, modifier: Modifier = Modifie
                 cornerRadius = CornerRadius(bar / 3f),
             )
         }
+    }
+}
+
+/** [raised]가 되면 살짝 기울어진 채 통 튀어나오고, 내리면 줄어들며 사라지는 [HandBadge]. */
+@Composable
+internal fun PoppingHandBadge(raised: Boolean, modifier: Modifier = Modifier, size: Dp = 32.dp) {
+    val hand by animateFloatAsState(
+        if (raised) 1f else 0f,
+        spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow),
+        label = "hand",
+    )
+    if (hand <= 0.01f) return
+    HandBadge(
+        modifier.graphicsLayer {
+            scaleX = hand
+            scaleY = hand
+            rotationZ = (1f - hand) * -25f
+        },
+        size = size,
+    )
+}
+
+/** 손을 든 사람 표시. 장식이라 읽지 않으며, 읽을 내용은 부르는 쪽 설명에 넣는다. */
+@Composable
+internal fun HandBadge(modifier: Modifier = Modifier, size: Dp = 32.dp) {
+    Box(
+        modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(VoxeraTheme.colors.warning)
+            .border(1.5.dp, VoxeraTheme.colors.canvas.copy(alpha = 0.6f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(VoxeraIcons.Hand, contentDescription = null, tint = VoxeraTheme.colors.onDanger, modifier = Modifier.size(size * 0.55f))
     }
 }

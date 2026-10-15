@@ -97,6 +97,7 @@ import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.component.ParticipantTile
 import com.naury.voxerartc.ui.component.StatusChip
+import com.naury.voxerartc.ui.component.PoppingHandBadge
 import com.naury.voxerartc.ui.component.VoxeraAvatar
 import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.ui.theme.VoxeraRadius
@@ -180,7 +181,7 @@ internal fun VideoStage(
             )
         }
         if (plan.paged) {
-            GridStage(participants, renderer, landscape, onTogglePin, top, bottom, Modifier.fillMaxSize())
+            GridStage(participants, renderer, landscape, onTogglePin, top, bottom, Modifier.fillMaxSize(), onTap.takeIf { !chromeVisible })
             return@BoxWithConstraints
         }
         val localId = participants.firstOrNull { it.isLocal }?.id
@@ -214,6 +215,7 @@ internal fun VideoStage(
                             onTogglePin = onTogglePin,
                             onTap = onTap,
                             onSwap = { localId?.let(onTogglePin) },
+                            chromeVisible = chromeVisible,
                         )
                     }
                 }
@@ -375,8 +377,11 @@ private fun StageTileContent(
     onTogglePin: (String) -> Unit,
     onTap: (() -> Unit)?,
     onSwap: () -> Unit,
+    chromeVisible: Boolean,
 ) {
     val role = placement.role
+    // 조작 막대가 숨어 있으면 어느 타일을 눌러도 먼저 막대를 꺼낸다. 막대가 보일 때 누르면 원래 동작(크게 보기 등)을 한다.
+    val reveal = !chromeVisible && onTap != null
     val radius by animateDpAsState(
         when (role) {
             TileRole.FULL -> 0.dp
@@ -399,14 +404,16 @@ private fun StageTileContent(
         pinned = role == TileRole.FOCUS && person.id == pinnedId,
         onTogglePin = if (placement.screenShare || role == TileRole.FULL || role == TileRole.FLOATING) null else ({ onTogglePin(person.id) }),
         showScreenShare = placement.screenShare,
-        onTap = when (role) {
-            TileRole.GRID, TileRole.THUMB -> ({ onTogglePin(person.id) })
-            TileRole.FLOATING -> onSwap
+        onTap = when {
+            reveal -> onTap
+            role == TileRole.GRID || role == TileRole.THUMB -> ({ onTogglePin(person.id) })
+            role == TileRole.FLOATING -> onSwap
             else -> onTap
         },
-        tapLabel = when (role) {
-            TileRole.GRID, TileRole.THUMB -> spotlight
-            TileRole.FLOATING -> swap
+        tapLabel = when {
+            reveal -> controls
+            role == TileRole.GRID || role == TileRole.THUMB -> spotlight
+            role == TileRole.FLOATING -> swap
             else -> controls.takeIf { onTap != null }
         },
         shape = shape,
@@ -425,6 +432,7 @@ private fun GridStage(
     top: Dp,
     bottom: Dp,
     modifier: Modifier,
+    reveal: (() -> Unit)?,
 ) {
     val pages = gridPages(participants)
     val pager = rememberPagerState { pages.size }
@@ -436,7 +444,7 @@ private fun GridStage(
     ) {
         // 화면 밖 쪽의 타일은 그리지 않으므로 영상 디코딩·렌더 부하가 보이는 9칸으로 제한된다(E25).
         HorizontalPager(pager, Modifier.weight(1f), beyondViewportPageCount = 0, key = { pages[it].firstOrNull()?.id ?: it }) { page ->
-            TileGrid(pages[page], renderer, landscape, onTogglePin)
+            TileGrid(pages[page], renderer, landscape, onTogglePin, reveal)
         }
         if (pages.size > 1) {
             PageDots(pages.size, pager.currentPage, Modifier.padding(top = VoxeraSpacing.xs))
@@ -445,7 +453,7 @@ private fun GridStage(
 }
 
 @Composable
-private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit) {
+private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit, reveal: (() -> Unit)?) {
     val spec = gridFor(tiles.size, landscape)
     Column(Modifier.fillMaxSize().padding(horizontal = VoxeraSpacing.xs), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
         tiles.chunked(spec.columns).forEach { row ->
@@ -456,8 +464,8 @@ private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, l
                         renderer,
                         Modifier.weight(1f).fillMaxHeight(),
                         onTogglePin = { onTogglePin(participant.id) },
-                        onTap = { onTogglePin(participant.id) },
-                        tapLabel = stringResource(R.string.voxera_tile_spotlight),
+                        onTap = reveal ?: { onTogglePin(participant.id) },
+                        tapLabel = stringResource(if (reveal != null) R.string.voxera_tile_toggle_controls else R.string.voxera_tile_spotlight),
                         shape = RoundedCornerShape(if (spec.columns >= 3) VoxeraRadius.md else VoxeraRadius.xl),
                     )
                 }
@@ -511,6 +519,7 @@ internal fun VoiceStage(participants: List<Participant>, elapsed: String, status
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.enterOnAppear(0, scale = true)) {
                         SpeakingRipple(focus.isSpeaking, focus.audioLevel, avatarSize)
                         VoxeraAvatar(focus.id, focus.displayName, size = avatarSize, speaking = focus.isSpeaking, audioLevel = focus.audioLevel)
+                        PoppingHandBadge(focus.isHandRaised, Modifier.align(Alignment.TopEnd), size = 40.dp)
                     }
                     // 물결 고리가 아바타 밖으로 퍼지므로 이름과 사이를 넉넉히 둔다.
                     Spacer(Modifier.height(gap))
@@ -588,6 +597,7 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                             Box(contentAlignment = Alignment.Center) {
                                 SpeakingRipple(participant.isSpeaking, participant.audioLevel, avatar)
                                 VoxeraAvatar(participant.id, participant.displayName, size = avatar, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
+                                PoppingHandBadge(participant.isHandRaised, Modifier.align(Alignment.TopEnd), size = 28.dp)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = VoxeraSpacing.xs)) {
                                 if (!participant.isMicrophoneEnabled) {

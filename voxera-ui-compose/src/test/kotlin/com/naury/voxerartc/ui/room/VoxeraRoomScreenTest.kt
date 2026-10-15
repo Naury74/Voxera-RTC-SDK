@@ -15,6 +15,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performImeAction
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.Reaction
 import com.google.common.truth.Truth.assertThat
@@ -200,6 +202,7 @@ class VoxeraRoomScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun `반응을 고르면 엔진으로 보낸다`() {
         val session = connectedSession(CallMode.VOICE)
         compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
@@ -207,5 +210,42 @@ class VoxeraRoomScreenTest {
         compose.onNodeWithContentDescription("Heart").performClick()
         compose.waitForIdle()
         assertThat(factory.last.sentReactions).containsExactly(Reaction.HEART)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun `채팅을 보내면 엔진으로 가고 받은 메시지는 배지로 센 뒤 시트를 열면 읽은 것으로 친다`() {
+        val session = connectedSession(CallMode.VOICE)
+        factory.last.upsertRemote(Participant(id = "alex", displayName = "Alex", isLocal = false))
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        factory.last.simulateChat("alex", "hello there")
+        compose.waitUntil(5_000) { session.chat.value.isNotEmpty() }
+        compose.waitForIdle()
+        compose.onNode(hasContentDescription("Chat").and(stateIs("1 unread message"))).assertExists()
+        compose.onNodeWithContentDescription("Chat").performClick()
+        compose.onNodeWithText("hello there").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Message").performTextInput("hi Alex")
+        compose.onNodeWithContentDescription("Message").performImeAction()
+        compose.waitUntil(5_000) { factory.last.sentChatMessages.isNotEmpty() }
+        assertThat(factory.last.sentChatMessages.map { it.second }).containsExactly("hi Alex")
+        compose.waitForIdle()
+        compose.onNodeWithText("hi Alex").assertIsDisplayed()
+        session.close()
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun `반응 시트에서 손을 들면 위에 알약이 남고 누르면 내린다`() {
+        val session = connectedSession(CallMode.VOICE)
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        compose.onNodeWithContentDescription("React").performClick()
+        compose.onNodeWithText("Raise hand").performClick()
+        compose.waitUntil(5_000) { session.participants.value.first { it.isLocal }.isHandRaised }
+        assertThat(factory.last.localHandRaised).isTrue()
+        compose.waitForIdle()
+        compose.onNodeWithText("Your hand is up").assertIsDisplayed().performClick()
+        compose.waitUntil(5_000) { !session.participants.value.first { it.isLocal }.isHandRaised }
+        assertThat(factory.last.localHandRaised).isFalse()
+        session.close()
     }
 }

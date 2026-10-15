@@ -180,4 +180,21 @@
     <string name="voxera_route_notice_now">Now playing on: %1$s</string>
     <string name="voxera_route_notice_undo">Undo</string>
     <string name="voxera_route_notice_switch">Switch</string>
+    <string name="voxera_notice_hand">%1$s raised a hand</string>
+    <string name="voxera_hand_raised">Hand raised</string>
+    <string name="voxera_hand_raise">Raise hand</string>
+    <string name="voxera_hand_lower">Lower hand</string>
+    <string name="voxera_hand_you_raised">Your hand is up</string>
+    <string name="voxera_control_chat">Chat</string>
+    <string name="voxera_chat_title">Chat</string>
+    <string name="voxera_chat_empty">No messages yet. Say hello.</string>
+    <string name="voxera_chat_placeholder">Message</string>
+    <string name="voxera_chat_send">Send</string>
+    <string name="voxera_chat_someone">Former participant</string>
+    <string name="voxera_chat_from">%1$s: %2$s</string>
+    <string name="voxera_chat_open">Open chat</string>
+    <plurals name="voxera_chat_unread">
+        <item quantity="one">%d unread message</item>
+        <item quantity="other">%d unread messages</item>
+    </plurals>
 </resources>

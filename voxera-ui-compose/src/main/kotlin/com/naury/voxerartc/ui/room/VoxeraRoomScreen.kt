@@ -113,7 +113,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** 통화 화면에서 연 시트. */
-private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS, REACTIONS }
+private enum class RoomSheet { NONE, AUDIO, PEOPLE, QUALITY, MORE, EFFECTS, REACTIONS, CHAT }
 
 /** 영상 통화에서 아무 조작이 없을 때 조작 막대를 숨기기까지 기다리는 시간. 접근성 서비스가 켜져 있으면 늘어나거나 숨기지 않는다. */
 private const val CHROME_TIMEOUT_MS = 4_000L
@@ -134,6 +134,8 @@ private const val CHROME_TIMEOUT_MS = 4_000L
  * @param onEnterPictureInPicture `null`이 아니면 상단에 PiP 버튼을 둔다. 호스트가 `enterPictureInPictureMode`를 부른다.
  * @param autoHideControls 영상 통화에서 4초 동안 조작이 없으면 상단 줄과 조작 막대를 숨긴다. 화면을 누르면 다시 나온다.
  * @param reactionsEnabled 반응 보내기 버튼과 떠오르는 반응을 보여 준다. 엔진이 지원하지 않으면 보내기는 아무 일도 하지 않는다.
+ * @param chatEnabled 채팅 버튼(읽지 않은 수 배지)과 채팅 시트, 새 메시지 알림을 보여 준다.
+ * @param handRaiseEnabled 반응 시트에 손들기 버튼을 둔다. [reactionsEnabled]가 `false`면 반응 시트가 없으므로 보이지 않는다.
  */
 @Composable
 public fun VoxeraRoomScreen(
@@ -149,6 +151,8 @@ public fun VoxeraRoomScreen(
     onEnterPictureInPicture: (() -> Unit)? = null,
     autoHideControls: Boolean = true,
     reactionsEnabled: Boolean = true,
+    chatEnabled: Boolean = true,
+    handRaiseEnabled: Boolean = true,
 ) {
     VoxeraTheme(theme) {
         val state by session.state.collectAsStateWithLifecycle()
@@ -198,9 +202,9 @@ public fun VoxeraRoomScreen(
                         }
                         RoomPhase.CALL -> when (current) {
                             is SessionState.Connected ->
-                                CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage)
+                                CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage, chatEnabled, handRaiseEnabled)
                             is SessionState.Reconnecting ->
-                                CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage)
+                                CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled, stage, chatEnabled, handRaiseEnabled)
                             else -> Unit
                         }
                     }
@@ -267,6 +271,8 @@ private fun CallContent(
     autoHideControls: Boolean,
     reactionsEnabled: Boolean,
     stage: StageSelection,
+    chatEnabled: Boolean,
+    handRaiseEnabled: Boolean,
 ) {
     // 영상 통화 중에는 화면이 꺼지지 않게 한다. 음성 통화는 시스템 시간 초과를 따른다(근접 센서는 호스트·android 모듈 몫).
     val view = LocalView.current
@@ -278,6 +284,12 @@ private fun CallContent(
     var sheet by rememberSaveable { mutableStateOf(RoomSheet.NONE) }
     var overflowControls by remember { mutableStateOf(emptyList<DockControl>()) }
     var lastRouteSelectionMs by remember { mutableLongStateOf(0L) }
+    val chat by session.chat.collectAsStateWithLifecycle()
+    // 채팅 시트를 열어 둔 동안 본 마지막 메시지. 이 뒤에 온 남의 메시지 수가 배지 숫자다.
+    var lastReadId by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(sheet, chat.lastOrNull()?.id) { if (sheet == RoomSheet.CHAT) lastReadId = chat.lastOrNull()?.id }
+    val unread = if (chatEnabled) unreadCount(chat, lastReadId) else 0
+    val myHand = participants.firstOrNull { it.isLocal }?.isHandRaised == true
     // 더보기 목록은 버튼 동작을 담아 저장할 수 없다. 화면이 다시 만들어져 비었으면 시트를 닫는다.
     LaunchedEffect(sheet, overflowControls) { if (sheet == RoomSheet.MORE && overflowControls.isEmpty()) sheet = RoomSheet.NONE }
     var pinnedId by stage.pinnedId
@@ -433,7 +445,9 @@ private fun CallContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
         ) {
+            if (handRaiseEnabled) RaisedHandChip(myHand, onLower = { scope.launch { session.setHandRaised(false) } })
             ParticipantNotices(participants)
+            if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, onOpen = { sheet = RoomSheet.CHAT })
             // 이어폰이 연결·해제되면 어디로 소리가 가는지 알리고 되돌리거나 옮길 수 있게 한다.
             AudioRouteNotices(media, lastRouteSelectionMs, onSelect = { id ->
                 lastRouteSelectionMs = System.nanoTime() / 1_000_000
@@ -458,6 +472,8 @@ private fun CallContent(
                 onAudio = { sheet = RoomSheet.AUDIO },
                 onEffects = { sheet = RoomSheet.EFFECTS },
                 onReact = if (reactionsEnabled) ({ sheet = RoomSheet.REACTIONS }) else null,
+                onChat = if (chatEnabled) ({ sheet = RoomSheet.CHAT }) else null,
+                chatUnread = unread,
                 onShare = onShareScreen?.let { share ->
                     { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
                 },
@@ -502,10 +518,18 @@ private fun CallContent(
                 }
                 RoomSheet.QUALITY -> QualitySheet(history)
                 RoomSheet.EFFECTS -> EffectsSheet(media, onSelect = { effect -> scope.launch { session.setVideoEffect(effect) } })
-                RoomSheet.REACTIONS -> ReactionPicker(onPick = { reaction ->
-                    scope.launch { session.sendReaction(reaction) }
-                    sheet = RoomSheet.NONE
-                })
+                RoomSheet.REACTIONS -> ReactionPicker(
+                    onPick = { reaction ->
+                        scope.launch { session.sendReaction(reaction) }
+                        sheet = RoomSheet.NONE
+                    },
+                    handRaised = myHand.takeIf { handRaiseEnabled },
+                    onToggleHand = {
+                        scope.launch { session.setHandRaised(!myHand) }
+                        sheet = RoomSheet.NONE
+                    },
+                )
+                RoomSheet.CHAT -> ChatSheet(chat, participants, onSend = { text -> scope.launch { session.sendChatMessage(text) } })
                 RoomSheet.MORE -> MoreControlsSheet(overflowControls, onDone = { if (sheet == RoomSheet.MORE) sheet = RoomSheet.NONE })
                 RoomSheet.NONE -> Unit
             }

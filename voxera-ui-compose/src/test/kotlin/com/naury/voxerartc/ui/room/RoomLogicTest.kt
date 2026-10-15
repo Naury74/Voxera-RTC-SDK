@@ -2,6 +2,7 @@ package com.naury.voxerartc.ui.room
 
 import com.google.common.truth.Truth.assertThat
 import com.naury.voxerartc.api.AudioRoute
+import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.AudioRouteType
 import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MetricDirection
@@ -67,7 +68,7 @@ class RoomLogicTest {
         assertThat(noticesBetween(null, first) { ++id }).isEmpty()
         val next = listOf(person("me", local = true), person("b"))
         val notices = noticesBetween(first, next) { ++id }
-        assertThat(notices.map { it.participantId to it.joined }).containsExactly("b" to true, "a" to false).inOrder()
+        assertThat(notices.map { it.participantId to it.kind }).containsExactly("b" to NoticeKind.JOINED, "a" to NoticeKind.LEFT).inOrder()
         assertThat(noticesBetween(next, next.filterNot { it.isLocal }) { ++id }).isEmpty()
     }
 
@@ -141,5 +142,39 @@ class RoomLogicTest {
         assertThat(routeNoticeBetween(media("speaker", phone, speaker), media("bt", phone, speaker, buds), userInitiated = true)).isNull()
         assertThat(routeNoticeBetween(LocalMediaState(), media("bt", phone, speaker, buds), false)).isNull()
         assertThat(routeNoticeBetween(media("speaker", phone, speaker), media("earpiece", phone, speaker), false)).isNull()
+    }
+
+    @Test
+    fun `새로 손을 든 사람만 알리고 손을 든 채 들어온 사람은 입장만 알린다`() {
+        var id = 0L
+        val before = listOf(person("me", local = true), person("a"), person("b"))
+        val after = listOf(person("me", local = true).copy(handRaisedAtMs = 1), person("a").copy(handRaisedAtMs = 5), person("b"), person("c").copy(handRaisedAtMs = 6))
+        val notices = noticesBetween(before, after) { ++id }
+        assertThat(notices.map { it.participantId to it.kind }).containsExactly("c" to NoticeKind.JOINED, "a" to NoticeKind.HAND_RAISED).inOrder()
+        assertThat(noticesBetween(after, after) { ++id }).isEmpty()
+    }
+
+    @Test
+    fun `참가자 목록은 손을 먼저 든 사람부터 위에 둔다`() {
+        val people = listOf(person("me", local = true), person("a"), person("b").copy(handRaisedAtMs = 30), person("c").copy(handRaisedAtMs = 10))
+        assertThat(peopleOrder(people).map { it.id }).containsExactly("c", "b", "me", "a").inOrder()
+    }
+
+    private fun chat(id: String, from: String, at: Long, local: Boolean = false) = ChatMessage(id, from, "t", at, local)
+
+    @Test
+    fun `읽지 않은 수는 마지막으로 본 메시지 뒤의 남의 메시지만 센다`() {
+        val messages = listOf(chat("1", "a", 0), chat("2", "me", 1, local = true), chat("3", "b", 2), chat("4", "a", 3))
+        assertThat(unreadCount(messages, null)).isEqualTo(3)
+        assertThat(unreadCount(messages, "2")).isEqualTo(2)
+        assertThat(unreadCount(messages, "4")).isEqualTo(0)
+        // 본 메시지가 오래되어 목록에서 밀려났으면 남은 남의 메시지를 모두 센다.
+        assertThat(unreadCount(messages, "gone")).isEqualTo(3)
+    }
+
+    @Test
+    fun `같은 사람이 2분 안에 이어 보낸 메시지는 한 묶음이다`() {
+        val messages = listOf(chat("1", "a", 0), chat("2", "a", 60_000), chat("3", "a", 200_000), chat("4", "b", 200_001))
+        assertThat(messages.indices.map { startsGroup(messages, it) }).containsExactly(true, false, true, true).inOrder()
     }
 }

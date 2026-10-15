@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -45,6 +46,7 @@ internal data class DockControl(
     val pending: Boolean = false,
     val danger: Boolean = false,
     val enabled: Boolean = true,
+    val badge: Int = 0,
 )
 
 /** 버튼 [count]개를 원 [circle] 크기로 놓을 때 필요한 막대 폭. 버튼 폭은 원 + 8dp, 사이 4dp, 막대 안쪽 여백 12dp씩. */
@@ -79,6 +81,8 @@ internal fun CallDock(
     onAudio: () -> Unit,
     onEffects: () -> Unit,
     onReact: (() -> Unit)?,
+    onChat: (() -> Unit)?,
+    chatUnread: Int,
     onShare: (() -> Unit)?,
     onEnd: () -> Unit,
     onMore: (List<DockControl>) -> Unit,
@@ -89,6 +93,16 @@ internal fun CallDock(
     val pending = stringResource(R.string.voxera_control_pending)
     fun stateOf(actual: Boolean, isPending: Boolean) = if (isPending) pending else if (actual) on else off
     val video = mode == CallMode.VIDEO
+    val chat = onChat?.let {
+        DockControl(
+            VoxeraIcons.Chat,
+            stringResource(R.string.voxera_control_chat),
+            it,
+            essential = false,
+            stateLabel = if (chatUnread > 0) pluralStringResource(R.plurals.voxera_chat_unread, chatUnread, chatUnread) else null,
+            badge = chatUnread,
+        )
+    }
     val controls = buildList {
         add(
             DockControl(
@@ -116,7 +130,10 @@ internal fun CallDock(
             if (media.canSwitchCamera) {
                 add(DockControl(VoxeraIcons.SwitchCamera, stringResource(R.string.voxera_control_flip), onFlip, essential = false, enabled = media.camera.actual))
             }
-            add(DockControl(VoxeraIcons.AutoFix, stringResource(R.string.voxera_control_effects), onEffects, essential = false, active = !media.videoEffect.isNone))
+        }
+        // 막대가 좁아 더보기로 옮길 때 앞에 있는 조작이 남는다. 채팅은 카메라 전환 다음으로 남긴다.
+        chat?.let(::add)
+        if (video) {
             if (onShare != null) {
                 add(
                     DockControl(
@@ -130,6 +147,7 @@ internal fun CallDock(
                     ),
                 )
             }
+            add(DockControl(VoxeraIcons.AutoFix, stringResource(R.string.voxera_control_effects), onEffects, essential = false, active = !media.videoEffect.isNone))
         }
         if (onReact != null) {
             add(DockControl(VoxeraIcons.Mood, stringResource(R.string.voxera_control_react), onReact, essential = false))
@@ -141,7 +159,12 @@ internal fun CallDock(
     }
     val moreLabel = stringResource(R.string.voxera_control_more)
     BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
-        val (shown, _, circle) = layoutDock(controls, { overflow -> DockControl(Icons.Filled.MoreVert, moreLabel, { onMore(overflow) }, essential = true) }, maxWidth)
+        // 더보기로 옮긴 조작의 배지(읽지 않은 채팅 등)는 더보기 버튼에 합쳐 보여 준다.
+        val (shown, _, circle) = layoutDock(
+            controls,
+            { overflow -> DockControl(Icons.Filled.MoreVert, moreLabel, { onMore(overflow) }, essential = true, badge = overflow.sumOf { it.badge }) },
+            maxWidth,
+        )
         // 버튼이 늘거나 줄면(카메라 켜기, 화면 공유) 막대 폭이 부드럽게 바뀐다.
         GlassDock(Modifier.animateContentSize(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow))) {
             Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), verticalAlignment = Alignment.CenterVertically) {
@@ -156,6 +179,7 @@ internal fun CallDock(
                         danger = control.danger,
                         enabled = control.enabled,
                         circleSize = circle,
+                        badge = control.badge,
                     )
                 }
             }

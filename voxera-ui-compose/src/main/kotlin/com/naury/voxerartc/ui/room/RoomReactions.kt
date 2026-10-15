@@ -1,5 +1,8 @@
 package com.naury.voxerartc.ui.room
 
+import com.naury.voxerartc.ui.component.VoxeraIcons
+import com.naury.voxerartc.ui.component.VoxeraButtonTone
+import com.naury.voxerartc.ui.component.VoxeraButton
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -37,7 +40,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -83,13 +86,23 @@ internal fun Reaction.labelRes(): Int = when (this) {
 
 /** 반응 고르기(시트 안). 큰 그림 문자 여섯 개를 한 줄에 두고, 누르면 [onPick]. */
 @Composable
-internal fun ReactionPicker(onPick: (Reaction) -> Unit) {
+internal fun ReactionPicker(onPick: (Reaction) -> Unit, handRaised: Boolean? = null, onToggleHand: () -> Unit = {}) {
     Text(
         stringResource(R.string.voxera_reactions_title),
         color = VoxeraTheme.colors.foreground,
         style = VoxeraTheme.typography.title,
         modifier = Modifier.padding(bottom = VoxeraSpacing.sm),
     )
+    // 손들기는 반응과 달리 내릴 때까지 남는다. 반응 위에 따로 둔다.
+    if (handRaised != null) {
+        VoxeraButton(
+            stringResource(if (handRaised) R.string.voxera_hand_lower else R.string.voxera_hand_raise),
+            onClick = onToggleHand,
+            tone = if (handRaised) VoxeraButtonTone.Secondary else VoxeraButtonTone.Primary,
+            icon = VoxeraIcons.Hand,
+            modifier = Modifier.fillMaxWidth().padding(bottom = VoxeraSpacing.md),
+        )
+    }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Reaction.entries.forEach { reaction ->
             val label = stringResource(reaction.labelRes())
@@ -178,7 +191,7 @@ private fun FloatingReactionView(item: FloatingReaction, travel: Dp, startX: Dp,
     val fade = if (p > 0.7f) 1f - (p - 0.7f) / 0.3f else 1f
     val rise = if (reduced) 0f else p
     val sway = if (reduced) 0f else sin(p * 6f + item.id) * 10f
-    Box(Modifier.fillMaxSize().clearAndSetSemantics { invisibleToUser() }, contentAlignment = Alignment.BottomStart) {
+    Box(Modifier.fillMaxSize().clearAndSetSemantics { hideFromAccessibility() }, contentAlignment = Alignment.BottomStart) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier

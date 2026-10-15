@@ -73,7 +73,7 @@ import com.naury.voxerartc.ui.theme.VoxeraTheme
 import java.util.Locale
 
 @Composable
-private fun SheetTitle(text: String) {
+internal fun SheetTitle(text: String) {
     Text(
         text,
         color = VoxeraTheme.colors.foreground,
@@ -132,6 +132,10 @@ private fun RouteRow(route: AudioRoute, selected: Boolean, onSelect: () -> Unit)
     }
 }
 
+/** 참가자 목록 순서: 손을 든 사람이 먼저 든 순서대로 맨 위, 나머지는 원래 순서. */
+internal fun peopleOrder(participants: List<Participant>): List<Participant> =
+    participants.filter { it.isHandRaised }.sortedBy { it.handRaisedAtMs } + participants.filterNot { it.isHandRaised }
+
 /**
  * 참가자 목록(G-10). 말하는 중·마이크·카메라·연결 상태를 보여 주고, 영상 통화면 고정/해제 버튼을 둔다.
  * 권한이 필요한 관리 동작(내보내기, 남의 마이크 끄기)은 제공하지 않는다.
@@ -141,7 +145,7 @@ internal fun PeopleSheet(participants: List<Participant>, pinnedId: String?, onT
     val colors = VoxeraTheme.colors
     SheetTitle(stringResource(R.string.voxera_people_title, participants.size))
     LazyColumn(Modifier.heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
-        items(participants, key = { it.id }) { participant ->
+        items(peopleOrder(participants), key = { it.id }) { participant ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm), modifier = Modifier.heightIn(min = 56.dp)) {
                 VoxeraAvatar(participant.id, participant.displayName, size = 40.dp, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
                 Column(Modifier.weight(1f)) {
@@ -160,6 +164,9 @@ internal fun PeopleSheet(participants: List<Participant>, pinnedId: String?, onT
                         else -> null
                     }
                     if (detail != null) Text(detail, color = if (participant.isSpeaking) colors.primary else colors.warning, style = VoxeraTheme.typography.caption)
+                }
+                if (participant.isHandRaised) {
+                    Icon(VoxeraIcons.Hand, contentDescription = stringResource(R.string.voxera_hand_raised), tint = colors.warning, modifier = Modifier.size(20.dp))
                 }
                 Icon(
                     if (participant.isMicrophoneEnabled) VoxeraIcons.Mic else VoxeraIcons.MicOff,

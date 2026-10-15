@@ -1,5 +1,8 @@
 package com.naury.voxerartc.ui.component
 
+import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.animation.AnimatedContent
@@ -136,6 +139,7 @@ public fun CallControlButton(
     accent: Boolean = false,
     enabled: Boolean = true,
     circleSize: Dp = 52.dp,
+    badge: Int = 0,
 ) {
     val colors = VoxeraTheme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -191,6 +195,8 @@ public fun CallControlButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs),
     ) {
+        // 원 밖으로 조금 나오는 숫자 배지(읽지 않은 메시지 등)를 위해 한 겹 더 감싼다. 배지 내용은 stateLabel로 읽힌다.
+        Box {
         Box(
             modifier = Modifier
                 .pressScale(interaction, pressed = 0.9f)
@@ -215,6 +221,30 @@ public fun CallControlButton(
             ) { shown ->
                 Icon(shown, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp).alpha(if (pending) 0.6f else 1f))
             }
+        }
+        // 배지는 생길 때 통 튀어나오고 없어질 때 줄어들며 사라진다. 사라지는 동안에는 마지막 숫자를 보여 준다.
+        val badgeScale by animateFloatAsState(if (badge > 0) 1f else 0f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "badge")
+        var lastBadge by remember { mutableStateOf(badge) }
+        if (badge > 0) lastBadge = badge
+        if (badgeScale > 0.01f) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 4.dp, y = (-2).dp)
+                    .graphicsLayer {
+                        scaleX = badgeScale
+                        scaleY = badgeScale
+                    }
+                    .sizeIn(minWidth = 20.dp, minHeight = 20.dp)
+                    .clip(CircleShape)
+                    .background(colors.danger)
+                    .border(1.5.dp, colors.canvas, CircleShape)
+                    .padding(horizontal = 5.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(if (lastBadge > 99) "99+" else lastBadge.toString(), color = colors.onDanger, style = VoxeraTheme.typography.caption, maxLines = 1)
+            }
+        }
         }
         // 막대 폭은 고정이라 이름표 글꼴만 최대 1.3배까지 키운다. 전체 이름은 contentDescription으로 읽힌다.
         val fontScale = LocalDensity.current.fontScale
