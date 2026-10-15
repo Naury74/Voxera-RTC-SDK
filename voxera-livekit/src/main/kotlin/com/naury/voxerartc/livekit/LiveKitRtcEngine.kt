@@ -23,6 +23,7 @@ import com.naury.voxerartc.api.VoxeraError
 import com.twilio.audioswitch.AudioDevice
 import com.twilio.audioswitch.AudioDeviceChangeListener
 import io.livekit.android.LiveKit
+import io.livekit.android.RoomOptions
 import io.livekit.android.events.RoomEvent
 import io.livekit.android.room.Room
 import io.livekit.android.room.track.CameraPosition
@@ -91,7 +92,9 @@ internal class LiveKitRtcEngine(
 
     override val kind: RtcEngineKind = RtcEngineKind.LIVE
 
-    private val room: Room = LiveKit.create(context)
+    // adaptiveStream: 타일 크기·보임 여부에 맞는 화질만 받는다(작은 줄·PiP·화면 밖 타일은 낮은 화질이나 멈춤).
+    // dynacast: 아무도 보지 않는 화질 계층은 보내지 않는다. 화질 계층 송출(simulcast)과 소음 제거는 LiveKit 기본값이 켜져 있다.
+    private val room: Room = LiveKit.create(context, RoomOptions(adaptiveStream = true, dynacast = true))
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val released = AtomicBoolean(false)
     private val connected = AtomicBoolean(false)
@@ -130,6 +133,8 @@ internal class LiveKitRtcEngine(
         }
         connected.set(true)
         room.remoteParticipants.values.forEach { participant -> participant.trackPublications.values.forEach(::applyVideoSubscription) }
+        // 먼저 와 있던 사람을 바로 알린다. 트랙을 게시하지 않은 사람(마이크·카메라를 끈 사람)은 다른 이벤트가 오지 않아 보이지 않게 된다.
+        room.remoteParticipants.values.forEach { _events.emit(upsert(it)) }
         videoTracks.register(this)
         room.audioSwitchHandler?.registerAudioDeviceChangeListener(audioDeviceListener)
         conditions.start()
@@ -172,7 +177,13 @@ internal class LiveKitRtcEngine(
                 DisconnectMapping.Ignore -> emptyList()
                 is DisconnectMapping.Notify -> listOf(RtcEngineEvent.Disconnected(mapping.error))
             }
-            is RoomEvent.ParticipantConnected -> listOf(upsert(event.participant))
+            is RoomEvent.ParticipantConnected -> {
+                // 손을 든 채로 있으면 새로 들어온 사람에게도 알린다.
+                if (handRaised) event.participant.identity?.let { identity ->
+                    scope.launch { room.localParticipant.publishData(HandWire.encode(true), DataPublishReliability.RELIABLE, HandWire.TOPIC, listOf(identity)) }
+                }
+                listOf(upsert(event.participant))
+            }
             is RoomEvent.ParticipantDisconnected -> listOf(RtcEngineEvent.ParticipantLeft(event.participant.voxeraId))
             is RoomEvent.ParticipantNameChanged -> listOf(upsert(event.participant))
             is RoomEvent.ActiveSpeakersChanged -> allParticipants()
@@ -191,10 +202,18 @@ internal class LiveKitRtcEngine(
             is RoomEvent.TrackMuted -> listOf(upsert(event.participant))
             is RoomEvent.TrackUnmuted -> listOf(upsert(event.participant))
             is RoomEvent.DataReceived -> {
-                // 반응 형식이 아니거나 보낸 사람을 모르면 버린다. 내용은 기록하지 않는다.
-                val from = event.participant
-                val reaction = ReactionWire.decode(event.topic, event.data)
-                if (from != null && reaction != null) listOf(RtcEngineEvent.ReactionReceived(from.voxeraId, reaction)) else emptyList()
+                // 아는 형식이 아니거나 보낸 사람을 모르면 버린다. 내용은 기록하지 않는다.
+                val from = event.participant?.voxeraId
+                when {
+                    from == null -> emptyList()
+                    event.topic == ReactionWire.TOPIC ->
+                        listOfNotNull(ReactionWire.decode(event.topic, event.data)?.let { RtcEngineEvent.ReactionReceived(from, it) })
+                    event.topic == ChatWire.TOPIC ->
+                        listOfNotNull(ChatWire.decode(event.topic, event.data)?.let { (id, text) -> RtcEngineEvent.ChatReceived(from, id, text) })
+                    event.topic == HandWire.TOPIC ->
+                        listOfNotNull(HandWire.decode(event.topic, event.data)?.let { RtcEngineEvent.HandRaisedChanged(from, it) })
+                    else -> emptyList()
+                }
             }
             else -> emptyList()
         }
@@ -294,6 +313,22 @@ internal class LiveKitRtcEngine(
     override suspend fun sendReaction(reaction: Reaction): MediaActionResult {
         val sent = room.localParticipant.publishData(ReactionWire.encode(reaction), DataPublishReliability.RELIABLE, ReactionWire.TOPIC)
         return if (sent.isSuccess) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.NotConnected)
+    }
+
+    override suspend fun sendChatMessage(messageId: String, text: String): MediaActionResult {
+        val sent = room.localParticipant.publishData(ChatWire.encode(messageId, text), DataPublishReliability.RELIABLE, ChatWire.TOPIC)
+        return if (sent.isSuccess) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.NotConnected)
+    }
+
+    /** 내 손들기 상태. 새 참가자에게 다시 알릴 때 쓴다. */
+    @Volatile
+    private var handRaised = false
+
+    override suspend fun setHandRaised(raised: Boolean): MediaActionResult {
+        val sent = room.localParticipant.publishData(HandWire.encode(raised), DataPublishReliability.RELIABLE, HandWire.TOPIC)
+        if (sent.isFailure) return MediaActionResult.Failed(VoxeraError.NotConnected)
+        handRaised = raised
+        return MediaActionResult.Applied
     }
 
     override suspend fun switchCamera(): MediaActionResult {
