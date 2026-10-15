@@ -257,3 +257,15 @@ LiveKit Cloud(voxera-test) 음성 통화, Galaxy Buds2가 미리 연결된 상�
 | --- | --- | --- |
 | debug | 1857, 1657, 1280 | 관찰 |
 | release (R8) | 1213, 956, 980 | 관찰 |
+
+## 메모리 장시간 측정 — 2026-10-16, voxera_verify(API 36), release 빌드
+
+9인 그룹 데모에서 한 사람을 크게 본 채 20분 동안 두고 `dumpsys meminfo`를 1분마다 읽었다(반응·말하는 사람 바뀜·채팅·손들기가 계속 일어남).
+
+| 항목 | 시작(1분) | 19분 | Result |
+| --- | --- | --- | --- |
+| TOTAL PSS | 37.7 MB | 40.1 MB (중간 37~40 MB 사이를 오감) | Pass |
+| Java Heap | 4.1 MB | 4.1 MB | Pass |
+| Native Heap | 14.6 MB | 15.0 MB | Pass |
+| Views | 11 | 11 | Pass |
+| 크래시 | — | 0건, 같은 프로세스 유지 | Pass |
