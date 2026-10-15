@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+    <img src="docs/images/logo-light.png" alt="Voxera" width="420">
+  </picture>
+</p>
+
 # Voxera RTC SDK
 
 <p>
