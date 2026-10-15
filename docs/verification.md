@@ -130,6 +130,14 @@
 
 실기기 PiP, 근접 화면 끄기, 마이크 레벨은 위 Fold7 표에서 확인했다. 발열 때 효과 끄기(E31)는 열 상태를 바꿀 방법이 없어 단위 테스트만 했다.
 
+## TalkBack (에뮬레이터 API 36) — 2026-10-15
+
+| Scenario | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| TalkBack을 켠 영상 통화 | 조작 막대를 자동으로 숨기지 않음 | 9초 넘게 그대로 보임(평소 4초에 숨김) | Pass |
+| 읽는 이름 | 타일·버튼마다 이름과 상태 | "Alex, Speaking", "4 participants", "Stable", Mic/Camera/Flip/More/End | Pass |
+| 손가락으로 항목 넘기기·두 번 탭 | 상단 → 영상 → 조작 막대 순서, 두 번 탭으로 동작 | adb가 넣은 터치는 TalkBack 제스처로 인식되지 않아 확인 못 함. 사람이 직접 써 봐야 함 | NOT RUN |
+
 ## LiveKit Cloud (wss) — 2026-10-15
 
 테스트용 Cloud 프로젝트에 연결했다. 토큰은 이 Mac의 `lk` 설정으로 15분짜리만 발급했고 API Secret은 앱·저장소에 들어가지 않는다. 상대는 `lk room join --publish-demo` 봇.

@@ -327,7 +327,8 @@ private fun CallContent(
                 }
             },
     ) {
-        val stageModifier = Modifier.fillMaxSize().semantics { traversalIndex = 1f }
+        // 각 영역을 하나의 묶음으로 만들어, 안쪽 타일·버튼끼리만 순서를 매기고 영역 사이 순서는 traversalIndex로 고정한다.
+        val stageModifier = Modifier.fillMaxSize().semantics { isTraversalGroup = true; traversalIndex = 1f }
         if (mode == CallMode.VIDEO) {
             VideoStage(
                 participants,
@@ -350,7 +351,7 @@ private fun CallContent(
             chromeVisible,
             enter = fadeIn() + slideInVertically { -it / 2 },
             exit = fadeOut() + slideOutVertically { -it / 2 },
-            modifier = Modifier.semantics { traversalIndex = 0f },
+            modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0f },
         ) {
             Column(
                 Modifier
@@ -438,7 +439,7 @@ private fun CallContent(
             exit = fadeOut() + slideOutVertically { it / 2 },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .semantics { traversalIndex = 2f },
+                .semantics { isTraversalGroup = true; traversalIndex = 2f },
         ) {
             CallDock(
                 mode = mode,
