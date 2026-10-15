@@ -26,6 +26,8 @@ import kotlinx.coroutines.launch
  * - 카메라를 켜거나 끄면 서비스 타입도 그에 맞게 바꾼다.
  *
  * - 알림에는 통화 시간과 종료 버튼이 표시된다. 종료 버튼은 [onHangUp]을 부른다(기본은 `session.leave()`).
+ * - 작은 아이콘은 Voxera 마크이고, 재연결·보류·화면 공유·마이크 꺼짐·영상 통화일 때는 오른쪽 아래에 배지가 붙고 본문도 그 상황을 알린다.
+ *   호스트 앱이 같은 이름의 drawable(`voxera_ic_notification`, `voxera_ic_notification_muted` 등)을 두면 그 아이콘을 쓴다.
  *
  * 반환한 [AutoCloseable]을 닫거나 통화가 끝나면 서비스를 멈춘다.
  *
@@ -58,7 +60,7 @@ public object VoxeraForegroundCall {
                     else -> null
                 }
                 if (connectedAt == null) {
-                    Spec(0, 0L)
+                    Spec(0, 0L, CallNotificationStatus.ACTIVE)
                 } else {
                     // 세션 시계(단조 시계) 기준 시작 시각을 알림이 쓰는 벽시계 시각으로 바꾼다.
                     val startedAt = System.currentTimeMillis() - (session.clock.nowMs() - connectedAt)
@@ -69,10 +71,12 @@ public object VoxeraForegroundCall {
                             cameraActive = media.camera.actual || media.camera.desired,
                         ),
                         startedAt,
+                        callNotificationStatus(reconnecting = state is SessionState.Reconnecting, media = media),
                     )
                 }
-            }.distinctUntilChanged { old, new -> old.types == new.types && (old.types == 0 || abs(old.startedAt - new.startedAt) < 2_000) }
-                .collect { spec -> if (spec.types == 0) stop(appContext) else start(appContext, spec.types, title, spec.startedAt) }
+            }.distinctUntilChanged { old, new ->
+                old.types == new.types && (old.types == 0 || (old.status == new.status && abs(old.startedAt - new.startedAt) < 2_000))
+            }.collect { spec -> if (spec.types == 0) stop(appContext) else start(appContext, spec, title) }
         }
         return AutoCloseable {
             scope.cancel()
@@ -81,13 +85,14 @@ public object VoxeraForegroundCall {
         }
     }
 
-    private data class Spec(val types: Int, val startedAt: Long)
+    private data class Spec(val types: Int, val startedAt: Long, val status: CallNotificationStatus)
 
-    private fun start(context: Context, types: Int, title: String, startedAt: Long) {
+    private fun start(context: Context, spec: Spec, title: String) {
         val intent = Intent(context, VoxeraCallService::class.java)
-            .putExtra(VoxeraCallService.EXTRA_TYPES, types)
+            .putExtra(VoxeraCallService.EXTRA_TYPES, spec.types)
             .putExtra(VoxeraCallService.EXTRA_TITLE, title)
-            .putExtra(VoxeraCallService.EXTRA_STARTED_AT, startedAt)
+            .putExtra(VoxeraCallService.EXTRA_STARTED_AT, spec.startedAt)
+            .putExtra(VoxeraCallService.EXTRA_STATUS, spec.status.name)
         try {
             ContextCompat.startForegroundService(context, intent)
         } catch (_: RuntimeException) {

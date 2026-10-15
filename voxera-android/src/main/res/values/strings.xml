@@ -3,6 +3,11 @@
     <string name="voxera_call_channel_name">Ongoing calls</string>
     <string name="voxera_call_channel_description">Shown while a call keeps using the microphone or camera.</string>
     <string name="voxera_call_notification_text">Call in progress. Tap to go back to the call.</string>
+    <string name="voxera_call_notification_video">Video call in progress. Tap to go back to the call.</string>
+    <string name="voxera_call_notification_muted">Your microphone is off. Tap to go back to the call.</string>
+    <string name="voxera_call_notification_sharing">You are sharing your screen. Tap to go back to the call.</string>
+    <string name="voxera_call_notification_on_hold">On hold while another call uses the audio.</string>
+    <string name="voxera_call_notification_reconnecting">Reconnecting to the call…</string>
     <string name="voxera_pip_mute">Mute</string>
     <string name="voxera_pip_unmute">Unmute</string>
     <string name="voxera_pip_hang_up">End call</string>

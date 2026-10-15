@@ -3,6 +3,11 @@
     <string name="voxera_call_channel_name">진행 중인 통화</string>
     <string name="voxera_call_channel_description">통화 중에 마이크나 카메라를 쓰는 동안 표시됩니다.</string>
     <string name="voxera_call_notification_text">통화 중 · 눌러서 통화 화면으로 돌아가기</string>
+    <string name="voxera_call_notification_video">영상 통화 중 · 눌러서 통화 화면으로 돌아가기</string>
+    <string name="voxera_call_notification_muted">마이크 꺼짐 · 눌러서 통화 화면으로 돌아가기</string>
+    <string name="voxera_call_notification_sharing">내 화면 공유 중 · 눌러서 통화 화면으로 돌아가기</string>
+    <string name="voxera_call_notification_on_hold">다른 통화가 오디오를 쓰는 동안 보류 중</string>
+    <string name="voxera_call_notification_reconnecting">통화에 다시 연결하는 중…</string>
     <string name="voxera_pip_mute">마이크 끄기</string>
     <string name="voxera_pip_unmute">마이크 켜기</string>
     <string name="voxera_pip_hang_up">통화 종료</string>

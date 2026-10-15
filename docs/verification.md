@@ -269,3 +269,18 @@ LiveKit Cloud(voxera-test) 음성 통화, Galaxy Buds2가 미리 연결된 상�
 | Native Heap | 14.6 MB | 15.0 MB | Pass |
 | Views | 11 | 11 | Pass |
 | 크래시 | — | 0건, 같은 프로세스 유지 | Pass |
+
+## 통화 알림 아이콘 — 2026-10-16, voxera_verify(API 36), 로컬 livekit-server 음성 통화
+
+알림 작은 아이콘을 Voxera 마크로 바꾸고 상황 배지를 붙인 뒤, 실제 통화 알림에서 아이콘 리소스와 상태 표시줄을 확인했다.
+
+| 상황 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 입장 직후 | 배지 없는 마크, "통화 중" 문구 | `voxera_ic_notification`, 상태 표시줄에 마크 | Pass |
+| 마이크 끔 | 사선 배지, "마이크 꺼짐" 문구 | `voxera_ic_notification_muted`, 본문 "Your microphone is off…" | Pass |
+| 마이크 다시 켬 | 배지 없는 마크로 돌아감 | `voxera_ic_notification` | Pass |
+| 서버를 멈춰 재연결 | 점 세 개 배지 | `voxera_ic_notification_reconnecting`. 에뮬레이터가 느려 바뀌기까지 25초 남짓 걸림 | Pass |
+| 재연결 시간 초과 | 통화가 끝나면 알림도 사라짐 | "Call disconnected", 알림 없어짐 | Pass |
+| 보류·화면 공유·영상 배지 | 상황에 맞는 배지 | 단위 테스트(상황 고르는 순서)만 확인 | NOT RUN |
+
+CallStyle 알림을 펼친 화면에서는 시스템이 작은 아이콘 대신 앱 아이콘을 사람 사진 옆에 붙여 보여 준다. 배지는 상태 표시줄과 잠금 화면 같은 작은 아이콘 자리에서 보인다.

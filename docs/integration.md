@@ -134,7 +134,18 @@ val pip = VoxeraPictureInPicture.attach(this, session, onHangUp = { lifecycleSco
 val inPip by pip.isInPictureInPicture.collectAsStateWithLifecycle()
 ```
 
-- foreground service: 통화가 연결돼 있는 동안 마이크와 카메라가 끊기지 않게 합니다. 알림은 통화 형식이라 경과 시간과 종료 버튼이 있고, Android 12+에서는 상태 표시줄에 통화 칩이 뜹니다. Android 13+에서는 `POST_NOTIFICATIONS` 권한이 있어야 알림이 보입니다.
+- foreground service: 통화가 연결돼 있는 동안 마이크와 카메라가 끊기지 않게 합니다. 알림은 통화 형식이라 경과 시간과 종료 버튼이 있고, Android 12+에서는 상태 표시줄에 통화 칩이 뜹니다. Android 13+에서는 `POST_NOTIFICATIONS` 권한이 있어야 알림이 보입니다. 알림의 작은 아이콘은 Voxera 마크이고, 상황에 따라 오른쪽 아래에 배지가 붙고 본문 문구도 바뀝니다. 상황이 겹치면 먼저 알아야 할 것 하나만 보여 주며 순서는 표와 같습니다.
+
+  | 상황 | 배지 | drawable 이름 |
+  | --- | --- | --- |
+  | 다시 연결하는 중 | 점 세 개 | `voxera_ic_notification_reconnecting` |
+  | 다른 통화 때문에 보류 | 일시정지 | `voxera_ic_notification_on_hold` |
+  | 내 화면 공유 중 | 화면과 위쪽 화살표 | `voxera_ic_notification_sharing` |
+  | 마이크 꺼짐 | 사선 | `voxera_ic_notification_muted` |
+  | 영상 통화 | 카메라 | `voxera_ic_notification_video` |
+  | 그 밖의 통화 | 없음 | `voxera_ic_notification` |
+
+  앱 아이콘으로 바꾸려면 앱의 `res/drawable`에 같은 이름의 흰색 단색 아이콘(24dp)을 두면 됩니다. 일부만 두면 나머지는 Voxera 아이콘이 쓰입니다.
 - PiP: 통화 중에 홈으로 나가면 저절로 작은 창으로 바뀝니다(Android 12+는 시스템 제스처, 11 이하는 `onUserLeaveHint`). 창에는 마이크 버튼과 종료 버튼이 있습니다. Activity에는 다음 설정이 필요합니다.
 
   ```xml
