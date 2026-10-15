@@ -138,10 +138,10 @@
 | --- | --- | --- | --- | --- | --- |
 | 26 | Pass (onUserLeaveHint 경로) | Pass | Pass | Pass | 0 |
 | 30 | Pass | Pass | Pass | Pass | 0 |
-| 31 | Pass | NOT RUN (스크립트가 시나리오를 못 누름, 다시 확인 필요) | Pass | Pass | 0 |
+| 31 | Pass | Pass (다시 돌림) | Pass | Pass | 0 |
 | 33 | Pass | Pass | Pass | Pass | 0 |
 | 34 | Pass | Pass | Pass | Pass | 0 |
-| 35 | NOT RUN (에뮬레이터 부팅 실패) | NOT RUN | NOT RUN | NOT RUN | - |
+| 35 | Pass | Pass | Pass | Pass (연결에 15초 걸려 다시 확인, 마이크·카메라 타입) | 0 |
 
 ## API 26 (minSdk) — 2026-10-14, AVD `voxera_api26`(Pixel, API 26, google_apis arm64)
 
