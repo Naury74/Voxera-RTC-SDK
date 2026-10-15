@@ -105,7 +105,7 @@ session.sendChatMessage("안녕하세요")                     // 비었거나 1
 session.setHandRaised(true)                              // 내 상태는 participants의 handRaisedAtMs로 보임
 ```
 
-한 사람이 5초에 5개를 넘게 보낸 채팅은 버립니다. 손들기는 나중에 들어온 사람에게도 다시 알립니다. LiveKit 데이터 메시지(주제 `voxera.chat`, `voxera.hand`)를 쓰므로 토큰에 따로 권한을 줄 필요가 없습니다.
+한 사람이 5초에 5개를 넘게 보낸 채팅은 버립니다. 손들기는 나중에 들어온 사람에게도 다시 알립니다. 채팅은 LiveKit 표준 채팅과 같은 텍스트 스트림(주제 `lk.chat`)이라 LiveKit Meet 같은 다른 클라이언트와도 주고받을 수 있습니다. 손들기는 데이터 메시지(주제 `voxera.hand`)입니다. 둘 다 토큰에 따로 권한을 줄 필요가 없습니다.
 
 ### 입장 전 화면
 
