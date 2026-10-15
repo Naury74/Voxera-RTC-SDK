@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     // 공개 API 목록을 모듈마다 api/ 아래에 두고, 바뀌면 apiCheck가 실패한다. 의도한 변경이면 apiDump로 갱신한다.
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.dokka)
 }
 
 apiValidation {
@@ -29,6 +30,13 @@ val minimumConsumerKotlin = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN
 subprojects {
     val summary = sdkModules[name] ?: return@subprojects
     apply(plugin = "maven-publish")
+    apply(plugin = "org.jetbrains.dokka")
+    // Maven Central은 javadoc jar를 요구한다. Dokka HTML을 묶어 javadoc 분류자로 함께 올린다.
+    val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
+        description = "Dokka HTML을 javadoc jar로 묶는다."
+        from(tasks.named("dokkaGeneratePublicationHtml"))
+        archiveClassifier.set("javadoc")
+    }
     pluginManager.withPlugin("com.android.library") { configureConsumerKotlin() }
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") { configureConsumerKotlin() }
     group = providers.gradleProperty("VOXERA_GROUP").get()
@@ -56,6 +64,7 @@ subprojects {
             publications {
                 create<MavenPublication>("release") {
                     from(component)
+                    artifact(dokkaJavadocJar)
                     artifactId = project.name
                     pom {
                         name.set(project.name)
@@ -94,4 +103,13 @@ fun Project.configureConsumerKotlin() {
             apiVersion.set(minimumConsumerKotlin)
         }
     }
+}
+
+// API 문서: ./gradlew :dokkaGenerate → build/dokka/html. SDK 모듈을 한 사이트로 묶는다.
+dependencies {
+    sdkModules.keys.forEach { dokka(project(":$it")) }
+}
+
+dokka {
+    moduleName.set("Voxera RTC SDK")
 }
