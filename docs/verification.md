@@ -130,6 +130,19 @@
 
 실기기 PiP, 근접 화면 끄기, 마이크 레벨은 위 Fold7 표에서 확인했다. 발열 때 효과 끄기(E31)는 열 상태를 바꿀 방법이 없어 단위 테스트만 했다.
 
+## API 매트릭스 (에뮬레이터, Pixel, google_apis arm64) — 2026-10-15
+
+데모 4인 → 크게 보기, 홈 버튼으로 PiP, 데모 음성 → 종료 요약, 로컬 서버 봇과 영상 실통화, 통화 서비스 foreground, 크래시 로그를 차례로 확인했다.
+
+| API | PiP | 종료 요약 | 실통화 입장 | 통화 서비스 | 크래시 |
+| --- | --- | --- | --- | --- | --- |
+| 26 | Pass (onUserLeaveHint 경로) | Pass | Pass | Pass | 0 |
+| 30 | Pass | Pass | Pass | Pass | 0 |
+| 31 | Pass | NOT RUN (스크립트가 시나리오를 못 누름, 다시 확인 필요) | Pass | Pass | 0 |
+| 33 | Pass | Pass | Pass | Pass | 0 |
+| 34 | Pass | Pass | Pass | Pass | 0 |
+| 35 | NOT RUN (에뮬레이터 부팅 실패) | NOT RUN | NOT RUN | NOT RUN | - |
+
 ## API 26 (minSdk) — 2026-10-14, AVD `voxera_api26`(Pixel, API 26, google_apis arm64)
 
 | Scenario | Expected | Actual | Result |

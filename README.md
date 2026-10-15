@@ -102,7 +102,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-017 | 카메라 색 효과(밝기, 대비, 채도) | 부분 | 에뮬레이터에서 게시, 적용, 폴백 확인. Fold7에서 프레임당 5.0~7.8ms(예산 15ms) |
 | VOX-026 | 접근성, 작은 화면, 큰 글꼴 | 부분 | 320dp·글꼴 200% 테스트와 에뮬레이터 확인, TalkBack 읽기 순서 지정. TalkBack을 켜고 직접 써 보지는 않음 |
 | VOX-028 | 배포 리허설 | 부분 | 로컬 Maven과 `samples/consumer`로 확인, POM에 Apache 2.0 라이선스. Maven Central 게시는 안 함 |
-| VOX-027 | 기기·API 매트릭스 | 부분 | API 26·36 에뮬레이터와 Fold7(API 36) 실기기 확인. 30, 31, 33~35는 안 함 |
+| VOX-027 | 기기·API 매트릭스 | 부분 | 에뮬레이터 API 26·30·31·33·34·36과 Fold7(API 36). API 35는 부팅 실패로 안 함, API 31 종료 화면 다시 확인 필요 |
 | VOX-015 | 장치 전환 실기기 검증 | 부분 | Fold7에서 스피커↔휴대전화↔블루투스 전환, 블루투스 끊김과 재연결, 백그라운드 마이크 확인. 유선은 안 함 |
 | VOX-029 | 공개 문서·라이선스 | 완료 | Apache 2.0(LICENSE, NOTICE, POM), 연동 가이드, 릴리스 노트, SECURITY.md |
 | 추가 | 통화 중 반응, 통화 알림(경과 시간, 종료), 수화부 근접 화면 끄기, 발열과 다른 통화 대응 | 부분 | 반응 보내기, 알림에서 종료, 다른 통화 안내는 에뮬레이터 실통화로 확인. 실통화 반응 받기와 근접 센서는 실기기가 필요 |
