@@ -1,6 +1,18 @@
 package com.naury.voxerartc.ui.room
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
+import com.naury.voxerartc.ui.glass.pressScale
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
@@ -60,6 +72,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
@@ -148,23 +161,66 @@ public fun VoxeraRoomScreen(
 
         CompositionLocalProvider(LocalSimulatedEffect provides if (simulated) media.videoEffect else VideoEffect.None) {
             Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = speaking)) {
-                val current = state
-                when {
-                    pictureInPicture && (current is SessionState.Connected || current is SessionState.Reconnecting) ->
-                        PictureInPictureContent(session, participants, media, renderer, (current as? SessionState.Connected)?.mode ?: (current as SessionState.Reconnecting).mode)
-                    pictureInPicture -> PictureInPictureStatus(current)
-                    current is SessionState.Idle || current is SessionState.Preparing || current is SessionState.Connecting ->
-                        ConnectingContent(current, simulated, onCancel = leave)
-                    current is SessionState.Ending -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
-                    current is SessionState.Ended -> EndedContent(current.reason, current.durationMs, history, simulated, onExit, onRejoin, onSaveReport)
-                    current is SessionState.Failed -> FailedContent(current.error, dropped = current.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
-                    current is SessionState.Connected ->
-                        CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
-                    current is SessionState.Reconnecting ->
-                        CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
+                // 연결 중 → 통화 → 종료처럼 단계가 바뀔 때만 화면을 바꾼다. 같은 단계 안의 변화(참가자, 재연결)는 그대로 이어진다.
+                val phase = state.phase(pictureInPicture)
+                val reduced = rememberReducedMotion()
+                AnimatedContent(
+                    targetState = phase,
+                    transitionSpec = {
+                        if (reduced) {
+                            fadeIn(tween(120)) togetherWith fadeOut(tween(120))
+                        } else {
+                            (fadeIn(tween(280, delayMillis = 60)) + scaleIn(tween(320), initialScale = 0.96f)) togetherWith
+                                (fadeOut(tween(160)) + scaleOut(tween(200), targetScale = 1.02f))
+                        }
+                    },
+                    label = "room-phase",
+                ) { target ->
+                    val current = state
+                    when (target) {
+                        RoomPhase.PIP_CALL -> when (current) {
+                            is SessionState.Connected -> PictureInPictureContent(session, participants, media, renderer, current.mode)
+                            is SessionState.Reconnecting -> PictureInPictureContent(session, participants, media, renderer, current.mode)
+                            else -> PictureInPictureStatus(current)
+                        }
+                        RoomPhase.PIP_STATUS -> PictureInPictureStatus(current)
+                        RoomPhase.CONNECTING -> ConnectingContent(current, simulated, onCancel = leave)
+                        RoomPhase.ENDING -> ProgressContent(stringResource(R.string.voxera_state_ending), simulated)
+                        RoomPhase.ENDED -> (current as? SessionState.Ended)?.let {
+                            EndedContent(it.reason, it.durationMs, history, simulated, onExit, onRejoin, onSaveReport)
+                        }
+                        RoomPhase.FAILED -> (current as? SessionState.Failed)?.let {
+                            FailedContent(it.error, dropped = it.durationMs != null, simulated, onExit, onRejoin, onSaveReport)
+                        }
+                        RoomPhase.CALL -> when (current) {
+                            is SessionState.Connected ->
+                                CallContent(session, current.mode, current.connectedAtMs, null, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
+                            is SessionState.Reconnecting ->
+                                CallContent(session, current.mode, current.connectedAtMs, current, participants, media, renderer, simulated, history, leave, onShareScreen, onEnterPictureInPicture, autoHideControls, reactionsEnabled)
+                            else -> Unit
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+/** 안내 줄은 위에서 펼쳐지며 나타나 아래 내용을 부드럽게 밀어낸다. */
+private val BannerEnter = expandVertically(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Top) + fadeIn()
+private val BannerExit = shrinkVertically(spring(stiffness = Spring.StiffnessMediumLow), shrinkTowards = Alignment.Top) + fadeOut()
+
+/** 화면 전환 단위. 이 값이 바뀔 때만 화면 전체가 바뀌는 효과를 준다. */
+private enum class RoomPhase { CONNECTING, CALL, ENDING, ENDED, FAILED, PIP_CALL, PIP_STATUS }
+
+private fun SessionState.phase(pictureInPicture: Boolean): RoomPhase = when (this) {
+    is SessionState.Connected, is SessionState.Reconnecting -> if (pictureInPicture) RoomPhase.PIP_CALL else RoomPhase.CALL
+    else -> when {
+        pictureInPicture -> RoomPhase.PIP_STATUS
+        this is SessionState.Ending -> RoomPhase.ENDING
+        this is SessionState.Ended -> RoomPhase.ENDED
+        this is SessionState.Failed -> RoomPhase.FAILED
+        else -> RoomPhase.CONNECTING
     }
 }
 
@@ -209,6 +265,9 @@ private fun CallContent(
     // 더보기 목록은 버튼 동작을 담아 저장할 수 없다. 화면이 다시 만들어져 비었으면 시트를 닫는다.
     LaunchedEffect(sheet, overflowControls) { if (sheet == RoomSheet.MORE && overflowControls.isEmpty()) sheet = RoomSheet.NONE }
     var pinnedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var stageView by rememberSaveable { mutableStateOf(StageView.GALLERY) }
+    // 크게 보던 사람이 나가면 고정을 푼다.
+    LaunchedEffect(participants, pinnedId) { if (pinnedId != null && participants.none { it.id == pinnedId }) pinnedId = null }
     val elapsed = rememberElapsed(session.clock, connectedAtMs)
     val window = LocalWindowInfo.current.containerSize
     val landscape = window.width > window.height
@@ -264,6 +323,8 @@ private fun CallContent(
                 topReserve = overlayHeight,
                 onTap = if (autoHideControls) toggleChrome else null,
                 chromeVisible = chromeVisible,
+                view = stageView,
+                onShowAll = { sheet = RoomSheet.PEOPLE },
                 modifier = stageModifier,
             )
         } else {
@@ -292,9 +353,15 @@ private fun CallContent(
                     onPeople = { sheet = RoomSheet.PEOPLE },
                     onQuality = { sheet = RoomSheet.QUALITY },
                     onPictureInPicture = onEnterPictureInPicture,
+                    // 3명 이상 영상 통화에서 갤러리 ↔ 발표자 보기를 바꾼다. 고정한 사람이 있으면 먼저 푼다.
+                    stageView = stageView.takeIf { mode == CallMode.VIDEO && participants.size >= 3 },
+                    onToggleView = {
+                        pinnedId = null
+                        stageView = if (stageView == StageView.GALLERY) StageView.SPEAKER else StageView.GALLERY
+                    },
                 )
                 // 공유 중에는 화면의 모든 내용(알림 포함)이 보인다는 것을 계속 알리고, 바로 멈출 수 있게 한다(G-09).
-                AnimatedVisibility(media.screenShare.actual, enter = fadeIn(), exit = fadeOut()) {
+                AnimatedVisibility(media.screenShare.actual, enter = BannerEnter, exit = BannerExit) {
                     GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth()) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
                             Box(Modifier.size(10.dp).clip(CircleShape).background(VoxeraTheme.colors.danger))
@@ -313,7 +380,7 @@ private fun CallContent(
                     }
                 }
                 // 마이크·카메라 조작이 실패하면(권한 없음, 장치 점유) 이유와 할 일을 알린다. 다음 조작이 성공하면 사라진다.
-                AnimatedVisibility(mediaError != null, enter = fadeIn(), exit = fadeOut()) {
+                AnimatedVisibility(mediaError != null, enter = BannerEnter, exit = BannerExit) {
                     if (mediaError != null) {
                         GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
                             Text(stringResource(mediaError.messageRes()), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
@@ -321,7 +388,7 @@ private fun CallContent(
                     }
                 }
                 // 휴대전화 통화 같은 다른 통화가 오디오를 가져가면 내 소리가 가지 않는다는 것을 알린다(E14).
-                AnimatedVisibility(media.audioInterrupted, enter = fadeIn(), exit = fadeOut()) {
+                AnimatedVisibility(media.audioInterrupted, enter = BannerEnter, exit = BannerExit) {
                     GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
                         Column {
                             Text(stringResource(R.string.voxera_interrupted_title), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
@@ -329,7 +396,7 @@ private fun CallContent(
                         }
                     }
                 }
-                AnimatedVisibility(reconnecting != null, enter = fadeIn(), exit = fadeOut()) {
+                AnimatedVisibility(reconnecting != null, enter = BannerEnter, exit = BannerExit) {
                     GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Assertive }) {
                         Column {
                             Text(stringResource(R.string.voxera_state_reconnecting), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
@@ -340,12 +407,12 @@ private fun CallContent(
             }
         }
         // 입퇴장 알림은 조작 막대를 숨겨도 보인다. 상단 줄이 있으면 그 아래에 둔다.
-        val noticeTop = if (chromeVisible) overlayHeight else 0.dp
+        val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
         ParticipantNotices(
             participants,
             Modifier
                 .align(Alignment.TopCenter)
-                .then(if (chromeVisible) Modifier else Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
+                .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(top = noticeTop + VoxeraSpacing.xs, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
         )
 
@@ -428,6 +495,8 @@ private fun TopBar(
     onPeople: () -> Unit,
     onQuality: () -> Unit,
     onPictureInPicture: (() -> Unit)?,
+    stageView: StageView?,
+    onToggleView: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
         // 글꼴이 커지면 상태 알약이 줄어들고 말줄임되어, 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
@@ -444,16 +513,23 @@ private fun TopBar(
                         Box(Modifier.size(8.dp).clip(CircleShape).background(health.color()).semantics { contentDescription = label })
                     }
                     Text(elapsed, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1)
-                    Text(
-                        pluralStringResource(R.plurals.voxera_participant_count, count, count),
-                        color = VoxeraTheme.colors.foregroundSecondary,
-                        style = VoxeraTheme.typography.caption,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    // 좁은 상단 줄에서도 잘리지 않게 숫자만 보이고, 전체 문구는 읽어 준다.
+                    val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
+                        Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
+                        Text("$count", color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1)
+                    }
                 }
             }
             if (simulated) DemoChip()
+        }
+        if (stageView != null) {
+            val toSpeaker = stageView == StageView.GALLERY
+            RoundIconButton(
+                if (toSpeaker) VoxeraIcons.Person else VoxeraIcons.GridView,
+                stringResource(if (toSpeaker) R.string.voxera_view_speaker else R.string.voxera_view_gallery),
+                onToggleView,
+            )
         }
         if (onPictureInPicture != null) RoundIconButton(VoxeraIcons.PictureInPicture, stringResource(R.string.voxera_control_pip), onPictureInPicture)
         RoundIconButton(VoxeraIcons.Group, stringResource(R.string.voxera_control_people), onPeople)
@@ -464,12 +540,13 @@ private fun TopBar(
 @Composable
 private fun RoundIconButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     // 터치 영역은 48dp 전체, 보이는 유리 원은 그 안의 40dp.
-    IconButton(onClick = onClick, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
+    val interaction = remember { MutableInteractionSource() }
+    IconButton(onClick = onClick, interactionSource = interaction, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
         GlassSurface(
             shape = CircleShape,
             level = GlassLevel.Medium,
             contentPadding = PaddingValues(VoxeraSpacing.xs),
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.pressScale(interaction, pressed = 0.88f).size(40.dp),
         ) {
             Icon(icon, contentDescription = null, tint = VoxeraTheme.colors.foreground, modifier = Modifier.size(20.dp).align(Alignment.Center))
         }

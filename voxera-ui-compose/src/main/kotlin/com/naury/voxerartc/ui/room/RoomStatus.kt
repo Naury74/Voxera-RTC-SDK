@@ -64,7 +64,8 @@ internal fun ConnectingContent(state: SessionState, simulated: Boolean, onCancel
             SpeakingRipple(speaking = true, level = 0.5f, size = 128.dp)
             VoxeraAvatar(id = room.ifEmpty { "room" }, name = room.ifEmpty { "?" }, size = 128.dp)
         }
-        Spacer(Modifier.height(VoxeraSpacing.xl))
+        // 물결 고리가 아바타 밖으로 퍼지므로 이름과 사이를 넉넉히 둔다.
+        Spacer(Modifier.height(48.dp))
         Text(room, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.headline, textAlign = TextAlign.Center)
         Spacer(Modifier.height(VoxeraSpacing.xs))
         Text(

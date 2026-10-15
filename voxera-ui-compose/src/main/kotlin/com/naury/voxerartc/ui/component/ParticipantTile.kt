@@ -20,13 +20,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import com.naury.voxerartc.ui.glass.pressScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -52,7 +59,8 @@ import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
  * 참가자 타일. 카메라가 켜져 있고 [renderer]가 있으면 영상, 아니면 이니셜 아바타를 보여 준다. 카메라를 끄면
  * 마지막 프레임 대신 아바타로 바뀐다. 이름표는 12dp 안쪽에 고정한다.
  *
- * 누르면 [onTap](예: 조작 막대 보이기/숨기기), 길게 누르면 [onTogglePin]. TalkBack에서는 두 번 탭이 고정/해제다.
+ * 누르면 [onTap](예: 이 사람 크게 보기, 조작 막대 보이기/숨기기), 길게 누르면 [onTogglePin]. 누르는 동안 살짝 작아진다.
+ * 고정된 타일에는 오른쪽 위에 고정 해제 버튼이 생긴다. TalkBack에서는 두 번 탭이 [onTap]([tapLabel]), 없으면 고정/해제다.
  *
  * @param onTogglePin `null`이 아니면 길게 눌러 고정/해제한다. [onTap]이 없으면 짧게 눌러도 고정/해제한다.
  * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대·시스템 막대를 피할 때 쓴다.
@@ -93,13 +101,17 @@ public fun ParticipantTile(
     val track = if (showScreenShare) participant.screenShare else participant.camera
     val speakingGlow by animateFloatAsState(if (participant.isSpeaking) 1f else 0f, tween(220), label = "speaking")
     val tap = onTap ?: onTogglePin
+    val interaction = remember { MutableInteractionSource() }
     BoxWithConstraints(
         modifier = modifier
+            .pressScale(interaction, pressed = 0.97f)
             .clip(shape)
             .background(colors.surfaceElevated)
             .then(
                 if (tap != null || onTogglePin != null) {
                     Modifier.combinedClickable(
+                        interactionSource = interaction,
+                        indication = LocalIndication.current,
                         role = Role.Button,
                         onClick = { tap?.invoke() },
                         onLongClickLabel = pinLabel.takeIf { onTap != null && onTogglePin != null },
@@ -114,26 +126,22 @@ public fun ParticipantTile(
             )
             .clearAndSetSemantics {
                 contentDescription = description
-                if (onTogglePin != null) {
-                    role = Role.Button
-                    onClick(label = pinLabel) { onTogglePin(); true }
-                } else if (onTap != null && tapLabel != null) {
+                if (onTap != null && tapLabel != null) {
                     role = Role.Button
                     onClick(label = tapLabel) { onTap(); true }
+                } else if (onTogglePin != null) {
+                    role = Role.Button
+                    onClick(label = pinLabel) { onTogglePin(); true }
+                }
+                if (onTogglePin != null && onTap != null && tapLabel != null) {
+                    customActions = listOf(CustomAccessibilityAction(pinLabel) { onTogglePin(); true })
                 }
             },
     ) {
         val compact = maxWidth < 140.dp
         if (track != null && renderer != null) {
             renderer.Render(track, mirror = participant.isLocal && !showScreenShare, modifier = Modifier.fillMaxSize())
-            // 이름표 쪽 아래를 살짝 어둡게 해 밝은 영상에서도 이름표 경계가 묻히지 않게 한다.
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Brush.verticalGradient(0.7f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.28f))),
-            )
         } else {
-            Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(colors.surfaceElevated, colors.surface))))
             val avatar = (minOf(maxWidth, maxHeight) * 0.42f).coerceIn(40.dp, 120.dp)
             VoxeraAvatar(
                 id = participant.id,
@@ -158,9 +166,21 @@ public fun ParticipantTile(
                 if (weak) SignalBars(participant.connectionQuality, Modifier.size(width = 14.dp, height = 12.dp))
             }
         }
-        if (pinned) {
-            GlassPill(Modifier.align(Alignment.TopEnd).padding(VoxeraSpacing.sm)) {
-                Icon(VoxeraIcons.PushPin, contentDescription = null, tint = colors.onScrim, modifier = Modifier.size(14.dp))
+        // 고정된 타일은 오른쪽 위 버튼으로 바로 풀 수 있다(48dp 터치 영역).
+        if (pinned && onTogglePin != null) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(VoxeraSpacing.xxs)
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClickLabel = pinLabel, onClick = onTogglePin)
+                    .clearAndSetSemantics { },
+                contentAlignment = Alignment.Center,
+            ) {
+                GlassPill(Modifier) {
+                    Icon(VoxeraIcons.PushPin, contentDescription = null, tint = colors.onScrim, modifier = Modifier.size(16.dp))
+                }
             }
         }
     }

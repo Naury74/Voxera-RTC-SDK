@@ -173,4 +173,8 @@
     <string name="voxera_reaction_clap">Clap</string>
     <string name="voxera_reaction_surprised">Surprised</string>
     <string name="voxera_reaction_celebrate">Celebrate</string>
+    <string name="voxera_tile_spotlight">Show large</string>
+    <string name="voxera_tile_toggle_controls">Show or hide controls</string>
+    <string name="voxera_view_speaker">Speaker view</string>
+    <string name="voxera_view_gallery">Gallery view</string>
 </resources>

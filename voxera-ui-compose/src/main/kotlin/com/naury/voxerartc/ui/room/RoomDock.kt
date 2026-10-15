@@ -1,5 +1,8 @@
 package com.naury.voxerartc.ui.room
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -139,7 +142,8 @@ internal fun CallDock(
     val moreLabel = stringResource(R.string.voxera_control_more)
     BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
         val (shown, _, circle) = layoutDock(controls, { overflow -> DockControl(Icons.Filled.MoreVert, moreLabel, { onMore(overflow) }, essential = true) }, maxWidth)
-        GlassDock {
+        // 버튼이 늘거나 줄면(카메라 켜기, 화면 공유) 막대 폭이 부드럽게 바뀐다.
+        GlassDock(Modifier.animateContentSize(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow))) {
             Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), verticalAlignment = Alignment.CenterVertically) {
                 shown.forEach { control ->
                     CallControlButton(

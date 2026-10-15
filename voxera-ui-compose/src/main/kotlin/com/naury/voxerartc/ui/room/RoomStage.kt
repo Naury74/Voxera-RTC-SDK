@@ -1,6 +1,20 @@
 package com.naury.voxerartc.ui.room
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.zIndex
+import com.naury.voxerartc.ui.glass.pressScale
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -84,11 +98,19 @@ internal val BottomReserve = 116.dp
 /** 조작 막대를 숨겼을 때 아래에 남기는 여백. */
 private val HiddenBottomReserve = 16.dp
 
+/** 발표자 보기에서 크게 보이는 사람을 바꾸기 전에 기다리는 시간. 짧은 맞장구에 화면이 흔들리지 않게 한다. */
+private const val SPEAKER_SWITCH_DELAY_MS = 1_500L
+
 /**
- * 영상 무대. 다른 사람이 화면을 공유하면 공유 화면을 크게, 고정한 타일이 있으면 큰 타일 + 아래 줄,
- * 2명은 상대 전체 화면 + 끌어 옮길 수 있는 내 영상, 그 밖에는 격자(9명 넘으면 쪽 넘김).
+ * 영상 무대. 모든 타일을 한 부모 아래에 두고 [planStage]가 정한 자리로 크기·위치를 스프링으로 옮긴다.
+ * 그래서 격자 ↔ 크게 보기 ↔ 화면 공유가 바뀌어도 타일이 다시 만들어지지 않고(영상이 끊기지 않고) 자연스럽게 움직인다.
  *
- * @param onTap 무대를 짧게 누름(조작 막대 보이기/숨기기). 길게 누르면 그 타일을 고정한다.
+ * - 격자 타일을 누르면 그 사람을 크게 본다. 크게 보이는 타일을 누르면 조작 막대를 숨기거나 보인다.
+ * - 1:1은 상대가 화면 전체, 나는 끌어 옮기는 작은 화면. 작은 화면을 누르면 서로 바뀐다.
+ * - 9명이 넘는 갤러리는 9칸씩 쪽을 넘긴다.
+ *
+ * @param onTap 크게 보이는 타일을 누름(조작 막대 보이기/숨기기).
+ * @param onShowAll 작은 줄의 "+N" 칸을 누름.
  * @param chromeVisible 조작 막대가 보이는지. 숨기면 무대가 아래까지 넓어진다.
  */
 @Composable
@@ -102,170 +124,231 @@ internal fun VideoStage(
     topReserve: Dp = TopReserve,
     onTap: (() -> Unit)? = null,
     chromeVisible: Boolean = true,
+    view: StageView = StageView.GALLERY,
+    onShowAll: () -> Unit = {},
 ) {
-    val top = if (chromeVisible) maxOf(topReserve, TopReserve) else HiddenBottomReserve
-    val bottom = if (chromeVisible) BottomReserve else HiddenBottomReserve
-    val pinned = participants.firstOrNull { it.id == pinnedId }
-    val local = participants.firstOrNull { it.isLocal }
-    val remotes = participants.filterNot { it.isLocal }
-    // 다른 사람이 화면을 공유하면 그 화면을 무대에 크게 둔다(G-09). 내 공유 화면은 다시 그리지 않는다.
-    val sharing = remotes.firstOrNull { it.screenShare != null }
-    when {
-        sharing != null -> StripStage(sharing, participants, renderer, onTogglePin, onTap, top, bottom, modifier, showScreenShare = true)
-        pinned != null -> StripStage(pinned, participants.filterNot { it.id == pinned.id }, renderer, onTogglePin, onTap, top, bottom, modifier, pinned = true)
-        remotes.size == 1 && local != null -> OneOnOneStage(remotes.single(), local, renderer, onTap, top, bottom, modifier)
-        else -> GridStage(participants, renderer, landscape, onTogglePin, onTap, top, bottom, modifier)
+    val top by animateDpAsState(if (chromeVisible) maxOf(topReserve, TopReserve) else HiddenBottomReserve, label = "top")
+    val bottom by animateDpAsState(if (chromeVisible) BottomReserve else HiddenBottomReserve, label = "bottom")
+    // 발표자 보기: 말하는 사람이 바뀌어도 잠깐 기다렸다가 바꾼다.
+    val talking = participants.filter { !it.isLocal && it.isSpeaking }.maxByOrNull { it.audioLevel }?.id
+    var stableSpeaker by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(talking) {
+        if (talking == null || talking == stableSpeaker) return@LaunchedEffect
+        if (stableSpeaker != null) delay(SPEAKER_SWITCH_DELAY_MS)
+        stableSpeaker = talking
+    }
+    var corner by rememberSaveable { mutableStateOf(Corner.BOTTOM_END) }
+    val insets = WindowInsets.safeDrawing.asPaddingValues()
+    val direction = LocalLayoutDirection.current
+    BoxWithConstraints(modifier) {
+        val density = LocalDensity.current
+        val plan = with(density) {
+            val start = insets.calculateStartPadding(direction).toPx() + VoxeraSpacing.xs.toPx()
+            val end = insets.calculateEndPadding(direction).toPx() + VoxeraSpacing.xs.toPx()
+            val areaTop = insets.calculateTopPadding().toPx() + top.toPx()
+            val areaBottom = insets.calculateBottomPadding().toPx() + bottom.toPx()
+            val w = constraints.maxWidth.toFloat()
+            val h = constraints.maxHeight.toFloat()
+            planStage(
+                participants = participants,
+                pinnedId = pinnedId,
+                view = view,
+                lastSpeakerId = stableSpeaker,
+                area = TileRect(start, areaTop, w - start - end, h - areaTop - areaBottom),
+                full = TileRect(0f, 0f, w, h),
+                landscape = landscape,
+                gap = VoxeraSpacing.xs.toPx(),
+                strip = (if (landscape) minOf(136.dp.toPx(), w * 0.18f) else minOf(136.dp.toPx(), h * 0.2f)),
+                floatingWidth = (if (maxWidth > 600.dp) 160.dp else 112.dp).toPx(),
+                floatingMargin = VoxeraSpacing.xs.toPx(),
+                corner = corner,
+            )
+        }
+        if (plan.paged) {
+            GridStage(participants, renderer, landscape, onTogglePin, top, bottom, Modifier.fillMaxSize())
+            return@BoxWithConstraints
+        }
+        val localId = participants.firstOrNull { it.isLocal }?.id
+        val full = TileRect(0f, 0f, constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+        plan.tiles.forEach { placement ->
+            key(placement.key) {
+                AnimatedTile(
+                    placement,
+                    draggable = placement.role == TileRole.FLOATING,
+                    onDropped = { center -> corner = nearestCorner(center, full) },
+                ) {
+                    StageTileContent(
+                        placement,
+                        renderer,
+                        pinnedId = pinnedId,
+                        hidden = plan.hidden,
+                        bottomLabel = insets.calculateBottomPadding() + bottom,
+                        startLabel = insets.calculateStartPadding(direction),
+                        onTogglePin = onTogglePin,
+                        onTap = onTap,
+                        onSwap = { localId?.let(onTogglePin) },
+                        onShowAll = onShowAll,
+                    )
+                }
+            }
+        }
     }
 }
 
-/** 화면 모서리 네 곳. 내 영상이 붙는 자리. */
-private enum class Corner { TOP_START, TOP_END, BOTTOM_START, BOTTOM_END }
-
-@Composable
-private fun OneOnOneStage(
-    remote: Participant,
-    local: Participant,
-    renderer: VoxeraVideoRenderer?,
-    onTap: (() -> Unit)?,
-    top: Dp,
-    bottom: Dp,
-    modifier: Modifier,
-) {
-    val insets = WindowInsets.safeDrawing.asPaddingValues()
-    val direction = LocalLayoutDirection.current
-    // 내 영상을 누르면 큰 화면과 작은 화면을 바꾼다.
-    var swapped by rememberSaveable { mutableIntStateOf(0) }
-    val main = if (swapped == 1) local else remote
-    val small = if (swapped == 1) remote else local
-    Box(modifier) {
-        ParticipantTile(
-            main,
-            renderer,
-            Modifier.fillMaxSize(),
-            onTap = onTap,
-            shape = RoundedCornerShape(0.dp),
-            speakingOutline = false,
-            labelPadding = PaddingValues(
-                start = insets.calculateStartPadding(direction) + VoxeraSpacing.xs,
-                bottom = insets.calculateBottomPadding() + bottom,
-            ),
-        )
-        FloatingTile(small, renderer, top = top, bottom = bottom, onSwap = { swapped = 1 - swapped })
+/** 놓은 자리의 중심에서 가장 가까운 모서리. */
+internal fun nearestCorner(center: Offset, full: TileRect): Corner {
+    val right = center.x > full.x + full.width / 2
+    val lower = center.y > full.y + full.height / 2
+    return when {
+        !right && !lower -> Corner.TOP_START
+        right && !lower -> Corner.TOP_END
+        !right -> Corner.BOTTOM_START
+        else -> Corner.BOTTOM_END
     }
 }
 
 /**
- * 끌어서 옮기는 작은 영상. 손을 떼면 가장 가까운 모서리로 튕기듯 붙고, 누르면 [onSwap]. 조작 막대가 숨으면 아래 모서리도 함께 내려간다.
- * TalkBack에서는 두 번 탭으로 화면을 바꾼다.
+ * 자리([TilePlacement.rect])로 스프링처럼 움직이는 상자. 처음 나타날 때는 살짝 커지며 흐려졌다 선명해진다.
+ * [draggable]이면 손가락을 따라 움직이고, 놓으면 [onDropped]로 중심을 알린 뒤 새 자리로 붙는다.
+ * 움직임 줄이기 설정이면 바로 그 자리에 둔다.
  */
 @Composable
-private fun FloatingTile(participant: Participant, renderer: VoxeraVideoRenderer?, top: Dp, bottom: Dp, onSwap: () -> Unit) {
-    val density = LocalDensity.current
+private fun AnimatedTile(
+    placement: TilePlacement,
+    draggable: Boolean,
+    onDropped: (Offset) -> Unit,
+    content: @Composable () -> Unit,
+) {
     val reduced = rememberReducedMotion()
+    val rect = placement.rect
+    val targetOffset = IntOffset(rect.x.roundToInt(), rect.y.roundToInt())
+    val targetSize = IntSize(rect.width.roundToInt().coerceAtLeast(1), rect.height.roundToInt().coerceAtLeast(1))
+    val offset = remember { Animatable(targetOffset, IntOffset.VectorConverter) }
+    val size = remember { Animatable(targetSize, IntSize.VectorConverter) }
+    val appear = remember { Animatable(if (reduced) 1f else 0f) }
+    var dragging by remember { mutableStateOf(false) }
+    var settle by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
-    val swapLabel = stringResource(R.string.voxera_tile_swap)
-    var corner by rememberSaveable { mutableIntStateOf(Corner.BOTTOM_END.ordinal) }
-    BoxWithConstraints(
-        Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(top = top, bottom = bottom + VoxeraSpacing.xs, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
-    ) {
-        val tileWidth = if (maxWidth > 600.dp) 160.dp else 112.dp
-        val tileHeight = tileWidth * 4 / 3
-        val maxX = with(density) { (maxWidth - tileWidth).toPx().coerceAtLeast(0f) }
-        val maxY = with(density) { (maxHeight - tileHeight).toPx().coerceAtLeast(0f) }
-        fun target(c: Int): Offset = when (Corner.entries[c]) {
-            Corner.TOP_START -> Offset(0f, 0f)
-            Corner.TOP_END -> Offset(maxX, 0f)
-            Corner.BOTTOM_START -> Offset(0f, maxY)
-            Corner.BOTTOM_END -> Offset(maxX, maxY)
-        }
-        val position = remember { Animatable(target(corner), Offset.VectorConverter) }
-        // 화면 크기·조작 막대가 바뀌면 같은 모서리를 지키며 따라간다.
-        LaunchedEffect(maxX, maxY) {
-            if (reduced) position.snapTo(target(corner)) else position.animateTo(target(corner), spring(stiffness = Spring.StiffnessMediumLow))
-        }
-        ParticipantTile(
-            participant,
-            renderer,
-            Modifier
-                .offset { IntOffset(position.value.x.roundToInt(), position.value.y.roundToInt()) }
-                .size(width = tileWidth, height = tileHeight)
-                .pointerInput(maxX, maxY) {
-                    // 손을 떼거나 끌기가 취소되면 가장 가까운 모서리로 붙인다.
-                    val settle: () -> Unit = {
-                        val (x, y) = position.value
-                        val right = x > maxX / 2
-                        val lower = y > maxY / 2
-                        corner = when {
-                            !right && !lower -> Corner.TOP_START
-                            right && !lower -> Corner.TOP_END
-                            !right -> Corner.BOTTOM_START
-                            else -> Corner.BOTTOM_END
-                        }.ordinal
-                        scope.launch {
-                            position.animateTo(target(corner), spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow))
-                        }
-                    }
-                    detectDragGestures(
-                        onDragEnd = settle,
-                        onDragCancel = settle,
-                    ) { change, drag ->
-                        change.consume()
-                        scope.launch {
-                            val next = position.value + drag
-                            position.snapTo(Offset(next.x.coerceIn(-24f, maxX + 24f), next.y.coerceIn(-24f, maxY + 24f)))
-                        }
-                    }
-                },
-            onTap = onSwap,
-            tapLabel = swapLabel,
-            shape = RoundedCornerShape(VoxeraRadius.lg),
-        )
+    val moveSpec = spring<IntOffset>(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
+    val sizeSpec = spring<IntSize>(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
+    LaunchedEffect(targetOffset, settle) {
+        if (dragging) return@LaunchedEffect
+        if (reduced) offset.snapTo(targetOffset) else offset.animateTo(targetOffset, moveSpec)
     }
+    LaunchedEffect(targetSize) { if (reduced) size.snapTo(targetSize) else size.animateTo(targetSize, sizeSpec) }
+    LaunchedEffect(Unit) { appear.animateTo(1f, tween(240)) }
+    val density = LocalDensity.current
+    Box(
+        Modifier
+            .zIndex(placement.role.z)
+            .offset { offset.value }
+            .size(with(density) { DpSize(size.value.width.toDp(), size.value.height.toDp()) })
+            .graphicsLayer {
+                alpha = appear.value
+                val scale = 0.94f + 0.06f * appear.value
+                scaleX = scale
+                scaleY = scale
+            }
+            .then(
+                if (draggable) {
+                    Modifier.pointerInput(Unit) {
+                        val drop: () -> Unit = {
+                            dragging = false
+                            val v = offset.value
+                            onDropped(Offset(v.x + size.value.width / 2f, v.y + size.value.height / 2f))
+                            settle++
+                        }
+                        detectDragGestures(
+                            onDragStart = { dragging = true },
+                            onDragEnd = drop,
+                            onDragCancel = drop,
+                        ) { change, drag ->
+                            change.consume()
+                            scope.launch { offset.snapTo(offset.value + IntOffset(drag.x.roundToInt(), drag.y.roundToInt())) }
+                        }
+                    }
+                } else Modifier,
+            ),
+    ) { content() }
+}
+
+/** 겹칠 때 위에 그릴 순서. 작은 화면이 큰 화면 위에 온다. 순서를 바꾸지 않고 높이만 정해 영상 View가 다시 붙지 않게 한다. */
+private val TileRole.z: Float
+    get() = when (this) {
+        TileRole.FULL, TileRole.FOCUS, TileRole.GRID -> 0f
+        TileRole.THUMB, TileRole.OVERFLOW -> 1f
+        TileRole.FLOATING -> 2f
+    }
+
+@Composable
+private fun StageTileContent(
+    placement: TilePlacement,
+    renderer: VoxeraVideoRenderer?,
+    pinnedId: String?,
+    hidden: Int,
+    bottomLabel: Dp,
+    startLabel: Dp,
+    onTogglePin: (String) -> Unit,
+    onTap: (() -> Unit)?,
+    onSwap: () -> Unit,
+    onShowAll: () -> Unit,
+) {
+    val role = placement.role
+    val radius by animateDpAsState(
+        when (role) {
+            TileRole.FULL -> 0.dp
+            TileRole.THUMB, TileRole.OVERFLOW -> VoxeraRadius.md
+            TileRole.FLOATING -> VoxeraRadius.lg
+            TileRole.GRID, TileRole.FOCUS -> VoxeraRadius.xl
+        },
+        label = "radius",
+    )
+    val shape = RoundedCornerShape(radius)
+    val person = placement.participant
+    if (person == null) {
+        OverflowCell(hidden, shape, onShowAll)
+        return
+    }
+    val spotlight = stringResource(R.string.voxera_tile_spotlight)
+    val swap = stringResource(R.string.voxera_tile_swap)
+    val controls = stringResource(R.string.voxera_tile_toggle_controls)
+    val labelBottom by animateDpAsState(if (role == TileRole.FULL) bottomLabel else 0.dp, label = "label")
+    ParticipantTile(
+        person,
+        renderer,
+        Modifier.fillMaxSize(),
+        pinned = role == TileRole.FOCUS && person.id == pinnedId,
+        onTogglePin = if (placement.screenShare || role == TileRole.FULL || role == TileRole.FLOATING) null else ({ onTogglePin(person.id) }),
+        showScreenShare = placement.screenShare,
+        onTap = when (role) {
+            TileRole.GRID, TileRole.THUMB -> ({ onTogglePin(person.id) })
+            TileRole.FLOATING -> onSwap
+            else -> onTap
+        },
+        tapLabel = when (role) {
+            TileRole.GRID, TileRole.THUMB -> spotlight
+            TileRole.FLOATING -> swap
+            else -> controls.takeIf { onTap != null }
+        },
+        shape = shape,
+        speakingOutline = role != TileRole.FULL,
+        labelPadding = PaddingValues(start = if (role == TileRole.FULL) startLabel + VoxeraSpacing.xs else 0.dp, bottom = labelBottom),
+    )
 }
 
 @Composable
-private fun StripStage(
-    focus: Participant,
-    others: List<Participant>,
-    renderer: VoxeraVideoRenderer?,
-    onTogglePin: (String) -> Unit,
-    onTap: (() -> Unit)?,
-    top: Dp,
-    bottom: Dp,
-    modifier: Modifier,
-    showScreenShare: Boolean = false,
-    pinned: Boolean = false,
-) {
-    Column(
-        modifier
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(top = top, bottom = bottom, start = VoxeraSpacing.xs, end = VoxeraSpacing.xs),
-        verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
+private fun OverflowCell(hidden: Int, shape: RoundedCornerShape, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .pressScale(interaction)
+            .clip(shape)
+            .background(VoxeraTheme.colors.surfaceElevated)
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        ParticipantTile(
-            focus,
-            renderer,
-            Modifier.fillMaxWidth().weight(1f),
-            pinned = pinned,
-            showScreenShare = showScreenShare,
-            onTogglePin = if (showScreenShare) null else ({ onTogglePin(focus.id) }),
-            onTap = onTap,
-        )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-            items(others, key = { it.id }) { participant ->
-                ParticipantTile(
-                    participant,
-                    renderer,
-                    Modifier.size(width = 96.dp, height = 128.dp),
-                    onTogglePin = { onTogglePin(participant.id) },
-                    onTap = onTap,
-                    shape = RoundedCornerShape(VoxeraRadius.md),
-                )
-            }
-        }
+        Text(pluralStringResource(R.plurals.voxera_more_participants, hidden, hidden), color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label)
     }
 }
 
@@ -275,7 +358,6 @@ private fun GridStage(
     renderer: VoxeraVideoRenderer?,
     landscape: Boolean,
     onTogglePin: (String) -> Unit,
-    onTap: (() -> Unit)?,
     top: Dp,
     bottom: Dp,
     modifier: Modifier,
@@ -290,7 +372,7 @@ private fun GridStage(
     ) {
         // 화면 밖 쪽의 타일은 그리지 않으므로 영상 디코딩·렌더 부하가 보이는 9칸으로 제한된다(E25).
         HorizontalPager(pager, Modifier.weight(1f), beyondViewportPageCount = 0, key = { pages[it].firstOrNull()?.id ?: it }) { page ->
-            TileGrid(pages[page], renderer, landscape, onTogglePin, onTap)
+            TileGrid(pages[page], renderer, landscape, onTogglePin)
         }
         if (pages.size > 1) {
             PageDots(pages.size, pager.currentPage, Modifier.padding(top = VoxeraSpacing.xs))
@@ -299,7 +381,7 @@ private fun GridStage(
 }
 
 @Composable
-private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit, onTap: (() -> Unit)?) {
+private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, landscape: Boolean, onTogglePin: (String) -> Unit) {
     val spec = gridFor(tiles.size, landscape)
     Column(Modifier.fillMaxSize().padding(horizontal = VoxeraSpacing.xs), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
         tiles.chunked(spec.columns).forEach { row ->
@@ -310,7 +392,8 @@ private fun TileGrid(tiles: List<Participant>, renderer: VoxeraVideoRenderer?, l
                         renderer,
                         Modifier.weight(1f).fillMaxHeight(),
                         onTogglePin = { onTogglePin(participant.id) },
-                        onTap = onTap,
+                        onTap = { onTogglePin(participant.id) },
+                        tapLabel = stringResource(R.string.voxera_tile_spotlight),
                         shape = RoundedCornerShape(if (spec.columns >= 3) VoxeraRadius.md else VoxeraRadius.xl),
                     )
                 }
