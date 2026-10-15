@@ -11,6 +11,7 @@ import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.RtcEngineFactory
 import com.naury.voxerartc.api.ScreenShareConsent
+import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.ReactionEvent
 import com.naury.voxerartc.api.SessionState
@@ -153,6 +154,12 @@ public class VoxeraClient internal constructor(
     public fun sendReaction(reaction: Reaction, callback: VoxeraActionCallback?): VoxeraCancellable =
         action(callback) { session.sendReaction(reaction) }
 
+    public fun sendChatMessage(text: String, callback: VoxeraActionCallback?): VoxeraCancellable =
+        action(callback) { session.sendChatMessage(text) }
+
+    public fun setHandRaised(raised: Boolean, callback: VoxeraActionCallback?): VoxeraCancellable =
+        action(callback) { session.setHandRaised(raised) }
+
     /** 통화를 끝낸다. 끝나면 [onDone]을 부른다. [onDone]은 `null`이어도 된다. */
     public fun leave(onDone: Runnable?) {
         scope.launch {
@@ -176,6 +183,12 @@ public class VoxeraClient internal constructor(
     public fun addReactionListener(listener: VoxeraListener<ReactionEvent>): VoxeraCancellable =
         launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
             session.reactions.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
+        }
+
+    /** 등록하는 순간의 채팅 목록을 먼저 받고, 메시지가 오갈 때마다 전체 목록을 받는다. */
+    public fun addChatListener(listener: VoxeraListener<List<ChatMessage>>): VoxeraCancellable =
+        launchCancellable(CoroutineStart.UNDISPATCHED) { isCancelled ->
+            session.chat.collect { value -> deliver(isCancelled) { listener.onChanged(value) } }
         }
 
     private fun action(callback: VoxeraActionCallback?, block: suspend () -> MediaActionResult): VoxeraCancellable =

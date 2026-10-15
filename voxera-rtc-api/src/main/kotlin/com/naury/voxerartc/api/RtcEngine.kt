@@ -49,6 +49,12 @@ public sealed interface RtcEngineEvent {
 
     /** 원격 참가자가 반응을 보냈다. 엔진은 모르는 반응을 이 이벤트로 바꾸지 않는다. */
     public data class ReactionReceived(val participantId: String, val reaction: Reaction) : RtcEngineEvent
+
+    /** 원격 참가자가 채팅을 보냈다. [text]는 다듬지 않은 값이며 세션이 [ChatMessage.sanitize]로 거른다. */
+    public data class ChatReceived(val participantId: String, val messageId: String, val text: String) : RtcEngineEvent
+
+    /** 원격 참가자가 손을 들거나 내렸다. 늦게 들어온 참가자에게도 엔진이 현재 상태를 다시 알려야 한다. */
+    public data class HandRaisedChanged(val participantId: String, val raised: Boolean) : RtcEngineEvent
 }
 
 /**
@@ -89,6 +95,15 @@ public interface RtcEngine {
 
     /** 룸의 다른 참가자에게 반응을 보낸다. 지원하지 않는 엔진은 Unsupported. */
     public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
+
+    /** 룸의 다른 참가자에게 채팅을 보낸다. [text]는 세션이 이미 다듬은 값이다. 지원하지 않는 엔진은 Unsupported. */
+    public suspend fun sendChatMessage(messageId: String, text: String): MediaActionResult = MediaActionResult.Unsupported
+
+    /**
+     * 손들기 상태를 알린다. 나중에 들어온 참가자도 알 수 있게, 손을 든 동안 새 참가자가 오면 엔진이 다시 알려야 한다.
+     * 지원하지 않는 엔진은 Unsupported.
+     */
+    public suspend fun setHandRaised(raised: Boolean): MediaActionResult = MediaActionResult.Unsupported
 
     /** 연결, 트랙, 리스너를 모두 해제한다. 여러 번 불러도 안전해야 한다. */
     public suspend fun release()

@@ -153,10 +153,32 @@ internal class DemoRtcEngine(
                 8 -> fake.simulateRouteConnected(FakeRtcEngine.DemoBluetoothHeadset)
                 45 -> fake.simulateRouteDisconnected(FakeRtcEngine.DemoBluetoothHeadset.id)
             }
+            playSocial(tick)
             if (scenario == DemoScenario.UNSTABLE_NETWORK) when (tick % 14) {
                 6 -> fake.simulateReconnecting()
                 9 -> fake.simulateReconnected()
             }
+        }
+    }
+
+    private var answered = 0
+
+    /** 그룹 데모에서는 손을 들고 채팅을 주고받는다. 내가 채팅을 보내면 잠시 뒤 누군가 답한다. */
+    private fun playSocial(tick: Int) {
+        if (remotes.isEmpty()) return
+        val group = scenario == DemoScenario.GROUP_FOUR || scenario == DemoScenario.GROUP_NINE
+        if (group && remotes.size >= 3) when (tick) {
+            5 -> fake.simulateHandRaised(remotes[1].id, true)
+            7 -> fake.simulateChat(remotes[2].id, "Can everyone hear me okay?")
+            9 -> fake.simulateChat(remotes[0].id, "Loud and clear 👍")
+            25 -> fake.simulateHandRaised(remotes[1].id, false)
+        }
+        if (scenario == DemoScenario.VIDEO_ONE_ON_ONE && tick == 6) fake.simulateChat(remotes[0].id, "Hi! Your video looks great.")
+        // 1초 틱마다 확인하므로 답은 보낸 뒤 1~2초 안에 온다.
+        val sent = fake.sentChatMessages.size
+        if (sent > answered) {
+            answered = sent
+            fake.simulateChat(remotes[random.nextInt(remotes.size)].id, Replies[random.nextInt(Replies.size)])
         }
     }
 
@@ -194,5 +216,6 @@ internal class DemoRtcEngine(
 
     private companion object {
         const val TICK_MS = 1_000L
+        val Replies = listOf("Sounds good!", "Got it, thanks.", "👍", "Agreed.", "Ha, nice one 😄")
     }
 }

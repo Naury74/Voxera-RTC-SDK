@@ -194,6 +194,37 @@ public class FakeRtcEngine(
         _events.tryEmit(RtcEngineEvent.ReactionReceived(participantId, reaction))
     }
 
+    private val _sentChat = mutableListOf<Pair<String, String>>()
+
+    /** [sendChatMessage]로 보낸 (메시지 ID, 글) 순서. */
+    public val sentChatMessages: List<Pair<String, String>> get() = synchronized(_sentChat) { _sentChat.toList() }
+
+    override suspend fun sendChatMessage(messageId: String, text: String): MediaActionResult {
+        synchronized(_sentChat) { _sentChat += messageId to text }
+        return MediaActionResult.Applied
+    }
+
+    /** 원격 참가자가 채팅을 보낸 것처럼 이벤트를 낸다. [messageId]를 같게 주면 중복 도착을 재현한다. */
+    @JvmOverloads
+    public fun simulateChat(participantId: String, text: String, messageId: String = java.util.UUID.randomUUID().toString()) {
+        _events.tryEmit(RtcEngineEvent.ChatReceived(participantId, messageId, text))
+    }
+
+    /** 마지막으로 [setHandRaised]에 넘긴 값. 부른 적 없으면 `null`. */
+    @Volatile
+    public var localHandRaised: Boolean? = null
+        private set
+
+    override suspend fun setHandRaised(raised: Boolean): MediaActionResult {
+        localHandRaised = raised
+        return MediaActionResult.Applied
+    }
+
+    /** 원격 참가자가 손을 들거나 내린 것처럼 이벤트를 낸다. */
+    public fun simulateHandRaised(participantId: String, raised: Boolean) {
+        _events.tryEmit(RtcEngineEvent.HandRaisedChanged(participantId, raised))
+    }
+
     public fun simulateEffectsThrottled() {
         media = media.copy(videoEffect = VideoEffect.None, effectsAvailability = EffectsAvailability.DISABLED_FOR_PERFORMANCE)
         _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))

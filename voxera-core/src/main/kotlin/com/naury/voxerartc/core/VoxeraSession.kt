@@ -1,6 +1,7 @@
 package com.naury.voxerartc.core
 
 import com.naury.voxerartc.api.CallMode
+import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.JoinResult
 import com.naury.voxerartc.api.LeaveReason
 import com.naury.voxerartc.api.LocalMediaState
@@ -15,6 +16,7 @@ import com.naury.voxerartc.api.ScreenShareConsent
 import com.naury.voxerartc.api.SessionState
 import com.naury.voxerartc.api.VideoEffect
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -79,6 +81,21 @@ public interface VoxeraSession : AutoCloseable {
     /** 반응을 보낸다. 연결된 동안에만 쓸 수 있다. 엔진이 지원하지 않거나 1초에 보낼 수 있는 개수([REACTION_BURST])를 넘었으면 Unsupported를 돌려준다. */
     public suspend fun sendReaction(reaction: Reaction): MediaActionResult = MediaActionResult.Unsupported
 
+    /**
+     * 이번 통화의 채팅. 오래된 것부터 최대 [CHAT_HISTORY]개를 담고 통화가 끝나면 비운다. 내가 보낸 메시지도 엔진이 받아들이면 들어온다.
+     * 한 참가자가 [CHAT_WINDOW_MS] 안에 [CHAT_BURST]개를 넘게 보내면 초과분은 버린다.
+     */
+    public val chat: StateFlow<List<ChatMessage>> get() = NoChat
+
+    /**
+     * 채팅을 보낸다. 앞뒤 공백을 자르고, 비었거나 [ChatMessage.MAX_LENGTH]를 넘거나 너무 빨리 보내면 Unsupported를 돌려준다.
+     * 연결된 동안에만 쓸 수 있다.
+     */
+    public suspend fun sendChatMessage(text: String): MediaActionResult = MediaActionResult.Unsupported
+
+    /** 손을 들거나 내린다. 내 상태는 [participants]의 로컬 참가자 [Participant.handRaisedAtMs]로 보인다. 연결된 동안에만 쓸 수 있다. */
+    public suspend fun setHandRaised(raised: Boolean): MediaActionResult = MediaActionResult.Unsupported
+
     /** [LocalMediaState.audioRoutes]에 있는 경로 하나를 id로 고른다. */
     public suspend fun selectAudioRoute(routeId: String): MediaActionResult
 
@@ -91,5 +108,15 @@ public interface VoxeraSession : AutoCloseable {
     public companion object {
         /** 한 참가자가 1초에 보낼 수 있는 반응 수. 화면이 반응으로 뒤덮이지 않도록 이를 넘는 반응은 버린다. */
         public const val REACTION_BURST: Int = 5
+
+        /** 통화 중 보관하는 채팅 수. 넘으면 오래된 것부터 지운다. */
+        public const val CHAT_HISTORY: Int = 200
+
+        /** [CHAT_WINDOW_MS] 동안 한 참가자가 보낼 수 있는 채팅 수. */
+        public const val CHAT_BURST: Int = 5
+
+        public const val CHAT_WINDOW_MS: Long = 5_000
     }
 }
+
+private val NoChat: StateFlow<List<ChatMessage>> = MutableStateFlow(emptyList())

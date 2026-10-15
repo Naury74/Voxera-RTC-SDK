@@ -1,6 +1,7 @@
 package com.naury.voxerartc.core
 
 import com.naury.voxerartc.api.CallMode
+import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.ConfigurationProblem
 import com.naury.voxerartc.api.ConnectOptions
 import com.naury.voxerartc.api.ConnectOutcome
@@ -113,6 +114,51 @@ internal class DefaultVoxeraSession(
     private fun publishReaction(participantId: String, reaction: Reaction) {
         val now = clock.nowMs()
         if (admitReaction(participantId, now)) _reactions.tryEmit(ReactionEvent(participantId, reaction, now))
+    }
+
+    // 채팅·손들기. social로 보호한다.
+    private val social = Any()
+    private val _chat = MutableStateFlow<List<ChatMessage>>(emptyList())
+    override val chat: StateFlow<List<ChatMessage>> = _chat.asStateFlow()
+    private val seenChatIds = LinkedHashSet<String>()
+    private val chatTimes = HashMap<String, ArrayDeque<Long>>()
+    private val raisedHands = HashMap<String, Long>()
+
+    /** 참가자별 최근 [VoxeraSession.CHAT_WINDOW_MS] 동안의 채팅 수를 세어 [VoxeraSession.CHAT_BURST]를 넘으면 버린다. */
+    private fun admitChat(participantId: String, nowMs: Long): Boolean = synchronized(social) {
+        val times = chatTimes.getOrPut(participantId) { ArrayDeque() }
+        while (times.isNotEmpty() && nowMs - times.first() >= VoxeraSession.CHAT_WINDOW_MS) times.removeFirst()
+        if (times.size >= VoxeraSession.CHAT_BURST) return false
+        times.addLast(nowMs)
+        true
+    }
+
+    /** 처음 보는 ID면 기록하고 `true`. 같은 메시지가 다시 오면 `false`. */
+    private fun firstSighting(messageId: String): Boolean = synchronized(social) {
+        if (!seenChatIds.add(messageId)) return false
+        if (seenChatIds.size > VoxeraSession.CHAT_HISTORY * 2) seenChatIds.remove(seenChatIds.first())
+        true
+    }
+
+    private fun appendChat(message: ChatMessage) {
+        _chat.update { (it + message).takeLast(VoxeraSession.CHAT_HISTORY) }
+    }
+
+    private fun publishChat(participantId: String, messageId: String, raw: String) {
+        if (messageId.isEmpty() || messageId.length > ChatMessage.MAX_ID_LENGTH) return
+        val text = ChatMessage.sanitize(raw) ?: return
+        val now = clock.nowMs()
+        if (!admitChat(participantId, now) || !firstSighting(messageId)) return
+        appendChat(ChatMessage(messageId, participantId, text, now, isLocal = false))
+    }
+
+    private fun onHandChanged(participantId: String, raised: Boolean) {
+        val changed = synchronized(social) {
+            if (raised) raisedHands.putIfAbsent(participantId, clock.nowMs()) == null else raisedHands.remove(participantId) != null
+        }
+        if (!changed) return
+        val at = synchronized(social) { raisedHands[participantId] }
+        _participants.update { list -> list.map { if (it.id == participantId) it.copy(handRaisedAtMs = at) else it } }
     }
 
     override val engineKind: RtcEngineKind get() = engineFactory.kind
@@ -298,7 +344,10 @@ internal class DefaultVoxeraSession(
         if (synchronized(lock) { machine.generation != generation || connection?.generation != generation }) return
         when (event) {
             is RtcEngineEvent.ParticipantUpserted -> upsertParticipant(event.participant)
-            is RtcEngineEvent.ParticipantLeft -> _participants.update { list -> list.filterNot { it.id == event.participantId } }
+            is RtcEngineEvent.ParticipantLeft -> {
+                synchronized(social) { raisedHands.remove(event.participantId) }
+                _participants.update { list -> list.filterNot { it.id == event.participantId } }
+            }
             is RtcEngineEvent.LocalMediaChanged -> _localMedia.update { current ->
                 event.state.copy(
                     microphone = current.microphone.settle(event.state.microphone.actual),
@@ -308,6 +357,8 @@ internal class DefaultVoxeraSession(
             }
             is RtcEngineEvent.QualitySampled -> _diagnostics.tryEmit(event.snapshot)
             is RtcEngineEvent.ReactionReceived -> publishReaction(event.participantId, event.reaction)
+            is RtcEngineEvent.ChatReceived -> publishChat(event.participantId, event.messageId, event.text)
+            is RtcEngineEvent.HandRaisedChanged -> onHandChanged(event.participantId, event.raised)
             RtcEngineEvent.Reconnecting -> onReconnecting(generation)
             RtcEngineEvent.Reconnected -> if (dispatch(SessionAction.Reconnected(generation)).accepted) {
                 synchronized(lock) { connection?.reconnectDeadline?.cancel() }
@@ -363,7 +414,9 @@ internal class DefaultVoxeraSession(
         }
     }
 
-    private fun upsertParticipant(participant: Participant) {
+    private fun upsertParticipant(engineValue: Participant) {
+        // 손들기는 엔진의 참가자 값에 없으므로 세션이 아는 값을 얹는다.
+        val participant = engineValue.copy(handRaisedAtMs = synchronized(social) { raisedHands[engineValue.id] })
         _participants.update { list ->
             val index = list.indexOfFirst { it.id == participant.id }
             val next = if (index >= 0) list.toMutableList().apply { set(index, participant) } else list + participant
@@ -384,6 +437,12 @@ internal class DefaultVoxeraSession(
         _localMedia.value = LocalMediaState()
         _diagnostics.resetReplayCache()
         synchronized(reactionTimes) { reactionTimes.clear() }
+        synchronized(social) {
+            seenChatIds.clear()
+            chatTimes.clear()
+            raisedHands.clear()
+        }
+        _chat.value = emptyList()
     }
 
     override suspend fun setMicrophoneEnabled(enabled: Boolean): MediaActionResult =
@@ -447,6 +506,41 @@ internal class DefaultVoxeraSession(
         if (result is MediaActionResult.Applied && sameCall) _reactions.tryEmit(ReactionEvent(localId, reaction, clock.nowMs()))
         return result
     }
+
+    override suspend fun sendChatMessage(text: String): MediaActionResult {
+        val (engine, generation) = liveEngine()
+        if (engine == null) return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val localId = _participants.value.firstOrNull { it.isLocal }?.id ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val clean = ChatMessage.sanitize(text) ?: return MediaActionResult.Unsupported
+        if (!admitChat(localId, clock.nowMs())) return MediaActionResult.Unsupported
+        val id = UUID.randomUUID().toString()
+        firstSighting(id)
+        val result = engine.sendChatMessage(id, clean)
+        if (result is MediaActionResult.Applied && isSameCall(generation)) {
+            appendChat(ChatMessage(id, localId, clean, clock.nowMs(), isLocal = true))
+        }
+        return result
+    }
+
+    override suspend fun setHandRaised(raised: Boolean): MediaActionResult {
+        val (engine, generation) = liveEngine()
+        if (engine == null) return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val localId = _participants.value.firstOrNull { it.isLocal }?.id ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
+        val result = engine.setHandRaised(raised)
+        if (result is MediaActionResult.Applied && isSameCall(generation)) onHandChanged(localId, raised)
+        return result
+    }
+
+    /** 연결 중(재연결 포함)인 엔진과 그 세대. 연결되어 있지 않으면 엔진이 `null`. */
+    private fun liveEngine(): Pair<RtcEngine?, Long> = synchronized(lock) {
+        val state = machine.state
+        val live = state is SessionState.Connected || state is SessionState.Reconnecting
+        (if (live) connection?.engine else null) to machine.generation
+    }
+
+    /** 보내는 사이 통화가 끝나거나 새 통화가 시작되지 않았는지. */
+    private fun isSameCall(generation: Long): Boolean =
+        synchronized(lock) { machine.generation == generation && connection?.generation == generation }
 
     override suspend fun switchCamera(): MediaActionResult {
         val engine = connectedEngine() ?: return MediaActionResult.Failed(VoxeraError.NotConnected)
