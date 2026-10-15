@@ -153,6 +153,11 @@ internal class DemoRtcEngine(
                 8 -> fake.simulateRouteConnected(FakeRtcEngine.DemoBluetoothHeadset)
                 45 -> fake.simulateRouteDisconnected(FakeRtcEngine.DemoBluetoothHeadset.id)
             }
+            // 1:1 영상 데모: 조작 막대가 숨은 뒤 이어폰이 연결되면 막대를 꺼내 오디오 버튼 위에 알린다.
+            if (scenario == DemoScenario.VIDEO_ONE_ON_ONE) when (tick) {
+                12 -> fake.simulateRouteConnected(FakeRtcEngine.DemoBluetoothHeadset)
+                40 -> fake.simulateRouteDisconnected(FakeRtcEngine.DemoBluetoothHeadset.id)
+            }
             playSocial(tick)
             if (scenario == DemoScenario.UNSTABLE_NETWORK) when (tick % 14) {
                 6 -> fake.simulateReconnecting()
