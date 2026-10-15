@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
                                         pip.ignoreNextUserLeave()
                                         share()
                                     }
-                                } ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) }; Unit },
+                                } ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) } },
                                 onSaveReport = {
                                     val file = viewModel.saveReport()
                                     val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)
