@@ -146,7 +146,7 @@ public class FakeRtcEngine(
     }
 
     override suspend fun selectAudioRoute(routeId: String): MediaActionResult {
-        if (audioRoutes.none { it.id == routeId && it.isSelectable }) return MediaActionResult.Unsupported
+        if (media.audioRoutes.none { it.id == routeId && it.isSelectable }) return MediaActionResult.Unsupported
         delay(mediaAckDelayMs)
         pendingMediaFailures.removeFirstOrNull()?.let { return MediaActionResult.Failed(it) }
         media = media.copy(selectedAudioRouteId = routeId)
@@ -243,15 +243,38 @@ public class FakeRtcEngine(
         _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
     }
 
+    /**
+     * 블루투스·유선 이어폰이 연결된 것처럼 [route]를 경로 목록에 넣는다. [select]면 실제 기기처럼 그 경로로 바로 옮긴다.
+     */
+    public fun simulateRouteConnected(route: AudioRoute, select: Boolean = true) {
+        media = media.copy(
+            audioRoutes = media.audioRoutes.filterNot { it.id == route.id } + route,
+            selectedAudioRouteId = if (select) route.id else media.selectedAudioRouteId,
+        )
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
+    }
+
+    /** 이어폰이 끊긴 것처럼 [routeId]를 빼고, 그 경로를 쓰고 있었으면 남은 첫 경로로 옮긴다. */
+    public fun simulateRouteDisconnected(routeId: String) {
+        val remaining = media.audioRoutes.filterNot { it.id == routeId }
+        media = media.copy(
+            audioRoutes = remaining,
+            selectedAudioRouteId = if (media.selectedAudioRouteId == routeId) remaining.firstOrNull()?.id else media.selectedAudioRouteId,
+        )
+        _events.tryEmit(RtcEngineEvent.LocalMediaChanged(media))
+    }
+
     private fun nextCameraHandle() = VideoTrackHandle(localState.id, "local-camera-${++cameraTrackSerial}", VideoSource.CAMERA)
 
     public companion object {
-        /** 이어피스, 스피커, 블루투스로 이루어진 기본 경로 목록. */
+        /** 기본 경로 목록(휴대전화 수화부, 스피커). 이어폰은 [simulateRouteConnected]로 붙인다. */
         public val DefaultAudioRoutes: List<AudioRoute> = listOf(
             AudioRoute("earpiece", "Phone", AudioRouteType.EARPIECE),
             AudioRoute("speaker", "Speaker", AudioRouteType.SPEAKER),
-            AudioRoute("bluetooth", "Bluetooth headset", AudioRouteType.BLUETOOTH),
         )
+
+        /** 데모·테스트용 블루투스 이어폰. */
+        public val DemoBluetoothHeadset: AudioRoute = AudioRoute("bluetooth:demo", "Galaxy Buds (demo)", AudioRouteType.BLUETOOTH)
     }
 }
 

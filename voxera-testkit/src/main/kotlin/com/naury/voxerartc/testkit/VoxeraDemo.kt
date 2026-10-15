@@ -148,6 +148,11 @@ internal class DemoRtcEngine(
             if (tick % 9 == 4 && remotes.isNotEmpty()) {
                 fake.simulateReaction(remotes[random.nextInt(remotes.size)].id, Reaction.entries[random.nextInt(Reaction.entries.size)])
             }
+            // 1:1 음성 데모: 통화 중에 블루투스 이어폰이 연결됐다가 끊기는 상황을 보여 준다.
+            if (scenario == DemoScenario.VOICE_ONE_ON_ONE) when (tick) {
+                8 -> fake.simulateRouteConnected(FakeRtcEngine.DemoBluetoothHeadset)
+                45 -> fake.simulateRouteDisconnected(FakeRtcEngine.DemoBluetoothHeadset.id)
+            }
             if (scenario == DemoScenario.UNSTABLE_NETWORK) when (tick % 14) {
                 6 -> fake.simulateReconnecting()
                 9 -> fake.simulateReconnected()
