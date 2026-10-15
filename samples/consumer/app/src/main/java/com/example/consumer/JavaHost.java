@@ -3,6 +3,7 @@ package com.example.consumer;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
 import com.naury.voxerartc.api.CallMode;
+import com.naury.voxerartc.api.Reaction;
 import com.naury.voxerartc.api.RtcCredentials;
 import com.naury.voxerartc.api.VoxeraError;
 import com.naury.voxerartc.core.java.VoxeraCallback;
@@ -23,6 +24,7 @@ final class JavaHost {
             @Override public void onSuccess(String sessionId) { }
             @Override public void onError(VoxeraError error) { }
         }).cancel();
+        client.sendReaction(Reaction.HEART, null).cancel();
         return client;
     }
 }
