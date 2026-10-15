@@ -90,7 +90,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 - 반응(👍 ❤️ 😂 👏 😮 🎉)을 주고받습니다(`reactionsEnabled = false`로 끌 수 있음).
 - 채팅을 주고받습니다. 시트를 닫아 둔 사이 온 메시지는 위에 잠깐 미리 보이고, 채팅 버튼에 읽지 않은 수가 붙습니다(`chatEnabled = false`로 끌 수 있음).
 - 반응 시트에서 손을 들고 내립니다. 손을 든 사람은 타일과 아바타에 손 배지가 붙고 참가자 목록 맨 위로 갑니다(`handRaiseEnabled = false`로 끌 수 있음).
-- 오디오 출력 목록에는 연결된 장치만 나옵니다. 통화 중 이어폰이 연결되면 그쪽으로 옮기고 위에 알림과 되돌리기 버튼을 띄웁니다. 끊기면 남은 장치를 알려 줍니다.
+- 오디오 출력 목록에는 연결된 장치만 나옵니다. 통화 중 이어폰이 연결되면 그쪽으로 옮기고, 오디오 버튼(막대가 좁으면 더보기 버튼) 위에 되돌리기 버튼이 있는 말풍선을 8초 띄웁니다. 끊기면 남은 장치를 6초 알려 줍니다. 조작 막대가 숨어 있으면 말풍선과 함께 꺼냅니다.
 - 품질 시트(왕복 시간, 지터, 손실, 비트레이트, 프레임과 그 추이), 오디오 출력 선택, 참가자 목록, 카메라 효과가 들어 있습니다.
 
 테마는 `theme = VoxeraThemeConfig(mode, glassQuality, palette, fontFamily, highContrast)`로 바꿉니다. 호스트의 `MaterialTheme`는 건드리지 않습니다. 색을 덮어쓸 때 대비가 모자라면 그 값은 버리고 기본색을 씁니다.
