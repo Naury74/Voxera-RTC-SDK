@@ -80,3 +80,7 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 크게 보기 | tap-to-pin | 격자 탭 = 크게 보기, 갤러리 ↔ 발표자 보기 전환, 발표자 전환 1.5초 지연 | 그룹 통화에서 한 사람에게 집중 |
 | 크게 보기 작은 줄 | 넘치는 인원은 "+N" | 모든 참가자를 한 줄에 두고 좌우(가로 화면은 위아래)로 넘김, 보이는 칸 근처만 그림 | 숨은 사람을 보려고 화면을 바꾸지 않아도 되게. 영상 렌더는 보이는 만큼만 |
 | 오디오 장치 목록 | 고정 목록 | 연결된 장치만 표시, 새 장치 연결·끊김을 화면 위 알림으로 안내(전환 시 되돌리기) | 없는 블루투스를 고르게 하지 않음. 이어폰을 끼면 바로 옮기되 사용자가 되돌릴 수 있게 |
+| 채팅 | 없음 | `ChatMessage`, `VoxeraSession.chat/sendChatMessage`, LiveKit 데이터 메시지(주제 `voxera.chat`, `1:<ID>:<글>`) | 형식 버전과 길이를 우리가 정해 검사하려고. LiveKit 텍스트 스트림(`lk.chat`)과는 아직 서로 읽지 못함 |
+| 손들기 | 없음 | `Participant.handRaisedAtMs`, `setHandRaised`, 데이터 메시지(`voxera.hand`) + 새 참가자에게 다시 보냄 | 참가자 속성(attributes)은 토큰에 `canUpdateOwnMetadata` 권한이 있어야 해서, 기본 토큰으로도 되게 함 |
+| 그룹 통화 수신 | 기본값 | `adaptiveStream`·`dynacast` 켬 | 작은 타일·PiP·화면 밖 타일은 낮은 화질만 받고, 아무도 안 보는 화질 계층은 보내지 않음 |
+| 진행자 기능 | 없음 | 제공하지 않음 | 남의 마이크 끄기·내보내기는 LiveKit 서버 API(관리자 권한)가 필요해 클라이언트 SDK 몫이 아님 |

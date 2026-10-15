@@ -209,3 +209,25 @@ API 30·31·33·34·35 기기는 아직 확인하지 않았다. API 26에서 유
 | 통화 중 이어폰 끊김 | 알림, 남은 장치로 | "Galaxy Buds (demo) disconnected · Now playing on: Phone" | Pass |
 | 음성 그룹 10명 이상 세로 넘기기 | 모두 표시 | 해당 데모 없음 | NOT RUN |
 | 실제 블루투스 이어폰 연결 알림 (Fold7) | 위와 같음 | 기기 미사용 | NOT RUN |
+
+## 채팅·손들기 — 2026-10-15
+
+데모(voxera_verify, API 36)와, 로컬 livekit-server에 에뮬레이터 두 대(voxera_verify API 36 "Mina", voxera_api35 "Joon")를 토큰 endpoint로 붙인 실통화로 확인했다.
+
+| Scenario | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| 데모 그룹 손들기 | 타일 손 배지, "손을 들었습니다" 알림 | Taylor 타일 왼쪽 위 배지, "Taylor raised a hand", 25초에 내려감 | Pass |
+| 데모 채팅 미리보기·배지 | 시트를 닫은 동안 온 글이 위에 잠깐, 배지 숫자 | "Alex · Loud and clear 👍", 더보기 버튼 배지 2, 더보기 목록 "2 unread messages" | Pass |
+| 채팅 시트 보내기 | 내 말풍선 오른쪽, 키보드 위로 시트, 키보드 보내기 키 | 두 줄 글 말풍선, 데모 답장 👍, 열고 나면 배지 사라짐 | Pass |
+| 미리보기 누르기 | 채팅 시트가 열림 | 열림(다크 모드) | Pass |
+| 내 손들기(음성) | 반응 시트 "손 들기", 위에 "손을 들었어요 · 손 내리기" | 그대로, 누르면 내려감 | Pass |
+| 숨은 조작 막대 | 격자 타일을 누르면 먼저 막대가 나옴 | 처음 구현은 누른 사람이 크게 보기로 바뀌어 막대를 꺼낼 길이 없었음 → 수정 후 막대만 나옴 | Fail → 수정 |
+| 입력 칸 | 화면이 매초 다시 그려져도 글자를 잃지 않음 | 문자열 입력 칸은 "HHi everyone, I c"처럼 겹치고 빠짐 → TextFieldState로 바꾼 뒤 정상(긴 adb 입력이 16자 안팎에서 끊기는 것은 에뮬레이터 쪽 한계로, 단어별로 넣으면 모두 들어감) | Fail → 수정 |
+| 실통화 채팅 | 상대에게 미리보기·배지 | Mina "Hello Joon, real chat here" → Joon 화면 미리보기와 배지 1 | Pass |
+| 실통화 손들기 | 상대 아바타에 배지 | Joon이 손 들기 → Mina 화면 Joon 아바타에 배지 | Pass |
+| 늦게 들어온 사람의 손들기 | 이미 든 손이 보임 | Mina가 나갔다 "Join again" → 바로 배지 보임 | Pass |
+| 먼저 와 있던 사람(트랙 없음) | 입장 즉시 보임 | 마이크를 끈 Joon이 Mina에게 안 보이고 "대기 중" → 입장 직후 기존 참가자를 알리도록 수정 후 바로 보임 | Fail → 수정 |
+| 로그 | 채팅 글·토큰 없음 | 두 기기 logcat에 글 0건, `eyJ` 0건 | Pass |
+| 장시간 통화 | 끊기지 않음 | Joon(API 35) 1시간 29분 유지 | Pass |
+| debug 빌드 과부하 | — | 에뮬레이터 두 대 + 호스트 load 16에서 API 36 debug 빌드가 첫 화면 구성에 프레임당 최대 4.5초 걸려 입력 ANR 1회. 메인 스레드는 막히지 않고 계속 진행 중이었음. release·단독 실행에서는 보지 못함 | 관찰 |
+| 다른 SDK(LiveKit Meet 등)와 채팅 호환 | — | 주제가 달라 서로 읽지 못함 | NOT RUN |
