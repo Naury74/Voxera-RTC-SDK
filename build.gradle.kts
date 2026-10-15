@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    // 공개 API 목록을 모듈마다 api/ 아래에 두고, 바뀌면 apiCheck가 실패한다. 의도한 변경이면 apiDump로 갱신한다.
+    alias(libs.plugins.binary.compatibility.validator)
+}
+
+apiValidation {
+    ignoredProjects += listOf("app")
 }
 
 // SDK 모듈은 같은 좌표로 배포한다. 저장소의 app(Showcase)은 배포하지 않는다.

@@ -1,0 +1,973 @@
+public final class com/naury/voxerartc/api/AudioRoute {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/AudioRouteType;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/AudioRouteType;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/naury/voxerartc/api/AudioRouteType;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/AudioRouteType;Z)Lcom/naury/voxerartc/api/AudioRoute;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/AudioRoute;Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/AudioRouteType;ZILjava/lang/Object;)Lcom/naury/voxerartc/api/AudioRoute;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getType ()Lcom/naury/voxerartc/api/AudioRouteType;
+	public fun hashCode ()I
+	public final fun isSelectable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/AudioRouteType : java/lang/Enum {
+	public static final field BLUETOOTH Lcom/naury/voxerartc/api/AudioRouteType;
+	public static final field EARPIECE Lcom/naury/voxerartc/api/AudioRouteType;
+	public static final field SPEAKER Lcom/naury/voxerartc/api/AudioRouteType;
+	public static final field UNKNOWN Lcom/naury/voxerartc/api/AudioRouteType;
+	public static final field USB Lcom/naury/voxerartc/api/AudioRouteType;
+	public static final field WIRED_HEADSET Lcom/naury/voxerartc/api/AudioRouteType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/AudioRouteType;
+	public static fun values ()[Lcom/naury/voxerartc/api/AudioRouteType;
+}
+
+public final class com/naury/voxerartc/api/CallMode : java/lang/Enum {
+	public static final field VIDEO Lcom/naury/voxerartc/api/CallMode;
+	public static final field VOICE Lcom/naury/voxerartc/api/CallMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/CallMode;
+	public static fun values ()[Lcom/naury/voxerartc/api/CallMode;
+}
+
+public final class com/naury/voxerartc/api/CameraFacing : java/lang/Enum {
+	public static final field BACK Lcom/naury/voxerartc/api/CameraFacing;
+	public static final field EXTERNAL Lcom/naury/voxerartc/api/CameraFacing;
+	public static final field FRONT Lcom/naury/voxerartc/api/CameraFacing;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/CameraFacing;
+	public static fun values ()[Lcom/naury/voxerartc/api/CameraFacing;
+}
+
+public final class com/naury/voxerartc/api/ChatMessage {
+	public static final field Companion Lcom/naury/voxerartc/api/ChatMessage$Companion;
+	public static final field MAX_ID_LENGTH I
+	public static final field MAX_LENGTH I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZ)Lcom/naury/voxerartc/api/ChatMessage;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ChatMessage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZILjava/lang/Object;)Lcom/naury/voxerartc/api/ChatMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAtMs ()J
+	public final fun getId ()Ljava/lang/String;
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isLocal ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ChatMessage$Companion {
+	public final fun sanitize (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ConfigurationProblem : java/lang/Enum {
+	public static final field DISPLAY_NAME_BLANK Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field DISPLAY_NAME_INVALID Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field ROOM_NAME_BLANK Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field ROOM_NAME_INVALID Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field SERVER_URL_BLANK Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field SERVER_URL_INSECURE Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field SERVER_URL_MALFORMED Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field SERVER_URL_NOT_ALLOWED Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field SERVER_URL_SCHEME Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field TOKEN_BLANK Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field TOKEN_EXPIRED Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field TOKEN_NOT_JWT Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static final field TOKEN_SOURCE_REJECTED Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public static fun values ()[Lcom/naury/voxerartc/api/ConfigurationProblem;
+}
+
+public final class com/naury/voxerartc/api/ConnectOptions {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ZZ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ZZ)Lcom/naury/voxerartc/api/ConnectOptions;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ConnectOptions;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ZZILjava/lang/Object;)Lcom/naury/voxerartc/api/ConnectOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRoomId ()Ljava/lang/String;
+	public final fun getStartWithCamera ()Z
+	public final fun getStartWithMicrophone ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/api/ConnectOutcome {
+}
+
+public final class com/naury/voxerartc/api/ConnectOutcome$Connected : com/naury/voxerartc/api/ConnectOutcome {
+	public fun <init> (Lcom/naury/voxerartc/api/Participant;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/Participant;
+	public final fun copy (Lcom/naury/voxerartc/api/Participant;)Lcom/naury/voxerartc/api/ConnectOutcome$Connected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ConnectOutcome$Connected;Lcom/naury/voxerartc/api/Participant;ILjava/lang/Object;)Lcom/naury/voxerartc/api/ConnectOutcome$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocal ()Lcom/naury/voxerartc/api/Participant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ConnectOutcome$Failed : com/naury/voxerartc/api/ConnectOutcome {
+	public fun <init> (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun copy (Lcom/naury/voxerartc/api/VoxeraError;)Lcom/naury/voxerartc/api/ConnectOutcome$Failed;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ConnectOutcome$Failed;Lcom/naury/voxerartc/api/VoxeraError;ILjava/lang/Object;)Lcom/naury/voxerartc/api/ConnectOutcome$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ConnectionQuality : java/lang/Enum {
+	public static final field EXCELLENT Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static final field GOOD Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static final field LOST Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static final field POOR Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static final field UNKNOWN Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/ConnectionQuality;
+	public static fun values ()[Lcom/naury/voxerartc/api/ConnectionQuality;
+}
+
+public final class com/naury/voxerartc/api/CredentialReason : java/lang/Enum {
+	public static final field INITIAL_JOIN Lcom/naury/voxerartc/api/CredentialReason;
+	public static final field REAUTHENTICATE Lcom/naury/voxerartc/api/CredentialReason;
+	public static final field RECONNECT Lcom/naury/voxerartc/api/CredentialReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/CredentialReason;
+	public static fun values ()[Lcom/naury/voxerartc/api/CredentialReason;
+}
+
+public final class com/naury/voxerartc/api/CredentialRequest {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CredentialReason;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CredentialReason;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CredentialReason;)Lcom/naury/voxerartc/api/CredentialRequest;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/CredentialRequest;Ljava/lang/String;Lcom/naury/voxerartc/api/CredentialReason;ILjava/lang/Object;)Lcom/naury/voxerartc/api/CredentialRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/naury/voxerartc/api/CredentialReason;
+	public final fun getRoomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/CredentialsUnavailableException : java/lang/Exception {
+	public fun <init> (Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getKind ()Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+}
+
+public final class com/naury/voxerartc/api/CredentialsUnavailableException$Kind : java/lang/Enum {
+	public static final field REJECTED Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+	public static final field TRANSIENT Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+	public static final field UNAUTHORIZED Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+	public static fun values ()[Lcom/naury/voxerartc/api/CredentialsUnavailableException$Kind;
+}
+
+public final class com/naury/voxerartc/api/EffectsAvailability : java/lang/Enum {
+	public static final field AVAILABLE Lcom/naury/voxerartc/api/EffectsAvailability;
+	public static final field DISABLED_FOR_PERFORMANCE Lcom/naury/voxerartc/api/EffectsAvailability;
+	public static final field UNSUPPORTED Lcom/naury/voxerartc/api/EffectsAvailability;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/EffectsAvailability;
+	public static fun values ()[Lcom/naury/voxerartc/api/EffectsAvailability;
+}
+
+public final class com/naury/voxerartc/api/EndReason : java/lang/Enum {
+	public static final field AFTER_FAILURE Lcom/naury/voxerartc/api/EndReason;
+	public static final field CANCELLED Lcom/naury/voxerartc/api/EndReason;
+	public static final field HOST_LEFT Lcom/naury/voxerartc/api/EndReason;
+	public static final field REMOTE_ENDED Lcom/naury/voxerartc/api/EndReason;
+	public static final field USER_LEFT Lcom/naury/voxerartc/api/EndReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/EndReason;
+	public static fun values ()[Lcom/naury/voxerartc/api/EndReason;
+}
+
+public final class com/naury/voxerartc/api/InputChecks {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/InputChecks;
+	public static final field MAX_DISPLAY_NAME_LENGTH I
+	public static final field MAX_ROOM_NAME_LENGTH I
+	public final fun checkAccessToken (Ljava/lang/String;J)Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public final fun checkDisplayName (Ljava/lang/String;)Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public final fun checkRoomName (Ljava/lang/String;)Lcom/naury/voxerartc/api/ConfigurationProblem;
+}
+
+public abstract interface class com/naury/voxerartc/api/JoinResult {
+}
+
+public final class com/naury/voxerartc/api/JoinResult$Connected : com/naury/voxerartc/api/JoinResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/api/JoinResult$Connected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/JoinResult$Connected;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/api/JoinResult$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSessionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/JoinResult$Rejected : com/naury/voxerartc/api/JoinResult {
+	public fun <init> (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun copy (Lcom/naury/voxerartc/api/VoxeraError;)Lcom/naury/voxerartc/api/JoinResult$Rejected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/JoinResult$Rejected;Lcom/naury/voxerartc/api/VoxeraError;ILjava/lang/Object;)Lcom/naury/voxerartc/api/JoinResult$Rejected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/LeaveReason : java/lang/Enum {
+	public static final field HOST Lcom/naury/voxerartc/api/LeaveReason;
+	public static final field USER Lcom/naury/voxerartc/api/LeaveReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/LeaveReason;
+	public static fun values ()[Lcom/naury/voxerartc/api/LeaveReason;
+}
+
+public final class com/naury/voxerartc/api/LocalMediaState {
+	public fun <init> ()V
+	public fun <init> (Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/CameraFacing;ZLjava/util/List;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoEffect;Lcom/naury/voxerartc/api/EffectsAvailability;Z)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/CameraFacing;ZLjava/util/List;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoEffect;Lcom/naury/voxerartc/api/EffectsAvailability;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun component10 ()Z
+	public final fun component2 ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun component3 ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun component4 ()Lcom/naury/voxerartc/api/CameraFacing;
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Lcom/naury/voxerartc/api/VideoEffect;
+	public final fun component9 ()Lcom/naury/voxerartc/api/EffectsAvailability;
+	public final fun copy (Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/CameraFacing;ZLjava/util/List;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoEffect;Lcom/naury/voxerartc/api/EffectsAvailability;Z)Lcom/naury/voxerartc/api/LocalMediaState;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/LocalMediaState;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/MediaToggle;Lcom/naury/voxerartc/api/CameraFacing;ZLjava/util/List;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoEffect;Lcom/naury/voxerartc/api/EffectsAvailability;ZILjava/lang/Object;)Lcom/naury/voxerartc/api/LocalMediaState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAudioInterrupted ()Z
+	public final fun getAudioRoutes ()Ljava/util/List;
+	public final fun getCamera ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun getCameraFacing ()Lcom/naury/voxerartc/api/CameraFacing;
+	public final fun getCanSwitchCamera ()Z
+	public final fun getEffectsAvailability ()Lcom/naury/voxerartc/api/EffectsAvailability;
+	public final fun getMicrophone ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun getScreenShare ()Lcom/naury/voxerartc/api/MediaToggle;
+	public final fun getSelectedAudioRouteId ()Ljava/lang/String;
+	public final fun getVideoEffect ()Lcom/naury/voxerartc/api/VideoEffect;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/api/MediaActionResult {
+}
+
+public final class com/naury/voxerartc/api/MediaActionResult$Applied : com/naury/voxerartc/api/MediaActionResult {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/MediaActionResult$Applied;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/MediaActionResult$Failed : com/naury/voxerartc/api/MediaActionResult {
+	public fun <init> (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun copy (Lcom/naury/voxerartc/api/VoxeraError;)Lcom/naury/voxerartc/api/MediaActionResult$Failed;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/MediaActionResult$Failed;Lcom/naury/voxerartc/api/VoxeraError;ILjava/lang/Object;)Lcom/naury/voxerartc/api/MediaActionResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/MediaActionResult$Unsupported : com/naury/voxerartc/api/MediaActionResult {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/MediaActionResult$Unsupported;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/MediaDevice : java/lang/Enum {
+	public static final field AUDIO_ROUTE Lcom/naury/voxerartc/api/MediaDevice;
+	public static final field CAMERA Lcom/naury/voxerartc/api/MediaDevice;
+	public static final field MICROPHONE Lcom/naury/voxerartc/api/MediaDevice;
+	public static final field SCREEN Lcom/naury/voxerartc/api/MediaDevice;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MediaDevice;
+	public static fun values ()[Lcom/naury/voxerartc/api/MediaDevice;
+}
+
+public final class com/naury/voxerartc/api/MediaPermission : java/lang/Enum {
+	public static final field CAMERA Lcom/naury/voxerartc/api/MediaPermission;
+	public static final field MICROPHONE Lcom/naury/voxerartc/api/MediaPermission;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MediaPermission;
+	public static fun values ()[Lcom/naury/voxerartc/api/MediaPermission;
+}
+
+public final class com/naury/voxerartc/api/MediaToggle {
+	public static final field Companion Lcom/naury/voxerartc/api/MediaToggle$Companion;
+	public fun <init> (ZZLcom/naury/voxerartc/api/VoxeraError;)V
+	public synthetic fun <init> (ZZLcom/naury/voxerartc/api/VoxeraError;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun copy (ZZLcom/naury/voxerartc/api/VoxeraError;)Lcom/naury/voxerartc/api/MediaToggle;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/MediaToggle;ZZLcom/naury/voxerartc/api/VoxeraError;ILjava/lang/Object;)Lcom/naury/voxerartc/api/MediaToggle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActual ()Z
+	public final fun getDesired ()Z
+	public final fun getLastError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public final fun isPending ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/MediaToggle$Companion {
+	public final fun getOff ()Lcom/naury/voxerartc/api/MediaToggle;
+}
+
+public final class com/naury/voxerartc/api/MetricDirection : java/lang/Enum {
+	public static final field NONE Lcom/naury/voxerartc/api/MetricDirection;
+	public static final field RECEIVE Lcom/naury/voxerartc/api/MetricDirection;
+	public static final field SEND Lcom/naury/voxerartc/api/MetricDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MetricDirection;
+	public static fun values ()[Lcom/naury/voxerartc/api/MetricDirection;
+}
+
+public final class com/naury/voxerartc/api/MetricKind : java/lang/Enum {
+	public static final field BITRATE Lcom/naury/voxerartc/api/MetricKind;
+	public static final field EFFECT_PROCESSING_TIME Lcom/naury/voxerartc/api/MetricKind;
+	public static final field FRAME_RATE Lcom/naury/voxerartc/api/MetricKind;
+	public static final field JITTER Lcom/naury/voxerartc/api/MetricKind;
+	public static final field PACKET_LOSS Lcom/naury/voxerartc/api/MetricKind;
+	public static final field RESOLUTION_HEIGHT Lcom/naury/voxerartc/api/MetricKind;
+	public static final field ROUND_TRIP_TIME Lcom/naury/voxerartc/api/MetricKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MetricKind;
+	public static fun values ()[Lcom/naury/voxerartc/api/MetricKind;
+}
+
+public final class com/naury/voxerartc/api/MetricSource : java/lang/Enum {
+	public static final field ENGINE Lcom/naury/voxerartc/api/MetricSource;
+	public static final field SIMULATED Lcom/naury/voxerartc/api/MetricSource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MetricSource;
+	public static fun values ()[Lcom/naury/voxerartc/api/MetricSource;
+}
+
+public final class com/naury/voxerartc/api/MetricUnit : java/lang/Enum {
+	public static final field BITS_PER_SECOND Lcom/naury/voxerartc/api/MetricUnit;
+	public static final field FRAMES_PER_SECOND Lcom/naury/voxerartc/api/MetricUnit;
+	public static final field MILLISECONDS Lcom/naury/voxerartc/api/MetricUnit;
+	public static final field PERCENT Lcom/naury/voxerartc/api/MetricUnit;
+	public static final field PIXELS Lcom/naury/voxerartc/api/MetricUnit;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/MetricUnit;
+	public static fun values ()[Lcom/naury/voxerartc/api/MetricUnit;
+}
+
+public abstract interface class com/naury/voxerartc/api/MonotonicClock {
+	public static final field Companion Lcom/naury/voxerartc/api/MonotonicClock$Companion;
+	public abstract fun nowMs ()J
+}
+
+public final class com/naury/voxerartc/api/MonotonicClock$Companion {
+	public final fun getSystem ()Lcom/naury/voxerartc/api/MonotonicClock;
+}
+
+public final class com/naury/voxerartc/api/Participant {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZZZFLcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/ConnectionQuality;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZZZFLcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/ConnectionQuality;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()F
+	public final fun component7 ()Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public final fun component8 ()Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public final fun component9 ()Lcom/naury/voxerartc/api/ConnectionQuality;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZZZFLcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/ConnectionQuality;Ljava/lang/Long;)Lcom/naury/voxerartc/api/Participant;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/Participant;Ljava/lang/String;Ljava/lang/String;ZZZFLcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/VideoTrackHandle;Lcom/naury/voxerartc/api/ConnectionQuality;Ljava/lang/Long;ILjava/lang/Object;)Lcom/naury/voxerartc/api/Participant;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAudioLevel ()F
+	public final fun getCamera ()Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public final fun getConnectionQuality ()Lcom/naury/voxerartc/api/ConnectionQuality;
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getHandRaisedAtMs ()Ljava/lang/Long;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getScreenShare ()Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public fun hashCode ()I
+	public final fun isHandRaised ()Z
+	public final fun isLocal ()Z
+	public final fun isMicrophoneEnabled ()Z
+	public final fun isSpeaking ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/QualityMetric {
+	public fun <init> (Lcom/naury/voxerartc/api/MetricKind;Lcom/naury/voxerartc/api/MetricDirection;Ljava/lang/Double;Lcom/naury/voxerartc/api/MetricUnit;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/MetricKind;
+	public final fun component2 ()Lcom/naury/voxerartc/api/MetricDirection;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun component4 ()Lcom/naury/voxerartc/api/MetricUnit;
+	public final fun copy (Lcom/naury/voxerartc/api/MetricKind;Lcom/naury/voxerartc/api/MetricDirection;Ljava/lang/Double;Lcom/naury/voxerartc/api/MetricUnit;)Lcom/naury/voxerartc/api/QualityMetric;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/QualityMetric;Lcom/naury/voxerartc/api/MetricKind;Lcom/naury/voxerartc/api/MetricDirection;Ljava/lang/Double;Lcom/naury/voxerartc/api/MetricUnit;ILjava/lang/Object;)Lcom/naury/voxerartc/api/QualityMetric;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lcom/naury/voxerartc/api/MetricDirection;
+	public final fun getKind ()Lcom/naury/voxerartc/api/MetricKind;
+	public final fun getUnit ()Lcom/naury/voxerartc/api/MetricUnit;
+	public final fun getValue ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public final fun isAvailable ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/QualitySnapshot {
+	public fun <init> (JLcom/naury/voxerartc/api/MetricSource;Ljava/util/List;)V
+	public final fun component1 ()J
+	public final fun component2 ()Lcom/naury/voxerartc/api/MetricSource;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (JLcom/naury/voxerartc/api/MetricSource;Ljava/util/List;)Lcom/naury/voxerartc/api/QualitySnapshot;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/QualitySnapshot;JLcom/naury/voxerartc/api/MetricSource;Ljava/util/List;ILjava/lang/Object;)Lcom/naury/voxerartc/api/QualitySnapshot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMetrics ()Ljava/util/List;
+	public final fun getSource ()Lcom/naury/voxerartc/api/MetricSource;
+	public final fun getTimestampMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun valueOf (Lcom/naury/voxerartc/api/MetricKind;Lcom/naury/voxerartc/api/MetricDirection;)Ljava/lang/Double;
+}
+
+public final class com/naury/voxerartc/api/Reaction : java/lang/Enum {
+	public static final field CELEBRATE Lcom/naury/voxerartc/api/Reaction;
+	public static final field CLAP Lcom/naury/voxerartc/api/Reaction;
+	public static final field Companion Lcom/naury/voxerartc/api/Reaction$Companion;
+	public static final field HEART Lcom/naury/voxerartc/api/Reaction;
+	public static final field LAUGH Lcom/naury/voxerartc/api/Reaction;
+	public static final field SURPRISED Lcom/naury/voxerartc/api/Reaction;
+	public static final field THUMBS_UP Lcom/naury/voxerartc/api/Reaction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWireName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/Reaction;
+	public static fun values ()[Lcom/naury/voxerartc/api/Reaction;
+}
+
+public final class com/naury/voxerartc/api/Reaction$Companion {
+	public final fun fromWireName (Ljava/lang/String;)Lcom/naury/voxerartc/api/Reaction;
+}
+
+public final class com/naury/voxerartc/api/ReactionEvent {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/Reaction;
+	public final fun component3 ()J
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;J)Lcom/naury/voxerartc/api/ReactionEvent;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ReactionEvent;Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;JILjava/lang/Object;)Lcom/naury/voxerartc/api/ReactionEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAtMs ()J
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getReaction ()Lcom/naury/voxerartc/api/Reaction;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcCredentials {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessToken ()Ljava/lang/String;
+	public final fun getServerUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/api/RtcCredentialsProvider {
+	public abstract fun getCredentials (Lcom/naury/voxerartc/api/CredentialRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/naury/voxerartc/api/RtcEngine {
+	public abstract fun connect (Lcom/naury/voxerartc/api/RtcCredentials;Lcom/naury/voxerartc/api/ConnectOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getEvents ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+	public abstract fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun selectAudioRoute (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendChatMessage (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendReaction (Lcom/naury/voxerartc/api/Reaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setCameraEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setHandRaised (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setMicrophoneEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setVideoEffect (Lcom/naury/voxerartc/api/VideoEffect;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun startScreenShare (Lcom/naury/voxerartc/api/ScreenShareConsent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun stopScreenShare (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun switchCamera (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/naury/voxerartc/api/RtcEngine$DefaultImpls {
+	public static fun sendChatMessage (Lcom/naury/voxerartc/api/RtcEngine;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun sendReaction (Lcom/naury/voxerartc/api/RtcEngine;Lcom/naury/voxerartc/api/Reaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun setHandRaised (Lcom/naury/voxerartc/api/RtcEngine;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun setVideoEffect (Lcom/naury/voxerartc/api/RtcEngine;Lcom/naury/voxerartc/api/VideoEffect;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun startScreenShare (Lcom/naury/voxerartc/api/RtcEngine;Lcom/naury/voxerartc/api/ScreenShareConsent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun stopScreenShare (Lcom/naury/voxerartc/api/RtcEngine;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/naury/voxerartc/api/RtcEngineEvent {
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$ChatReceived : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/naury/voxerartc/api/RtcEngineEvent$ChatReceived;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$ChatReceived;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$ChatReceived;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessageId ()Ljava/lang/String;
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$Disconnected : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun copy (Lcom/naury/voxerartc/api/VoxeraError;)Lcom/naury/voxerartc/api/RtcEngineEvent$Disconnected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$Disconnected;Lcom/naury/voxerartc/api/VoxeraError;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$Disconnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$HandRaisedChanged : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lcom/naury/voxerartc/api/RtcEngineEvent$HandRaisedChanged;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$HandRaisedChanged;Ljava/lang/String;ZILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$HandRaisedChanged;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getRaised ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$LocalMediaChanged : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Lcom/naury/voxerartc/api/LocalMediaState;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/LocalMediaState;
+	public final fun copy (Lcom/naury/voxerartc/api/LocalMediaState;)Lcom/naury/voxerartc/api/RtcEngineEvent$LocalMediaChanged;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$LocalMediaChanged;Lcom/naury/voxerartc/api/LocalMediaState;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$LocalMediaChanged;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getState ()Lcom/naury/voxerartc/api/LocalMediaState;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$ParticipantLeft : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantLeft;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantLeft;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantLeft;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParticipantId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$ParticipantUpserted : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Lcom/naury/voxerartc/api/Participant;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/Participant;
+	public final fun copy (Lcom/naury/voxerartc/api/Participant;)Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantUpserted;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantUpserted;Lcom/naury/voxerartc/api/Participant;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$ParticipantUpserted;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParticipant ()Lcom/naury/voxerartc/api/Participant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$QualitySampled : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Lcom/naury/voxerartc/api/QualitySnapshot;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/QualitySnapshot;
+	public final fun copy (Lcom/naury/voxerartc/api/QualitySnapshot;)Lcom/naury/voxerartc/api/RtcEngineEvent$QualitySampled;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$QualitySampled;Lcom/naury/voxerartc/api/QualitySnapshot;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$QualitySampled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSnapshot ()Lcom/naury/voxerartc/api/QualitySnapshot;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$ReactionReceived : com/naury/voxerartc/api/RtcEngineEvent {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/Reaction;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;)Lcom/naury/voxerartc/api/RtcEngineEvent$ReactionReceived;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/RtcEngineEvent$ReactionReceived;Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;ILjava/lang/Object;)Lcom/naury/voxerartc/api/RtcEngineEvent$ReactionReceived;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getReaction ()Lcom/naury/voxerartc/api/Reaction;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$Reconnected : com/naury/voxerartc/api/RtcEngineEvent {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/RtcEngineEvent$Reconnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineEvent$Reconnecting : com/naury/voxerartc/api/RtcEngineEvent {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/RtcEngineEvent$Reconnecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/api/RtcEngineFactory {
+	public abstract fun create ()Lcom/naury/voxerartc/api/RtcEngine;
+	public abstract fun getKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+}
+
+public final class com/naury/voxerartc/api/RtcEngineKind : java/lang/Enum {
+	public static final field LIVE Lcom/naury/voxerartc/api/RtcEngineKind;
+	public static final field SIMULATED Lcom/naury/voxerartc/api/RtcEngineKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/RtcEngineKind;
+	public static fun values ()[Lcom/naury/voxerartc/api/RtcEngineKind;
+}
+
+public abstract interface class com/naury/voxerartc/api/ScreenShareConsent {
+}
+
+public abstract interface class com/naury/voxerartc/api/ServerUrlCheck {
+}
+
+public final class com/naury/voxerartc/api/ServerUrlCheck$Invalid : com/naury/voxerartc/api/ServerUrlCheck {
+	public fun <init> (Lcom/naury/voxerartc/api/ConfigurationProblem;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public final fun copy (Lcom/naury/voxerartc/api/ConfigurationProblem;)Lcom/naury/voxerartc/api/ServerUrlCheck$Invalid;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ServerUrlCheck$Invalid;Lcom/naury/voxerartc/api/ConfigurationProblem;ILjava/lang/Object;)Lcom/naury/voxerartc/api/ServerUrlCheck$Invalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProblem ()Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ServerUrlCheck$Valid : com/naury/voxerartc/api/ServerUrlCheck {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/api/ServerUrlCheck$Valid;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ServerUrlCheck$Valid;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/api/ServerUrlCheck$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNormalized ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/ServerUrlPolicy {
+	public static final field MAX_URL_LENGTH I
+	public fun <init> ()V
+	public fun <init> (ZLjava/util/Set;)V
+	public synthetic fun <init> (ZLjava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun check (Ljava/lang/String;)Lcom/naury/voxerartc/api/ServerUrlCheck;
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (ZLjava/util/Set;)Lcom/naury/voxerartc/api/ServerUrlPolicy;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/ServerUrlPolicy;ZLjava/util/Set;ILjava/lang/Object;)Lcom/naury/voxerartc/api/ServerUrlPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowInsecureLocalhost ()Z
+	public final fun getAllowedHosts ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/api/SessionState {
+}
+
+public final class com/naury/voxerartc/api/SessionState$Connected : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun component3 ()J
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;J)Lcom/naury/voxerartc/api/SessionState$Connected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Connected;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;JILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConnectedAtMs ()J
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRoomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Connecting : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)Lcom/naury/voxerartc/api/SessionState$Connecting;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Connecting;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Connecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRoomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Ended : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Lcom/naury/voxerartc/api/EndReason;Ljava/lang/Long;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/EndReason;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun copy (Lcom/naury/voxerartc/api/EndReason;Ljava/lang/Long;)Lcom/naury/voxerartc/api/SessionState$Ended;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Ended;Lcom/naury/voxerartc/api/EndReason;Ljava/lang/Long;ILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Ended;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMs ()Ljava/lang/Long;
+	public final fun getReason ()Lcom/naury/voxerartc/api/EndReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Ending : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Lcom/naury/voxerartc/api/EndReason;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/EndReason;
+	public final fun copy (Lcom/naury/voxerartc/api/EndReason;)Lcom/naury/voxerartc/api/SessionState$Ending;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Ending;Lcom/naury/voxerartc/api/EndReason;ILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Ending;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/naury/voxerartc/api/EndReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Failed : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Lcom/naury/voxerartc/api/VoxeraError;Ljava/lang/Long;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/VoxeraError;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun copy (Lcom/naury/voxerartc/api/VoxeraError;Ljava/lang/Long;)Lcom/naury/voxerartc/api/SessionState$Failed;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Failed;Lcom/naury/voxerartc/api/VoxeraError;Ljava/lang/Long;ILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMs ()Ljava/lang/Long;
+	public final fun getError ()Lcom/naury/voxerartc/api/VoxeraError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Idle : com/naury/voxerartc/api/SessionState {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/SessionState$Idle;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Preparing : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)Lcom/naury/voxerartc/api/SessionState$Preparing;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Preparing;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Preparing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRoomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/SessionState$Reconnecting : com/naury/voxerartc/api/SessionState {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;JJJ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()J
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;JJJ)Lcom/naury/voxerartc/api/SessionState$Reconnecting;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/SessionState$Reconnecting;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;JJJILjava/lang/Object;)Lcom/naury/voxerartc/api/SessionState$Reconnecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConnectedAtMs ()J
+	public final fun getDeadlineMs ()J
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRoomId ()Ljava/lang/String;
+	public final fun getSinceMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VideoEffect {
+	public static final field Companion Lcom/naury/voxerartc/api/VideoEffect$Companion;
+	public fun <init> ()V
+	public fun <init> (FFF)V
+	public synthetic fun <init> (FFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()F
+	public final fun copy (FFF)Lcom/naury/voxerartc/api/VideoEffect;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VideoEffect;FFFILjava/lang/Object;)Lcom/naury/voxerartc/api/VideoEffect;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBrightness ()F
+	public final fun getContrast ()F
+	public final fun getSaturation ()F
+	public fun hashCode ()I
+	public final fun isNone ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VideoEffect$Companion {
+	public final fun getNone ()Lcom/naury/voxerartc/api/VideoEffect;
+}
+
+public final class com/naury/voxerartc/api/VideoSource : java/lang/Enum {
+	public static final field CAMERA Lcom/naury/voxerartc/api/VideoSource;
+	public static final field SCREEN_SHARE Lcom/naury/voxerartc/api/VideoSource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/api/VideoSource;
+	public static fun values ()[Lcom/naury/voxerartc/api/VideoSource;
+}
+
+public final class com/naury/voxerartc/api/VideoTrackHandle {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoSource;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/naury/voxerartc/api/VideoSource;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoSource;)Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VideoTrackHandle;Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/VideoSource;ILjava/lang/Object;)Lcom/naury/voxerartc/api/VideoTrackHandle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParticipantId ()Ljava/lang/String;
+	public final fun getSource ()Lcom/naury/voxerartc/api/VideoSource;
+	public final fun getTrackId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/naury/voxerartc/api/VoxeraError {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCode ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$AuthenticationExpired : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$AuthenticationExpired;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$ConcurrentSession : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$ConcurrentSession;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$DuplicateIdentity : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$DuplicateIdentity;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$HostUnauthorized : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$HostUnauthorized;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$InternalFailure : com/naury/voxerartc/api/VoxeraError {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/api/VoxeraError$InternalFailure;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VoxeraError$InternalFailure;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/api/VoxeraError$InternalFailure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTechnicalCode ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$InvalidConfiguration : com/naury/voxerartc/api/VoxeraError {
+	public fun <init> (Lcom/naury/voxerartc/api/ConfigurationProblem;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public final fun copy (Lcom/naury/voxerartc/api/ConfigurationProblem;)Lcom/naury/voxerartc/api/VoxeraError$InvalidConfiguration;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VoxeraError$InvalidConfiguration;Lcom/naury/voxerartc/api/ConfigurationProblem;ILjava/lang/Object;)Lcom/naury/voxerartc/api/VoxeraError$InvalidConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProblem ()Lcom/naury/voxerartc/api/ConfigurationProblem;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$MediaDeviceUnavailable : com/naury/voxerartc/api/VoxeraError {
+	public fun <init> (Lcom/naury/voxerartc/api/MediaDevice;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/MediaDevice;
+	public final fun copy (Lcom/naury/voxerartc/api/MediaDevice;)Lcom/naury/voxerartc/api/VoxeraError$MediaDeviceUnavailable;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VoxeraError$MediaDeviceUnavailable;Lcom/naury/voxerartc/api/MediaDevice;ILjava/lang/Object;)Lcom/naury/voxerartc/api/VoxeraError$MediaDeviceUnavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDevice ()Lcom/naury/voxerartc/api/MediaDevice;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$NetworkUnavailable : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$NetworkUnavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$NotConnected : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$NotConnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$PermissionDenied : com/naury/voxerartc/api/VoxeraError {
+	public fun <init> (Lcom/naury/voxerartc/api/MediaPermission;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/MediaPermission;
+	public final fun copy (Lcom/naury/voxerartc/api/MediaPermission;)Lcom/naury/voxerartc/api/VoxeraError$PermissionDenied;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/api/VoxeraError$PermissionDenied;Lcom/naury/voxerartc/api/MediaPermission;ILjava/lang/Object;)Lcom/naury/voxerartc/api/VoxeraError$PermissionDenied;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPermission ()Lcom/naury/voxerartc/api/MediaPermission;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$RemoteEnded : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$RemoteEnded;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$ServerIncompatible : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$ServerIncompatible;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$ServerUnreachable : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$ServerUnreachable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/api/VoxeraError$UserCancelled : com/naury/voxerartc/api/VoxeraError {
+	public static final field INSTANCE Lcom/naury/voxerartc/api/VoxeraError$UserCancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

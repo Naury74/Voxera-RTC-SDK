@@ -1,0 +1,331 @@
+public final class com/naury/voxerartc/invitation/CallActionResult : java/lang/Enum {
+	public static final field APPLIED Lcom/naury/voxerartc/invitation/CallActionResult;
+	public static final field NOT_ALLOWED_IN_STATE Lcom/naury/voxerartc/invitation/CallActionResult;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallActionResult;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/CallActionResult;
+}
+
+public final class com/naury/voxerartc/invitation/CallCoordinator : java/lang/AutoCloseable {
+	public fun <init> (Lcom/naury/voxerartc/invitation/InvitationGateway;Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/invitation/CallPolicy;)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/invitation/InvitationGateway;Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/invitation/CallPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun accept (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun call (Ljava/util/List;Lcom/naury/voxerartc/api/CallMode;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public final fun decline (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun hangup (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun start ()V
+}
+
+public final class com/naury/voxerartc/invitation/CallDirection : java/lang/Enum {
+	public static final field INCOMING Lcom/naury/voxerartc/invitation/CallDirection;
+	public static final field OUTGOING Lcom/naury/voxerartc/invitation/CallDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallDirection;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/CallDirection;
+}
+
+public final class com/naury/voxerartc/invitation/CallEndReason : java/lang/Enum {
+	public static final field ANSWERED_ELSEWHERE Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field BUSY Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field CANCELLED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field COMPLETED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field DECLINED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field EXPIRED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field FAILED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static final field MISSED Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallEndReason;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/CallEndReason;
+}
+
+public final class com/naury/voxerartc/invitation/CallInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallInfo;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallInfo;Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCallId ()Ljava/lang/String;
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getPeerDisplayName ()Ljava/lang/String;
+	public final fun getPeerId ()Ljava/lang/String;
+	public final fun getRoomId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallInviteRequest {
+	public fun <init> (Ljava/util/List;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallInviteRequest;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallInviteRequest;Ljava/util/List;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallInviteRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClientRequestId ()Ljava/lang/String;
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRecipientIds ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallPolicy {
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/naury/voxerartc/invitation/CallPolicy;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallPolicy;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRingTimeoutMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/invitation/CallState {
+}
+
+public final class com/naury/voxerartc/invitation/CallState$Active : com/naury/voxerartc/invitation/CallState {
+	public fun <init> (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun component2 ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public final fun copy (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;)Lcom/naury/voxerartc/invitation/CallState$Active;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallState$Active;Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallState$Active;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getDirection ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallState$ConnectingMedia : com/naury/voxerartc/invitation/CallState {
+	public fun <init> (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun component2 ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public final fun copy (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;)Lcom/naury/voxerartc/invitation/CallState$ConnectingMedia;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallState$ConnectingMedia;Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallState$ConnectingMedia;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getDirection ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallState$Dialing : com/naury/voxerartc/invitation/CallState {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;)Lcom/naury/voxerartc/invitation/CallState$Dialing;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallState$Dialing;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallState$Dialing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClientRequestId ()Ljava/lang/String;
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallState$Ended : com/naury/voxerartc/invitation/CallState {
+	public fun <init> (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallEndReason;)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun component2 ()Lcom/naury/voxerartc/invitation/CallEndReason;
+	public final fun copy (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallEndReason;)Lcom/naury/voxerartc/invitation/CallState$Ended;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallState$Ended;Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallEndReason;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallState$Ended;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getReason ()Lcom/naury/voxerartc/invitation/CallEndReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallState$Idle : com/naury/voxerartc/invitation/CallState {
+	public static final field INSTANCE Lcom/naury/voxerartc/invitation/CallState$Idle;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/CallState$Ringing : com/naury/voxerartc/invitation/CallState {
+	public fun <init> (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;J)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun component2 ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public final fun component3 ()J
+	public final fun copy (Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;J)Lcom/naury/voxerartc/invitation/CallState$Ringing;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/CallState$Ringing;Lcom/naury/voxerartc/invitation/CallInfo;Lcom/naury/voxerartc/invitation/CallDirection;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallState$Ringing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getDeadlineMs ()J
+	public final fun getDirection ()Lcom/naury/voxerartc/invitation/CallDirection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/DeclineReason : java/lang/Enum {
+	public static final field BUSY Lcom/naury/voxerartc/invitation/DeclineReason;
+	public static final field TIMEOUT Lcom/naury/voxerartc/invitation/DeclineReason;
+	public static final field USER Lcom/naury/voxerartc/invitation/DeclineReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/DeclineReason;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/DeclineReason;
+}
+
+public abstract interface class com/naury/voxerartc/invitation/InvitationDecision {
+}
+
+public final class com/naury/voxerartc/invitation/InvitationDecision$Applied : com/naury/voxerartc/invitation/InvitationDecision {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/naury/voxerartc/invitation/InvitationDecision$Applied;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/InvitationDecision$Applied;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InvitationDecision$Applied;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRevision ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/InvitationDecision$Conflict : com/naury/voxerartc/invitation/InvitationDecision {
+	public fun <init> (Lcom/naury/voxerartc/invitation/InvitationEventType;J)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public final fun component2 ()J
+	public final fun copy (Lcom/naury/voxerartc/invitation/InvitationEventType;J)Lcom/naury/voxerartc/invitation/InvitationDecision$Conflict;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/InvitationDecision$Conflict;Lcom/naury/voxerartc/invitation/InvitationEventType;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InvitationDecision$Conflict;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrent ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public final fun getRevision ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/InvitationDecision$Unavailable : com/naury/voxerartc/invitation/InvitationDecision {
+	public static final field INSTANCE Lcom/naury/voxerartc/invitation/InvitationDecision$Unavailable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/InvitationEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;JLcom/naury/voxerartc/invitation/InvitationEventType;Ljava/lang/String;Lcom/naury/voxerartc/invitation/CallInfo;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;JLcom/naury/voxerartc/invitation/InvitationEventType;Ljava/lang/String;Lcom/naury/voxerartc/invitation/CallInfo;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;JLcom/naury/voxerartc/invitation/InvitationEventType;Ljava/lang/String;Lcom/naury/voxerartc/invitation/CallInfo;)Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/InvitationEvent;Ljava/lang/String;Ljava/lang/String;JLcom/naury/voxerartc/invitation/InvitationEventType;Ljava/lang/String;Lcom/naury/voxerartc/invitation/CallInfo;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getCallId ()Ljava/lang/String;
+	public final fun getEventId ()Ljava/lang/String;
+	public final fun getOccurredAt ()Ljava/lang/String;
+	public final fun getRevision ()J
+	public final fun getType ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/InvitationEventType : java/lang/Enum {
+	public static final field ACCEPTED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field BUSY Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field CANCELLED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field DECLINED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field ENDED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field EXPIRED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static final field INVITED Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/InvitationEventType;
+}
+
+public abstract interface class com/naury/voxerartc/invitation/InvitationGateway {
+	public abstract fun accept (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cancel (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun decline (Ljava/lang/String;Lcom/naury/voxerartc/invitation/DeclineReason;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun hangup (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun initiate (Lcom/naury/voxerartc/invitation/CallInviteRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun observeInvitations ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/naury/voxerartc/invitation/InvitationPayloads {
+	public static final field INSTANCE Lcom/naury/voxerartc/invitation/InvitationPayloads;
+	public final fun parse (Ljava/util/Map;)Lcom/naury/voxerartc/invitation/PayloadParseResult;
+}
+
+public final class com/naury/voxerartc/invitation/InviteFailure : java/lang/Enum {
+	public static final field BUSY Lcom/naury/voxerartc/invitation/InviteFailure;
+	public static final field NOT_ALLOWED Lcom/naury/voxerartc/invitation/InviteFailure;
+	public static final field UNAVAILABLE Lcom/naury/voxerartc/invitation/InviteFailure;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/InviteFailure;
+	public static fun values ()[Lcom/naury/voxerartc/invitation/InviteFailure;
+}
+
+public abstract interface class com/naury/voxerartc/invitation/InviteResult {
+}
+
+public final class com/naury/voxerartc/invitation/InviteResult$Created : com/naury/voxerartc/invitation/InviteResult {
+	public fun <init> (Lcom/naury/voxerartc/invitation/CallInfo;J)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun component2 ()J
+	public final fun copy (Lcom/naury/voxerartc/invitation/CallInfo;J)Lcom/naury/voxerartc/invitation/InviteResult$Created;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/InviteResult$Created;Lcom/naury/voxerartc/invitation/CallInfo;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InviteResult$Created;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCall ()Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun getRevision ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/InviteResult$Rejected : com/naury/voxerartc/invitation/InviteResult {
+	public fun <init> (Lcom/naury/voxerartc/invitation/InviteFailure;)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/InviteFailure;
+	public final fun copy (Lcom/naury/voxerartc/invitation/InviteFailure;)Lcom/naury/voxerartc/invitation/InviteResult$Rejected;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/InviteResult$Rejected;Lcom/naury/voxerartc/invitation/InviteFailure;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InviteResult$Rejected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/naury/voxerartc/invitation/InviteFailure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/invitation/PayloadParseResult {
+}
+
+public final class com/naury/voxerartc/invitation/PayloadParseResult$ContainsSecret : com/naury/voxerartc/invitation/PayloadParseResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/PayloadParseResult$ContainsSecret;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/PayloadParseResult$ContainsSecret;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/PayloadParseResult$ContainsSecret;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getField ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/PayloadParseResult$Invalid : com/naury/voxerartc/invitation/PayloadParseResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/invitation/PayloadParseResult$Invalid;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/PayloadParseResult$Invalid;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/PayloadParseResult$Invalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getField ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/invitation/PayloadParseResult$Parsed : com/naury/voxerartc/invitation/PayloadParseResult {
+	public fun <init> (Lcom/naury/voxerartc/invitation/InvitationEvent;)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public final fun copy (Lcom/naury/voxerartc/invitation/InvitationEvent;)Lcom/naury/voxerartc/invitation/PayloadParseResult$Parsed;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/invitation/PayloadParseResult$Parsed;Lcom/naury/voxerartc/invitation/InvitationEvent;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/PayloadParseResult$Parsed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvent ()Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

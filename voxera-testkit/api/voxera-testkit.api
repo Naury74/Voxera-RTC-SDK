@@ -1,0 +1,140 @@
+public final class com/naury/voxerartc/testkit/DemoScenario : java/lang/Enum {
+	public static final field GROUP_FOUR Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field GROUP_NINE Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field SCREEN_SHARE Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field UNSTABLE_NETWORK Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field VIDEO_ONE_ON_ONE Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field VOICE_ONE_ON_ONE Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getMode ()Lcom/naury/voxerartc/api/CallMode;
+	public final fun getRemoteNames ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static fun values ()[Lcom/naury/voxerartc/testkit/DemoScenario;
+}
+
+public final class com/naury/voxerartc/testkit/DemoScreenShareConsent : com/naury/voxerartc/api/ScreenShareConsent {
+	public static final field INSTANCE Lcom/naury/voxerartc/testkit/DemoScreenShareConsent;
+}
+
+public final class com/naury/voxerartc/testkit/FakeInvitationGateway : com/naury/voxerartc/invitation/InvitationGateway {
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun accept (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun cancel (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun decline (Ljava/lang/String;Lcom/naury/voxerartc/invitation/DeclineReason;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deliver (Lcom/naury/voxerartc/invitation/InvitationEvent;)V
+	public final fun event (Ljava/lang/String;Lcom/naury/voxerartc/invitation/InvitationEventType;Lcom/naury/voxerartc/invitation/CallInfo;J)Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public static synthetic fun event$default (Lcom/naury/voxerartc/testkit/FakeInvitationGateway;Ljava/lang/String;Lcom/naury/voxerartc/invitation/InvitationEventType;Lcom/naury/voxerartc/invitation/CallInfo;JILjava/lang/Object;)Lcom/naury/voxerartc/invitation/InvitationEvent;
+	public final fun getAnswer ()Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;
+	public final fun getDecision ()Lkotlin/jvm/functions/Function2;
+	public final fun getInitiateResult ()Lkotlin/jvm/functions/Function1;
+	public final fun getRequests ()Ljava/util/List;
+	public fun hangup (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun initiate (Lcom/naury/voxerartc/invitation/CallInviteRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun nextRevision ()J
+	public fun observeInvitations ()Lkotlinx/coroutines/flow/Flow;
+	public final fun ring (Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;)Lcom/naury/voxerartc/invitation/CallInfo;
+	public static synthetic fun ring$default (Lcom/naury/voxerartc/testkit/FakeInvitationGateway;Ljava/lang/String;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/invitation/CallInfo;
+	public final fun setAnswer (Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;)V
+	public final fun setDecision (Lkotlin/jvm/functions/Function2;)V
+	public final fun setInitiateResult (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/naury/voxerartc/testkit/FakeInvitationGateway$Answer {
+	public fun <init> (Lcom/naury/voxerartc/invitation/InvitationEventType;J)V
+	public final fun component1 ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public final fun component2 ()J
+	public final fun copy (Lcom/naury/voxerartc/invitation/InvitationEventType;J)Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;Lcom/naury/voxerartc/invitation/InvitationEventType;JILjava/lang/Object;)Lcom/naury/voxerartc/testkit/FakeInvitationGateway$Answer;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDelayMs ()J
+	public final fun getType ()Lcom/naury/voxerartc/invitation/InvitationEventType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/testkit/FakeRtcEngine : com/naury/voxerartc/api/RtcEngine {
+	public static final field Companion Lcom/naury/voxerartc/testkit/FakeRtcEngine$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/naury/voxerartc/api/Participant;JJLjava/util/List;Ljava/util/List;Lcom/naury/voxerartc/api/EffectsAvailability;)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/api/Participant;JJLjava/util/List;Ljava/util/List;Lcom/naury/voxerartc/api/EffectsAvailability;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun connect (Lcom/naury/voxerartc/api/RtcCredentials;Lcom/naury/voxerartc/api/ConnectOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun emitQuality (Lcom/naury/voxerartc/api/QualitySnapshot;)V
+	public final fun failNextMediaAction (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun getCameraRequests ()Ljava/util/List;
+	public final fun getConnectDelayMs ()J
+	public final fun getConnectRequests ()Ljava/util/List;
+	public final fun getConnectResults ()Lkotlin/collections/ArrayDeque;
+	public fun getEvents ()Lkotlinx/coroutines/flow/Flow;
+	public final fun getFailMicrophoneOnConnect ()Z
+	public final fun getHangOnConnect ()Z
+	public fun getKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+	public final fun getLocalHandRaised ()Ljava/lang/Boolean;
+	public final fun getMediaAckDelayMs ()J
+	public final fun getMicrophoneRequests ()Ljava/util/List;
+	public final fun getReceivedCredentials ()Ljava/util/List;
+	public final fun getReleaseCount ()I
+	public final fun getSentChatMessages ()Ljava/util/List;
+	public final fun getSentReactions ()Ljava/util/List;
+	public final fun isReleased ()Z
+	public fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun removeRemote (Ljava/lang/String;)V
+	public fun selectAudioRoute (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendChatMessage (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendReaction (Lcom/naury/voxerartc/api/Reaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setCameraEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setConnectDelayMs (J)V
+	public final fun setFailMicrophoneOnConnect (Z)V
+	public fun setHandRaised (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setHangOnConnect (Z)V
+	public final fun setMediaAckDelayMs (J)V
+	public fun setMicrophoneEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setVideoEffect (Lcom/naury/voxerartc/api/VideoEffect;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun simulateChat (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun simulateChat (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun simulateChat$default (Lcom/naury/voxerartc/testkit/FakeRtcEngine;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun simulateDisconnect (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public final fun simulateEffectsThrottled ()V
+	public final fun simulateHandRaised (Ljava/lang/String;Z)V
+	public final fun simulateLocalMedia (Lkotlin/jvm/functions/Function1;)V
+	public final fun simulateReaction (Ljava/lang/String;Lcom/naury/voxerartc/api/Reaction;)V
+	public final fun simulateReconnected ()V
+	public final fun simulateReconnecting ()V
+	public final fun simulateRouteConnected (Lcom/naury/voxerartc/api/AudioRoute;Z)V
+	public static synthetic fun simulateRouteConnected$default (Lcom/naury/voxerartc/testkit/FakeRtcEngine;Lcom/naury/voxerartc/api/AudioRoute;ZILjava/lang/Object;)V
+	public final fun simulateRouteDisconnected (Ljava/lang/String;)V
+	public final fun simulateScreenShareStopped ()V
+	public fun startScreenShare (Lcom/naury/voxerartc/api/ScreenShareConsent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun stopScreenShare (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun switchCamera (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun upsertRemote (Lcom/naury/voxerartc/api/Participant;)V
+}
+
+public final class com/naury/voxerartc/testkit/FakeRtcEngine$Companion {
+	public final fun getDefaultAudioRoutes ()Ljava/util/List;
+	public final fun getDemoBluetoothHeadset ()Lcom/naury/voxerartc/api/AudioRoute;
+}
+
+public final class com/naury/voxerartc/testkit/FakeRtcEngineFactory : com/naury/voxerartc/api/RtcEngineFactory {
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create ()Lcom/naury/voxerartc/api/RtcEngine;
+	public fun create ()Lcom/naury/voxerartc/testkit/FakeRtcEngine;
+	public final fun getCreated ()Ljava/util/List;
+	public fun getKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+	public final fun getLast ()Lcom/naury/voxerartc/testkit/FakeRtcEngine;
+}
+
+public final class com/naury/voxerartc/testkit/VoxeraDemo {
+	public static final field INSTANCE Lcom/naury/voxerartc/testkit/VoxeraDemo;
+	public static final field ROOM_ID Ljava/lang/String;
+	public final fun createFakeSession (Lcom/naury/voxerartc/testkit/DemoScenario;)Lcom/naury/voxerartc/core/VoxeraSession;
+	public final fun createSdk (Lcom/naury/voxerartc/testkit/DemoScenario;)Lcom/naury/voxerartc/core/VoxeraSdk;
+}
+
+public final class com/naury/voxerartc/testkit/VoxeraDemoKt {
+	public static final field DEMO_SCREEN_TRACK_PREFIX Ljava/lang/String;
+}
+

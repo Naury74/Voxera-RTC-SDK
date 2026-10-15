@@ -1,0 +1,274 @@
+public final class com/naury/voxerartc/core/MediaPreferences {
+	public fun <init> ()V
+	public fun <init> (ZZ)V
+	public synthetic fun <init> (ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lcom/naury/voxerartc/core/MediaPreferences;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/MediaPreferences;ZZILjava/lang/Object;)Lcom/naury/voxerartc/core/MediaPreferences;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStartWithCamera ()Z
+	public final fun getStartWithMicrophone ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/SessionPolicy {
+	public fun <init> ()V
+	public fun <init> (JJIJ)V
+	public synthetic fun <init> (JJIJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()I
+	public final fun component4 ()J
+	public final fun copy (JJIJ)Lcom/naury/voxerartc/core/SessionPolicy;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/SessionPolicy;JJIJILjava/lang/Object;)Lcom/naury/voxerartc/core/SessionPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConnectTimeoutMs ()J
+	public final fun getCredentialAttempts ()I
+	public final fun getCredentialRetryDelayMs ()J
+	public final fun getReconnectDeadlineMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/Voxera {
+	public static final field INSTANCE Lcom/naury/voxerartc/core/Voxera;
+	public final fun create (Lcom/naury/voxerartc/api/RtcEngineFactory;)Lcom/naury/voxerartc/core/VoxeraSdk;
+}
+
+public abstract interface class com/naury/voxerartc/core/VoxeraSdk {
+	public abstract fun createSession (Lcom/naury/voxerartc/core/VoxeraSessionConfig;)Lcom/naury/voxerartc/core/VoxeraSession;
+	public abstract fun getEngineKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+}
+
+public abstract interface class com/naury/voxerartc/core/VoxeraSession : java/lang/AutoCloseable {
+	public static final field CHAT_BURST I
+	public static final field CHAT_HISTORY I
+	public static final field CHAT_WINDOW_MS J
+	public static final field Companion Lcom/naury/voxerartc/core/VoxeraSession$Companion;
+	public static final field REACTION_BURST I
+	public abstract fun close ()V
+	public fun getChat ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun getClock ()Lcom/naury/voxerartc/api/MonotonicClock;
+	public abstract fun getDiagnostics ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getEngineKind ()Lcom/naury/voxerartc/api/RtcEngineKind;
+	public abstract fun getLocalMedia ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun getParticipants ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getReactions ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun join (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Lcom/naury/voxerartc/core/MediaPreferences;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun join$default (Lcom/naury/voxerartc/core/VoxeraSession;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Lcom/naury/voxerartc/core/MediaPreferences;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun leave (Lcom/naury/voxerartc/api/LeaveReason;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun leave$default (Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/api/LeaveReason;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun selectAudioRoute (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendChatMessage (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendReaction (Lcom/naury/voxerartc/api/Reaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setCameraEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setHandRaised (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setMicrophoneEnabled (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setVideoEffect (Lcom/naury/voxerartc/api/VideoEffect;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun startScreenShare (Lcom/naury/voxerartc/api/ScreenShareConsent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun stopScreenShare (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun switchCamera (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/naury/voxerartc/core/VoxeraSession$Companion {
+	public static final field CHAT_BURST I
+	public static final field CHAT_HISTORY I
+	public static final field CHAT_WINDOW_MS J
+	public static final field REACTION_BURST I
+}
+
+public final class com/naury/voxerartc/core/VoxeraSession$DefaultImpls {
+	public static fun getChat (Lcom/naury/voxerartc/core/VoxeraSession;)Lkotlinx/coroutines/flow/StateFlow;
+	public static fun getReactions (Lcom/naury/voxerartc/core/VoxeraSession;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun join$default (Lcom/naury/voxerartc/core/VoxeraSession;Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Lcom/naury/voxerartc/core/MediaPreferences;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun leave$default (Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/api/LeaveReason;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static fun sendChatMessage (Lcom/naury/voxerartc/core/VoxeraSession;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun sendReaction (Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/api/Reaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun setHandRaised (Lcom/naury/voxerartc/core/VoxeraSession;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/naury/voxerartc/core/VoxeraSessionConfig {
+	public fun <init> (Lcom/naury/voxerartc/api/RtcCredentialsProvider;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;Lcom/naury/voxerartc/api/ServerUrlPolicy;)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/api/RtcCredentialsProvider;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;Lcom/naury/voxerartc/api/ServerUrlPolicy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/naury/voxerartc/api/RtcCredentialsProvider;
+	public final fun component2 ()Lcom/naury/voxerartc/core/MediaPreferences;
+	public final fun component3 ()Lcom/naury/voxerartc/core/SessionPolicy;
+	public final fun component4 ()Lcom/naury/voxerartc/api/ServerUrlPolicy;
+	public final fun copy (Lcom/naury/voxerartc/api/RtcCredentialsProvider;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;Lcom/naury/voxerartc/api/ServerUrlPolicy;)Lcom/naury/voxerartc/core/VoxeraSessionConfig;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/VoxeraSessionConfig;Lcom/naury/voxerartc/api/RtcCredentialsProvider;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;Lcom/naury/voxerartc/api/ServerUrlPolicy;ILjava/lang/Object;)Lcom/naury/voxerartc/core/VoxeraSessionConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCredentials ()Lcom/naury/voxerartc/api/RtcCredentialsProvider;
+	public final fun getMedia ()Lcom/naury/voxerartc/core/MediaPreferences;
+	public final fun getPolicy ()Lcom/naury/voxerartc/core/SessionPolicy;
+	public final fun getServerUrlPolicy ()Lcom/naury/voxerartc/api/ServerUrlPolicy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/DiagnosticBundle {
+	public fun <init> (Ljava/lang/String;Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticBundle;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/diagnostics/DiagnosticBundle;Ljava/lang/String;Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticBundle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;
+	public final fun getEvents ()Ljava/util/List;
+	public final fun getQuality ()Ljava/util/List;
+	public final fun getRoomHash ()Ljava/lang/String;
+	public final fun getSdkVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/DiagnosticContext {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppVersion ()Ljava/lang/String;
+	public final fun getDevice ()Ljava/lang/String;
+	public final fun getOs ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/DiagnosticEvent {
+	public fun <init> (JLjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (JLjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/String;Ljava/lang/String;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticEvent;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/diagnostics/DiagnosticEvent;JLjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAtMs ()J
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getState ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/core/diagnostics/DiagnosticExporter {
+	public abstract fun export (Lcom/naury/voxerartc/core/diagnostics/DiagnosticBundle;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/DiagnosticQuality {
+	public fun <init> (JLcom/naury/voxerartc/api/MetricSource;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;)V
+	public final fun component1 ()J
+	public final fun component2 ()Lcom/naury/voxerartc/api/MetricSource;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/Double;
+	public final fun component6 ()Ljava/lang/Double;
+	public final fun component7 ()Ljava/lang/Double;
+	public final fun component8 ()Ljava/lang/Double;
+	public final fun copy (JLcom/naury/voxerartc/api/MetricSource;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticQuality;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/diagnostics/DiagnosticQuality;JLcom/naury/voxerartc/api/MetricSource;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;ILjava/lang/Object;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticQuality;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAtMs ()J
+	public final fun getJitterMs ()Ljava/lang/Double;
+	public final fun getLossPercent ()Ljava/lang/Double;
+	public final fun getReceiveBitrate ()Ljava/lang/Double;
+	public final fun getReceiveFps ()Ljava/lang/Double;
+	public final fun getRttMs ()Ljava/lang/Double;
+	public final fun getSendBitrate ()Ljava/lang/Double;
+	public final fun getSource ()Lcom/naury/voxerartc/api/MetricSource;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/naury/voxerartc/core/diagnostics/ExportResult {
+}
+
+public final class com/naury/voxerartc/core/diagnostics/ExportResult$Exported : com/naury/voxerartc/core/diagnostics/ExportResult {
+	public static final field INSTANCE Lcom/naury/voxerartc/core/diagnostics/ExportResult$Exported;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/ExportResult$Failed : com/naury/voxerartc/core/diagnostics/ExportResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/naury/voxerartc/core/diagnostics/ExportResult$Failed;
+	public static synthetic fun copy$default (Lcom/naury/voxerartc/core/diagnostics/ExportResult$Failed;Ljava/lang/String;ILjava/lang/Object;)Lcom/naury/voxerartc/core/diagnostics/ExportResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/naury/voxerartc/core/diagnostics/SessionDiagnostics : java/lang/AutoCloseable {
+	public fun <init> (Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/api/MonotonicClock;II)V
+	public synthetic fun <init> (Lcom/naury/voxerartc/core/VoxeraSession;Lcom/naury/voxerartc/api/MonotonicClock;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun snapshot (Lcom/naury/voxerartc/core/diagnostics/DiagnosticContext;Ljava/lang/String;)Lcom/naury/voxerartc/core/diagnostics/DiagnosticBundle;
+	public final fun start ()V
+}
+
+public abstract interface class com/naury/voxerartc/core/java/CredentialsCallback {
+	public abstract fun onCredentials (Lcom/naury/voxerartc/api/RtcCredentials;)V
+	public abstract fun onError (Lcom/naury/voxerartc/api/CredentialsUnavailableException;)V
+}
+
+public abstract interface class com/naury/voxerartc/core/java/JavaCredentialsProvider {
+	public abstract fun getCredentials (Lcom/naury/voxerartc/api/CredentialRequest;Lcom/naury/voxerartc/core/java/CredentialsCallback;)V
+}
+
+public abstract interface class com/naury/voxerartc/core/java/VoxeraActionCallback {
+	public abstract fun onComplete (Lcom/naury/voxerartc/api/MediaActionResult;)V
+}
+
+public abstract interface class com/naury/voxerartc/core/java/VoxeraCallback {
+	public abstract fun onError (Lcom/naury/voxerartc/api/VoxeraError;)V
+	public abstract fun onSuccess (Ljava/lang/Object;)V
+}
+
+public abstract interface class com/naury/voxerartc/core/java/VoxeraCancellable {
+	public abstract fun cancel ()V
+}
+
+public final class com/naury/voxerartc/core/java/VoxeraClient : java/lang/AutoCloseable {
+	public final fun addChatListener (Lcom/naury/voxerartc/core/java/VoxeraListener;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun addParticipantsListener (Lcom/naury/voxerartc/core/java/VoxeraListener;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun addReactionListener (Lcom/naury/voxerartc/core/java/VoxeraListener;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun addStateListener (Lcom/naury/voxerartc/core/java/VoxeraListener;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public fun close ()V
+	public final fun getCurrentState ()Lcom/naury/voxerartc/api/SessionState;
+	public final fun getSession ()Lcom/naury/voxerartc/core/VoxeraSession;
+	public final fun joinRoom (Ljava/lang/String;Lcom/naury/voxerartc/api/CallMode;Lcom/naury/voxerartc/core/java/VoxeraCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun leave (Ljava/lang/Runnable;)V
+	public final fun selectAudioRoute (Ljava/lang/String;Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun sendChatMessage (Ljava/lang/String;Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun sendReaction (Lcom/naury/voxerartc/api/Reaction;Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun setCameraEnabled (ZLcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun setHandRaised (ZLcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun setMicrophoneEnabled (ZLcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun startScreenShare (Lcom/naury/voxerartc/api/ScreenShareConsent;Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun stopScreenShare (Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+	public final fun switchCamera (Lcom/naury/voxerartc/core/java/VoxeraActionCallback;)Lcom/naury/voxerartc/core/java/VoxeraCancellable;
+}
+
+public final class com/naury/voxerartc/core/java/VoxeraJava {
+	public static final field INSTANCE Lcom/naury/voxerartc/core/java/VoxeraJava;
+	public static final fun create (Lcom/naury/voxerartc/api/RtcEngineFactory;Lcom/naury/voxerartc/core/java/JavaCredentialsProvider;Ljava/util/concurrent/Executor;)Lcom/naury/voxerartc/core/java/VoxeraClient;
+	public static final fun create (Lcom/naury/voxerartc/api/RtcEngineFactory;Lcom/naury/voxerartc/core/java/JavaCredentialsProvider;Ljava/util/concurrent/Executor;Lcom/naury/voxerartc/core/MediaPreferences;)Lcom/naury/voxerartc/core/java/VoxeraClient;
+	public static final fun create (Lcom/naury/voxerartc/api/RtcEngineFactory;Lcom/naury/voxerartc/core/java/JavaCredentialsProvider;Ljava/util/concurrent/Executor;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;)Lcom/naury/voxerartc/core/java/VoxeraClient;
+	public static synthetic fun create$default (Lcom/naury/voxerartc/api/RtcEngineFactory;Lcom/naury/voxerartc/core/java/JavaCredentialsProvider;Ljava/util/concurrent/Executor;Lcom/naury/voxerartc/core/MediaPreferences;Lcom/naury/voxerartc/core/SessionPolicy;ILjava/lang/Object;)Lcom/naury/voxerartc/core/java/VoxeraClient;
+}
+
+public abstract interface class com/naury/voxerartc/core/java/VoxeraListener {
+	public abstract fun onChanged (Ljava/lang/Object;)V
+}
+
