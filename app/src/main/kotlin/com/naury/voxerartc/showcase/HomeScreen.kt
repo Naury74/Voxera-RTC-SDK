@@ -1,6 +1,7 @@
 package com.naury.voxerartc.showcase
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -28,8 +30,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
@@ -97,7 +102,12 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
             ) {
                 Column(Modifier.padding(horizontal = VoxeraSpacing.xs).enterOnAppear(0)) {
-                    Text(stringResource(R.string.showcase_brand), color = colors.primary, style = VoxeraTheme.typography.label)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        BrandMark(Modifier.size(28.dp))
+                        Spacer(Modifier.width(VoxeraSpacing.xs))
+                        Text(stringResource(R.string.showcase_brand), color = colors.primary, style = VoxeraTheme.typography.label)
+                    }
+                    Spacer(Modifier.height(VoxeraSpacing.xs))
                     Text(
                         stringResource(R.string.showcase_title),
                         color = colors.foreground,
@@ -150,6 +160,15 @@ fun HomeScreen(
                 Spacer(Modifier.height(VoxeraSpacing.xl))
             }
         }
+    }
+}
+
+/** 앱 아이콘과 같은 마크를 작은 타일로 보여 준다. 옆에 이름 글자가 있으므로 읽지 않는다. */
+@Composable
+private fun BrandMark(modifier: Modifier = Modifier) {
+    // 아이콘 전경은 마스크 여백을 두고 그려져 있어서 타일 안에서는 키워 보여 준다.
+    Box(modifier.clip(RoundedCornerShape(26)).background(colorResource(R.color.brand_tile))) {
+        Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize().scale(1.6f))
     }
 }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 테마 아이콘용 단색 전경. 시스템이 색을 입힌다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M30.5,35.5a3.5,3.5 0,0 1,7 0V52.5a3.5,3.5 0,0 1,-7 0ZM40.5,45.5a3.5,3.5 0,0 1,7 0V62.5a3.5,3.5 0,0 1,-7 0ZM50.5,55.5a3.5,3.5 0,0 1,7 0V72.5a3.5,3.5 0,0 1,-7 0ZM60.5,45.5a3.5,3.5 0,0 1,7 0V62.5a3.5,3.5 0,0 1,-7 0ZM70.5,35.5a3.5,3.5 0,0 1,7 0V52.5a3.5,3.5 0,0 1,-7 0Z" />
+</vector>
