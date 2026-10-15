@@ -12,6 +12,7 @@ androidxCore = "1.19.1"
 androidxLifecycle = "2.11.0"
 kotlinxCoroutines = "1.11.0"
 livekit = "2.29.0"
+androidxCoreTelecom = "1.0.1"
 
 junit4 = "4.13.2"
 truth = "1.4.5"
@@ -21,6 +22,7 @@ robolectric = "4.17"
 [libraries]
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
+androidx-core-telecom = { module = "androidx.core:core-telecom", version.ref = "androidxCoreTelecom" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }

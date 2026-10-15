@@ -11,6 +11,7 @@ import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.android.VoxeraForegroundCall
 import com.naury.voxerartc.android.VoxeraProximityScreenOff
+import com.naury.voxerartc.android.VoxeraTelecomCall
 import com.naury.voxerartc.core.MediaPreferences
 import com.naury.voxerartc.core.Voxera
 import com.naury.voxerartc.core.VoxeraSession
@@ -119,7 +120,10 @@ class ShowcaseViewModel(application: Application) : AndroidViewModel(application
         // 백그라운드 유지(알림의 종료 버튼 포함)와, 수화부로 음성 통화할 때 귀에 대면 화면 끄기를 통화 동안 함께 건다.
         val foreground = VoxeraForegroundCall.keepWhileConnected(getApplication(), session, title = "Voxera · $roomId")
         val proximity = VoxeraProximityScreenOff.whileOnEarpiece(getApplication(), session)
+        // 시스템 통화 목록에도 올린다. 휴대전화가 오면 시스템이 이 통화를 보류하고, 차량·시계에서 끊을 수 있다.
+        val telecom = VoxeraTelecomCall.registerWhileConnected(getApplication(), session, title = "Voxera · $roomId")
         val keepAlive = AutoCloseable {
+            telecom.close()
             proximity.close()
             foreground.close()
         }
