@@ -1,5 +1,10 @@
 package com.naury.voxerartc.ui.room
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.geometry.Rect
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
@@ -309,7 +314,9 @@ private fun CallContent(
     val accessibility = LocalAccessibilityManager.current
     // TalkBack처럼 화면을 더듬어 쓰는 동안에는 숨기지 않는다. 그 방식으로는 손가락 터치가 오지 않아 다시 꺼낼 수 없다.
     val touchExploration = rememberTouchExploration()
-    val canHide = autoHideControls && !touchExploration && mode == CallMode.VIDEO && sheet == RoomSheet.NONE && reconnecting == null &&
+    // 오디오 알림 말풍선이 버튼을 가리키는 동안에는 조작 막대를 숨기지 않는다.
+    var routeNoticeVisible by remember { mutableStateOf(false) }
+    val canHide = autoHideControls && !touchExploration && mode == CallMode.VIDEO && sheet == RoomSheet.NONE && reconnecting == null && !routeNoticeVisible &&
         mediaError == null && !media.screenShare.actual && !media.audioInterrupted && participants.any { !it.isLocal }
     LaunchedEffect(canHide) { if (!canHide) chromeVisible = true }
     LaunchedEffect(canHide, chromeVisible, lastTouch) {
@@ -325,10 +332,14 @@ private fun CallContent(
     // 영상 View는 Compose 배너 위에 그려지므로, 상단 상태 줄·배너의 실제 높이만큼 무대를 내려 겹치지 않게 한다.
     val density = LocalDensity.current
     var overlayHeight by remember { mutableStateOf(0.dp) }
+    // 오디오 알림 말풍선의 기준점: 이 화면 상자와 오디오(또는 더보기) 버튼의 화면 위치. 값으로 들고 있어야 움직일 때 다시 그려진다.
+    var screenOrigin by remember { mutableStateOf(Offset.Zero) }
+    var audioButtonBounds by remember { mutableStateOf<Rect?>(null) }
     // TalkBack 읽기 순서: 상단 상태·안내 → 영상 무대 → 조작 막대. 그리는 순서(무대가 맨 아래)와 다르므로 따로 정한다.
     Box(
         Modifier
             .fillMaxSize()
+            .onGloballyPositioned { screenOrigin = it.positionInRoot() }
             .semantics { isTraversalGroup = true }
             // 화면 어디를 만져도 숨김 시계를 다시 맞춘다. 이벤트는 소비하지 않는다.
             .pointerInput(Unit) {
@@ -448,11 +459,6 @@ private fun CallContent(
             if (handRaiseEnabled) RaisedHandChip(myHand, onLower = { scope.launch { session.setHandRaised(false) } })
             ParticipantNotices(participants)
             if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, onOpen = { sheet = RoomSheet.CHAT })
-            // 이어폰이 연결·해제되면 어디로 소리가 가는지 알리고 되돌리거나 옮길 수 있게 한다.
-            AudioRouteNotices(media, lastRouteSelectionMs, onSelect = { id ->
-                lastRouteSelectionMs = System.nanoTime() / 1_000_000
-                scope.launch { session.selectAudioRoute(id) }
-            })
         }
 
         AnimatedVisibility(
@@ -486,8 +492,23 @@ private fun CallContent(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
                     .enterOnAppear(3, scale = true),
+                onAudioAnchor = { audioButtonBounds = if (it.isAttached) it.boundsInRoot() else null },
             )
         }
+
+        // 이어폰이 연결·해제되면 오디오 버튼 위 말풍선으로 어디로 소리가 가는지 알리고, 되돌리거나 옮길 수 있게 한다.
+        val audioAnchor = audioButtonBounds?.takeIf { chromeVisible }?.translate(-screenOrigin)
+        AudioRouteNotices(
+            media,
+            lastRouteSelectionMs,
+            onSelect = { id ->
+                lastRouteSelectionMs = System.nanoTime() / 1_000_000
+                scope.launch { session.selectAudioRoute(id) }
+            },
+            anchor = audioAnchor,
+            onVisibleChange = { routeNoticeVisible = it },
+            modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0.5f },
+        )
 
         if (reactionsEnabled) {
             // 반응은 조작 막대를 숨겨도 보인다. 막대가 있으면 그 위에서 떠오른다.

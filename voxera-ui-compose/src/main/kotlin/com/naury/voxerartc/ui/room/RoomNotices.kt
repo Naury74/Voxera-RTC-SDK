@@ -1,5 +1,30 @@
 package com.naury.voxerartc.ui.room
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -37,6 +62,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -167,14 +193,33 @@ internal fun routeNoticeBetween(previous: LocalMediaState?, current: LocalMediaS
     }
 }
 
+/** 되돌리기·전환 버튼이 있는 오디오 알림이 보이는 시간. */
+internal const val ROUTE_NOTICE_ACTION_MS = 8_000L
+
+/** 끊김처럼 알리기만 하는 오디오 알림이 보이는 시간. */
+internal const val ROUTE_NOTICE_INFO_MS = 6_000L
+
 /**
- * 이어폰 연결·해제 알림. 위에서 내려오는 유리 캡슐에 기기 이름과 상황, 되돌리기·전환 버튼을 보여 주고 5초 뒤 사라진다.
+ * 이어폰 연결·해제 알림. 오디오 버튼 위에 꼬리 달린 말풍선으로 기기 이름과 상황, 되돌리기·전환 버튼을 보여 준다.
+ * 화면 위쪽은 연결 순간 시스템의 이어폰 팝업과 겹치므로 버튼 쪽에 띄운다. 꼬리 끝에서 커지며 나타난다.
+ * 버튼이 있는 알림은 8초, 끊김 알림은 6초 보인다. 접근성 설정의 "조치를 취할 시간"이 더 길면 그 값을 따른다.
  * TalkBack에는 조용히 읽힌다. 사용자가 경로 메뉴에서 고른 지 3초 안의 변화는 알리지 않는다.
  *
+ * 이 함수는 화면 전체를 차지하는 상자 안에 두며, 말풍선 밖은 터치를 막지 않는다.
+ *
  * @param lastUserSelectionMs 사용자가 메뉴에서 경로를 마지막으로 고른 시각([System.nanoTime] 기준 ms).
+ * @param anchor 말풍선이 가리킬 버튼의 영역(이 상자 기준 px). 모르면 아래 가운데를 가리킨다.
+ * @param onVisibleChange 말풍선이 보이기 시작하거나 사라질 때 불린다. 보이는 동안 조작 막대를 숨기지 않을 때 쓴다.
  */
 @Composable
-internal fun AudioRouteNotices(media: LocalMediaState, lastUserSelectionMs: Long, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun AudioRouteNotices(
+    media: LocalMediaState,
+    lastUserSelectionMs: Long,
+    onSelect: (String) -> Unit,
+    anchor: Rect?,
+    onVisibleChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var previous by remember { mutableStateOf<LocalMediaState?>(null) }
     var notice by remember { mutableStateOf<RouteNotice?>(null) }
     var serial by remember { mutableStateOf(0) }
@@ -186,62 +231,117 @@ internal fun AudioRouteNotices(media: LocalMediaState, lastUserSelectionMs: Long
         }
         previous = media
     }
+    val accessibility = LocalAccessibilityManager.current
     LaunchedEffect(serial) {
-        if (notice != null) {
-            delay(5_000)
-            notice = null
+        val shown = notice ?: return@LaunchedEffect
+        val hasAction = shown !is RouteNotice.Lost
+        val base = if (hasAction) ROUTE_NOTICE_ACTION_MS else ROUTE_NOTICE_INFO_MS
+        val timeout = accessibility?.calculateRecommendedTimeoutMillis(base, containsIcons = true, containsText = true, containsControls = hasAction) ?: base
+        // 접근성 설정이 "사라지지 않음"이면 다음 알림이 올 때까지 둔다.
+        if (timeout == Long.MAX_VALUE) return@LaunchedEffect
+        delay(timeout)
+        notice = null
+    }
+    val visible = notice != null
+    LaunchedEffect(visible) { onVisibleChange(visible) }
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val margin = VoxeraSpacing.sm
+        val width = minOf(360.dp, maxWidth - margin * 2)
+        // 가리킬 곳: 버튼 위쪽 가운데. 버튼을 모르면 화면 아래 가운데.
+        val target = with(density) {
+            anchor?.let { DpOffset(it.center.x.toDp(), it.top.toDp()) } ?: DpOffset(maxWidth / 2, maxHeight - 120.dp)
+        }
+        val left = (target.x - width / 2).coerceIn(margin, maxWidth - margin - width)
+        val tailX = (target.x - left).coerceIn(VoxeraRadius.xl, width - VoxeraRadius.xl)
+        val origin = TransformOrigin(tailX / width, 1f)
+        AnimatedVisibility(
+            visible = visible,
+            enter = scaleIn(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow), initialScale = 0.6f, transformOrigin = origin) + fadeIn(),
+            exit = scaleOut(tween(160), targetScale = 0.8f, transformOrigin = origin) + fadeOut(tween(160)),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = left)
+                // 버튼은 막대 안쪽에 있으므로, 꼬리 끝이 막대 윗선보다 조금 위에 오도록 막대 안쪽 여백만큼 더 띄운다.
+                .padding(bottom = (maxHeight - target.y + BubbleGap).coerceAtLeast(0.dp))
+                .width(width),
+        ) {
+            val shown = notice ?: return@AnimatedVisibility
+            RouteBubble(shown, tailX, onSelect = { id ->
+                onSelect(id)
+                notice = null
+            })
         }
     }
-    AnimatedVisibility(
-        visible = notice != null,
-        enter = slideInVertically { -it } + fadeIn(),
-        exit = slideOutVertically { -it } + fadeOut(),
-        modifier = modifier,
+}
+
+@Composable
+private fun RouteBubble(shown: RouteNotice, tailX: Dp, onSelect: (String) -> Unit) {
+    val colors = VoxeraTheme.colors
+    val (route, title, body) = when (shown) {
+        is RouteNotice.SwitchedTo -> Triple(shown.route, shown.route.label, stringResource(R.string.voxera_route_notice_switched))
+        is RouteNotice.Available -> Triple(shown.route, stringResource(R.string.voxera_route_notice_available, shown.route.label), stringResource(R.string.voxera_route_notice_available_body))
+        is RouteNotice.Lost -> Triple(
+            shown.route,
+            stringResource(R.string.voxera_route_notice_lost, shown.route.label),
+            shown.now?.let { stringResource(R.string.voxera_route_notice_now, stringResource(it.type.labelRes())) }.orEmpty(),
+        )
+    }
+    val action: Pair<String, () -> Unit>? = when (shown) {
+        is RouteNotice.SwitchedTo -> shown.previous?.let { prev -> stringResource(R.string.voxera_route_notice_undo) to { onSelect(prev.id) } }
+        is RouteNotice.Available -> stringResource(R.string.voxera_route_notice_switch) to { onSelect(shown.route.id) }
+        is RouteNotice.Lost -> null
+    }
+    // 꼬리까지 한 모양으로 그려 유리 채움·테두리·그림자가 끊기지 않게 한다.
+    val density = LocalDensity.current
+    val shape = remember(tailX, density) { with(density) { BubbleShape(VoxeraRadius.xl.toPx(), tailX.toPx(), TailWidth.toPx(), TailHeight.toPx()) } }
+    GlassSurface(
+        level = GlassLevel.High,
+        shape = shape,
+        contentPadding = PaddingValues(start = VoxeraSpacing.sm, end = VoxeraSpacing.xs, top = VoxeraSpacing.xs, bottom = VoxeraSpacing.xs + TailHeight),
+        modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        val shown = notice ?: return@AnimatedVisibility
-        val colors = VoxeraTheme.colors
-        val (route, title, body) = when (shown) {
-            is RouteNotice.SwitchedTo -> Triple(shown.route, shown.route.label, stringResource(R.string.voxera_route_notice_switched))
-            is RouteNotice.Available -> Triple(shown.route, stringResource(R.string.voxera_route_notice_available, shown.route.label), stringResource(R.string.voxera_route_notice_available_body))
-            is RouteNotice.Lost -> Triple(
-                shown.route,
-                stringResource(R.string.voxera_route_notice_lost, shown.route.label),
-                shown.now?.let { stringResource(R.string.voxera_route_notice_now, stringResource(it.type.labelRes())) }.orEmpty(),
-            )
-        }
-        val action: Pair<String, () -> Unit>? = when (shown) {
-            is RouteNotice.SwitchedTo -> shown.previous?.let { prev -> stringResource(R.string.voxera_route_notice_undo) to { onSelect(prev.id); notice = null } }
-            is RouteNotice.Available -> stringResource(R.string.voxera_route_notice_switch) to { onSelect(shown.route.id); notice = null }
-            is RouteNotice.Lost -> null
-        }
-        GlassSurface(
-            level = GlassLevel.High,
-            shape = RoundedCornerShape(VoxeraRadius.xl),
-            contentPadding = PaddingValues(start = VoxeraSpacing.sm, end = VoxeraSpacing.xs, top = VoxeraSpacing.xs, bottom = VoxeraSpacing.xs),
-            modifier = Modifier.widthIn(max = 420.dp).semantics { liveRegion = LiveRegionMode.Polite },
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                VoxeraIconTile(route.type.icon(), if (shown is RouteNotice.Lost) colors.warning else colors.primary, size = 36.dp)
-                Column(Modifier.weight(1f, fill = false)) {
-                    Text(title, color = colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (body.isNotEmpty()) Text(body, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 2)
-                }
-                if (action != null) {
-                    val interaction = remember { MutableInteractionSource() }
-                    Box(
-                        Modifier
-                            .pressScale(interaction)
-                            .heightIn(min = 40.dp)
-                            .clip(CircleShape)
-                            .background(colors.primary.copy(alpha = 0.14f))
-                            .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = action.second)
-                            .padding(horizontal = VoxeraSpacing.sm),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(action.first, color = colors.primary, style = VoxeraTheme.typography.label)
-                    }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
+            VoxeraIconTile(route.type.icon(), if (shown is RouteNotice.Lost) colors.warning else colors.primary, size = 36.dp)
+            Column(Modifier.weight(1f)) {
+                Text(title, color = colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (body.isNotEmpty()) Text(body, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 2)
+            }
+            if (action != null) {
+                val interaction = remember { MutableInteractionSource() }
+                Box(
+                    Modifier
+                        .pressScale(interaction)
+                        .heightIn(min = 40.dp)
+                        .clip(CircleShape)
+                        .background(colors.primary.copy(alpha = 0.14f))
+                        .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = action.second)
+                        .padding(horizontal = VoxeraSpacing.sm),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(action.first, color = colors.primary, style = VoxeraTheme.typography.label)
                 }
             }
         }
     }
 }
+
+/** 아래쪽 [tailX] 위치에 꼬리가 달린 둥근 사각형. 꼬리 높이만큼 아래가 비어 있으므로 내용 아래 여백을 그만큼 더 준다. */
+private class BubbleShape(private val radius: Float, private val tailX: Float, private val tailWidth: Float, private val tailHeight: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val bodyHeight = size.height - tailHeight
+        val body = Path().apply { addRoundRect(RoundRect(0f, 0f, size.width, bodyHeight, CornerRadius(radius))) }
+        val x = tailX.coerceIn(radius + tailWidth / 2, size.width - radius - tailWidth / 2)
+        val tail = Path().apply {
+            moveTo(x - tailWidth / 2, bodyHeight - 1f)
+            lineTo(x + tailWidth / 2, bodyHeight - 1f)
+            lineTo(x, size.height)
+            close()
+        }
+        return Outline.Generic(Path.combine(PathOperation.Union, body, tail))
+    }
+}
+
+private val TailWidth = 22.dp
+private val TailHeight = 10.dp
+private val BubbleGap = 18.dp

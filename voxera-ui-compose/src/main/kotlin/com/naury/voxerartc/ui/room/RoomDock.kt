@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -47,6 +49,7 @@ internal data class DockControl(
     val danger: Boolean = false,
     val enabled: Boolean = true,
     val badge: Int = 0,
+    val anchor: Boolean = false,
 )
 
 /** 버튼 [count]개를 원 [circle] 크기로 놓을 때 필요한 막대 폭. 버튼 폭은 원 + 8dp, 사이 4dp, 막대 안쪽 여백 12dp씩. */
@@ -87,6 +90,7 @@ internal fun CallDock(
     onEnd: () -> Unit,
     onMore: (List<DockControl>) -> Unit,
     modifier: Modifier = Modifier,
+    onAudioAnchor: (LayoutCoordinates) -> Unit = {},
 ) {
     val on = stringResource(R.string.voxera_control_on)
     val off = stringResource(R.string.voxera_control_off)
@@ -153,7 +157,7 @@ internal fun CallDock(
             add(DockControl(VoxeraIcons.Mood, stringResource(R.string.voxera_control_react), onReact, essential = false))
         }
         if (media.audioRoutes.isNotEmpty()) {
-            add(DockControl(media.selectedRouteIcon(), stringResource(R.string.voxera_control_audio), onAudio, essential = false))
+            add(DockControl(media.selectedRouteIcon(), stringResource(R.string.voxera_control_audio), onAudio, essential = false, anchor = true))
         }
         add(DockControl(VoxeraIcons.CallEnd, stringResource(R.string.voxera_control_end), onEnd, essential = true, danger = true))
     }
@@ -162,7 +166,10 @@ internal fun CallDock(
         // 더보기로 옮긴 조작의 배지(읽지 않은 채팅 등)는 더보기 버튼에 합쳐 보여 준다.
         val (shown, _, circle) = layoutDock(
             controls,
-            { overflow -> DockControl(Icons.Filled.MoreVert, moreLabel, { onMore(overflow) }, essential = true, badge = overflow.sumOf { it.badge }) },
+            // 오디오 버튼이 더보기로 옮겨졌으면 오디오 알림 말풍선은 더보기 버튼을 가리킨다.
+            { overflow ->
+                DockControl(Icons.Filled.MoreVert, moreLabel, { onMore(overflow) }, essential = true, badge = overflow.sumOf { it.badge }, anchor = overflow.any { it.anchor })
+            },
             maxWidth,
         )
         // 버튼이 늘거나 줄면(카메라 켜기, 화면 공유) 막대 폭이 부드럽게 바뀐다.
@@ -180,6 +187,7 @@ internal fun CallDock(
                         enabled = control.enabled,
                         circleSize = circle,
                         badge = control.badge,
+                        modifier = if (control.anchor) Modifier.onGloballyPositioned(onAudioAnchor) else Modifier,
                     )
                 }
             }
