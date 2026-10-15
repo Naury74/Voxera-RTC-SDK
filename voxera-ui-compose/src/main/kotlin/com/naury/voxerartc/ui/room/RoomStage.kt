@@ -1,5 +1,10 @@
 package com.naury.voxerartc.ui.room
 
+import com.naury.voxerartc.ui.theme.enterOnAppear
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
@@ -445,18 +450,21 @@ internal fun VoiceStage(participants: List<Participant>, elapsed: String, status
             val focus = remotes.firstOrNull()
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(bottom = 96.dp)) {
                 if (focus != null) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.enterOnAppear(0, scale = true)) {
                         SpeakingRipple(focus.isSpeaking, focus.audioLevel, avatarSize)
                         VoxeraAvatar(focus.id, focus.displayName, size = avatarSize, speaking = focus.isSpeaking, audioLevel = focus.audioLevel)
                     }
                     // 물결 고리가 아바타 밖으로 퍼지므로 이름과 사이를 넉넉히 둔다.
                     Spacer(Modifier.height(gap))
-                    Text(focus.displayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center)
+                    Text(focus.displayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.enterOnAppear(1))
                     Spacer(Modifier.height(VoxeraSpacing.xxs))
-                    Text(elapsed, color = VoxeraTheme.colors.primary, style = VoxeraTheme.typography.title)
+                    Text(elapsed, color = VoxeraTheme.colors.primary, style = VoxeraTheme.typography.title, modifier = Modifier.enterOnAppear(2))
                     if (status != null) {
                         Spacer(Modifier.height(VoxeraSpacing.xxs))
-                        Text(status, color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.body)
+                        // 연결 상태가 바뀌면 문구가 서서히 바뀐다.
+                        AnimatedContent(status, transitionSpec = { fadeIn(tween(240)) togetherWith fadeOut(tween(160)) }, label = "status", modifier = Modifier.enterOnAppear(3)) { text ->
+                            Text(text, color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.body)
+                        }
                     }
                     if (!focus.isMicrophoneEnabled) {
                         Spacer(Modifier.height(VoxeraSpacing.sm))
@@ -509,11 +517,12 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
         val cellWidth = (maxWidth - VoxeraSpacing.md * (columns - 1)) / columns
         val avatar = (cellWidth * 0.6f).coerceIn(56.dp, 120.dp)
         Column(Modifier.align(Alignment.Center), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.lg)) {
-            shown.chunked(columns).forEach { row ->
+            shown.chunked(columns).forEachIndexed { rowIndex, row ->
                 // 덜 찬 마지막 줄도 가운데로 모은다.
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.md, Alignment.CenterHorizontally)) {
-                    row.forEach { participant ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(cellWidth)) {
+                    row.forEachIndexed { colIndex, participant ->
+                        key(participant.id) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(cellWidth).enterOnAppear(rowIndex * columns + colIndex, scale = true)) {
                             Box(contentAlignment = Alignment.Center) {
                                 SpeakingRipple(participant.isSpeaking, participant.audioLevel, avatar)
                                 VoxeraAvatar(participant.id, participant.displayName, size = avatar, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
@@ -529,6 +538,7 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                                     maxLines = 1,
                                 )
                             }
+                        }
                         }
                     }
                 }

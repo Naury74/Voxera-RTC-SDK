@@ -1,5 +1,14 @@
 package com.naury.voxerartc.ui.call
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
+import com.naury.voxerartc.ui.theme.enterOnAppear
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -175,14 +184,27 @@ private fun RingingPeer(ringing: CallState.Ringing, compact: Boolean) {
     val ripple = if (compact) VoxeraSpacing.xl else 64.dp
     val avatar = if (compact) 104.dp else 152.dp
     Spacer(Modifier.height(ripple))
-    Box(contentAlignment = Alignment.Center) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.enterOnAppear(1, scale = true)) {
         SpeakingRipple(speaking = true, level = 0.8f, size = avatar)
         VoxeraAvatar(call.peerId, call.peerDisplayName, size = avatar)
     }
     Spacer(Modifier.height(if (compact) VoxeraSpacing.xl else 48.dp))
-    Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
+    Text(call.peerDisplayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.enterOnAppear(2).semantics { heading() })
     Spacer(Modifier.height(VoxeraSpacing.xs))
     Text(pluralStringResource(R.plurals.voxera_call_rings_for, remaining, remaining), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, textAlign = TextAlign.Center)
+}
+
+/** 수락 버튼 뒤에서 퍼져 나가는 고리. 움직임 줄이기 설정이면 그리지 않는다. 장식이다. */
+@Composable
+private fun AcceptPulse(modifier: Modifier) {
+    if (rememberReducedMotion()) return
+    val color = VoxeraTheme.colors.primary
+    val transition = rememberInfiniteTransition(label = "accept")
+    val p by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1_300, easing = LinearEasing)), label = "accept-pulse")
+    Canvas(modifier) {
+        val r = size.minDimension / 2f
+        drawCircle(color.copy(alpha = 0.35f * (1f - p)), radius = r * (1f + 0.55f * p))
+    }
 }
 
 /** 수신이면 거절·수락, 발신이면 취소 버튼. */
@@ -190,15 +212,19 @@ private fun RingingPeer(ringing: CallState.Ringing, compact: Boolean) {
 private fun RingingActions(ringing: CallState.Ringing, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
     val call = ringing.call
     if (ringing.direction == CallDirection.INCOMING) {
-        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2), modifier = Modifier.enterOnAppear(4, scale = true)) {
             CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_decline), danger = true, onClick = onDecline, circleSize = 72.dp)
-            CallControlButton(
-                icon = if (call.mode == CallMode.VIDEO) VoxeraIcons.Videocam else VoxeraIcons.Call,
-                label = stringResource(R.string.voxera_call_accept),
-                accent = true,
-                onClick = onAccept,
-                circleSize = 72.dp,
-            )
+            // 수락 버튼 뒤로 고리가 맥박처럼 퍼져 누를 곳을 알려 준다.
+            Box(contentAlignment = Alignment.TopCenter) {
+                AcceptPulse(Modifier.padding(top = 4.dp).size(72.dp))
+                CallControlButton(
+                    icon = if (call.mode == CallMode.VIDEO) VoxeraIcons.Videocam else VoxeraIcons.Call,
+                    label = stringResource(R.string.voxera_call_accept),
+                    accent = true,
+                    onClick = onAccept,
+                    circleSize = 72.dp,
+                )
+            }
         }
     } else {
         CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_cancel), danger = true, onClick = onCancel, circleSize = 72.dp)

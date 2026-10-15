@@ -1,5 +1,36 @@
 package com.naury.voxerartc.ui.room
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import com.naury.voxerartc.ui.theme.enterOnAppear
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,52 +80,99 @@ import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 
-/** 연결 중(G-04). 방 이름 아바타 뒤로 물결이 퍼지고, 지금 단계를 두 칸 진행 표시로 보여 준다. */
+/**
+ * 연결 중(G-04). 방 아바타가 숨 쉬듯 커졌다 작아지고 뒤로 물결이 퍼진다. 아래 진행 막대는 빛이 계속 흘러가며,
+ * 준비 → 연결 단계가 바뀌면 문구가 위로 밀려 바뀌고 막대도 다음 칸이 찬다. 요소들은 차례로 떠오르며 나타난다.
+ */
 @Composable
 internal fun ConnectingContent(state: SessionState, simulated: Boolean, onCancel: () -> Unit) {
     val connecting = state is SessionState.Connecting
-    val label = stringResource(if (connecting) R.string.voxera_state_connecting else R.string.voxera_state_preparing)
     val room = when (state) {
         is SessionState.Preparing -> state.roomId
         is SessionState.Connecting -> state.roomId
         else -> ""
     }
+    val reduced = rememberReducedMotion()
+    val breath = if (reduced) {
+        0f
+    } else {
+        val transition = rememberInfiniteTransition(label = "connecting")
+        val value by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1_400, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "breath")
+        value
+    }
     CenteredColumn(simulated) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.enterOnAppear(0, scale = true)) {
             SpeakingRipple(speaking = true, level = 0.5f, size = 128.dp)
-            VoxeraAvatar(id = room.ifEmpty { "room" }, name = room.ifEmpty { "?" }, size = 128.dp)
+            VoxeraAvatar(
+                id = room.ifEmpty { "room" },
+                name = room.ifEmpty { "?" },
+                size = 128.dp,
+                modifier = Modifier.graphicsLayer {
+                    val sc = 1f + 0.04f * breath
+                    scaleX = sc
+                    scaleY = sc
+                },
+            )
         }
         // 물결 고리가 아바타 밖으로 퍼지므로 이름과 사이를 넉넉히 둔다.
         Spacer(Modifier.height(48.dp))
-        Text(room, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.headline, textAlign = TextAlign.Center)
+        Text(room, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.headline, textAlign = TextAlign.Center, modifier = Modifier.enterOnAppear(1))
         Spacer(Modifier.height(VoxeraSpacing.xs))
-        Text(
-            label,
-            color = VoxeraTheme.colors.foregroundSecondary,
-            style = VoxeraTheme.typography.body,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        )
+        AnimatedContent(
+            targetState = connecting,
+            transitionSpec = {
+                (slideInVertically(tween(260)) { it / 2 } + fadeIn(tween(260))) togetherWith (slideOutVertically(tween(200)) { -it / 2 } + fadeOut(tween(160)))
+            },
+            label = "connecting-label",
+            modifier = Modifier.enterOnAppear(2).semantics { liveRegion = LiveRegionMode.Polite },
+        ) { isConnecting ->
+            Text(
+                stringResource(if (isConnecting) R.string.voxera_state_connecting else R.string.voxera_state_preparing),
+                color = VoxeraTheme.colors.foregroundSecondary,
+                style = VoxeraTheme.typography.body,
+            )
+        }
         Spacer(Modifier.height(VoxeraSpacing.md))
-        StepBar(steps = 2, current = if (connecting) 1 else 0)
+        StepBar(steps = 2, current = if (connecting) 1 else 0, modifier = Modifier.enterOnAppear(3))
         Spacer(Modifier.height(VoxeraSpacing.xxl))
-        VoxeraButton(stringResource(R.string.voxera_action_cancel), onClick = onCancel, tone = VoxeraButtonTone.Secondary, modifier = Modifier.widthIn(min = 160.dp))
+        VoxeraButton(
+            stringResource(R.string.voxera_action_cancel),
+            onClick = onCancel,
+            tone = VoxeraButtonTone.Secondary,
+            modifier = Modifier.widthIn(min = 160.dp).enterOnAppear(4),
+        )
     }
 }
 
-/** 단계 진행 막대. 지난 단계와 지금 단계는 채운다. 글자로 단계가 이미 나오므로 장식으로 둔다. */
+/**
+ * 단계 진행 막대. 지난 단계는 채우고, 지금 단계 칸은 빛이 왼쪽에서 오른쪽으로 계속 흘러간다. 단계가 바뀌면 칸이 차오른다.
+ * 글자로 단계가 이미 나오므로 장식으로 둔다.
+ */
 @Composable
-private fun StepBar(steps: Int, current: Int) {
+private fun StepBar(steps: Int, current: Int, modifier: Modifier = Modifier) {
     val colors = VoxeraTheme.colors
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    val reduced = rememberReducedMotion()
+    val sweep = if (reduced) {
+        0.5f
+    } else {
+        val transition = rememberInfiniteTransition(label = "step")
+        val value by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1_100, easing = LinearEasing)), label = "sweep")
+        value
+    }
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(steps) { index ->
-            Box(
-                Modifier
-                    .size(width = 28.dp, height = 4.dp)
-                    .background(
-                        if (index <= current) colors.primary else colors.foreground.copy(alpha = 0.16f),
-                        RoundedCornerShape(2.dp),
-                    ),
-            )
+            val fill by animateFloatAsState(if (index < current) 1f else 0f, spring(stiffness = Spring.StiffnessLow), label = "fill")
+            Canvas(Modifier.size(width = 36.dp, height = 4.dp)) {
+                val r = CornerRadius(size.height / 2)
+                drawRoundRect(colors.foreground.copy(alpha = 0.14f), cornerRadius = r)
+                if (fill > 0f) drawRoundRect(colors.primary, size = Size(size.width * fill, size.height), cornerRadius = r)
+                if (index == current) {
+                    // 지금 단계: 빛 조각이 흘러간다.
+                    val w = size.width * 0.45f
+                    val x = (size.width + w) * sweep - w
+                    clipRect { drawRoundRect(colors.primary, topLeft = Offset(x, 0f), size = Size(w, size.height), cornerRadius = r) }
+                }
+            }
         }
     }
 }
@@ -121,27 +199,37 @@ internal fun EndedContent(
     onSaveReport: (() -> Unit)?,
 ) {
     val colors = VoxeraTheme.colors
+    val reduced = rememberReducedMotion()
     CenteredColumn(simulated) {
-        VoxeraIconTile(VoxeraIcons.CallEnd, colors.danger, size = 64.dp)
+        VoxeraIconTile(VoxeraIcons.CallEnd, colors.danger, size = 64.dp, modifier = Modifier.enterOnAppear(0, scale = true))
         Spacer(Modifier.height(VoxeraSpacing.lg))
         Text(
             stringResource(R.string.voxera_end_title),
             color = colors.foreground,
             style = VoxeraTheme.typography.headline,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier.enterOnAppear(1).semantics { heading() },
         )
         if (durationMs != null) {
-            Text(formatDuration(durationMs), color = colors.primary, style = VoxeraTheme.typography.display)
+            // 통화 시간은 0에서 실제 값까지 빠르게 올라간다. 읽기에는 최종 값만 쓴다.
+            val shown = remember { Animatable(if (reduced) durationMs.toFloat() else 0f) }
+            LaunchedEffect(durationMs) { shown.animateTo(durationMs.toFloat(), tween(700, easing = FastOutSlowInEasing)) }
+            val final = formatDuration(durationMs)
+            Text(
+                formatDuration(shown.value.toLong()),
+                color = colors.primary,
+                style = VoxeraTheme.typography.display,
+                modifier = Modifier.enterOnAppear(2).clearAndSetSemantics { contentDescription = final },
+            )
         }
         Spacer(Modifier.height(VoxeraSpacing.xxs))
-        Text(stringResource(reason.messageRes()), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body, textAlign = TextAlign.Center)
+        Text(stringResource(reason.messageRes()), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body, textAlign = TextAlign.Center, modifier = Modifier.enterOnAppear(3))
         val rtt = history.average(MetricKind.ROUND_TRIP_TIME, MetricDirection.NONE)
         val loss = history.average(MetricKind.PACKET_LOSS, MetricDirection.RECEIVE)
         val jitter = history.average(MetricKind.JITTER, MetricDirection.RECEIVE)
         val health = healthOf(rtt, loss, jitter)
         if (health != null) {
             Spacer(Modifier.height(VoxeraSpacing.lg))
-            GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.xl), modifier = Modifier.fillMaxWidth()) {
+            GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.xl), modifier = Modifier.fillMaxWidth().enterOnAppear(4)) {
                 Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.voxera_end_quality), color = colors.foreground, style = VoxeraTheme.typography.label, modifier = Modifier.weight(1f))
@@ -158,7 +246,7 @@ internal fun EndedContent(
             }
         }
         Spacer(Modifier.height(VoxeraSpacing.xxl))
-        ExitActions(onExit, onRejoin, rejoinLabel = stringResource(R.string.voxera_action_rejoin), onSaveReport)
+        ExitActions(onExit, onRejoin, rejoinLabel = stringResource(R.string.voxera_action_rejoin), onSaveReport, firstIndex = 5)
     }
 }
 
@@ -181,17 +269,30 @@ internal fun FailedContent(
     onSaveReport: (() -> Unit)?,
 ) {
     val colors = VoxeraTheme.colors
+    val reduced = rememberReducedMotion()
+    // 나타난 뒤 아이콘이 좌우로 짧게 흔들려 문제가 생겼음을 알린다.
+    val shake = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        if (reduced) return@LaunchedEffect
+        delay(260)
+        listOf(-8f, 7f, -5f, 3f, 0f).forEach { shake.animateTo(it, tween(70)) }
+    }
     CenteredColumn(simulated) {
-        VoxeraIconTile(if (dropped) VoxeraIcons.Wifi else VoxeraIcons.Shield, colors.warning, size = 64.dp)
+        VoxeraIconTile(
+            if (dropped) VoxeraIcons.Wifi else VoxeraIcons.Shield,
+            colors.warning,
+            size = 64.dp,
+            modifier = Modifier.enterOnAppear(0, scale = true).graphicsLayer { translationX = shake.value.dp.toPx() },
+        )
         Spacer(Modifier.height(VoxeraSpacing.lg))
         Text(
             stringResource(if (dropped) R.string.voxera_dropped_title else R.string.voxera_failed_title),
             color = colors.foreground,
             style = VoxeraTheme.typography.headline,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier.enterOnAppear(1).semantics { heading() },
         )
         Spacer(Modifier.height(VoxeraSpacing.md))
-        GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.xl), modifier = Modifier.fillMaxWidth()) {
+        GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.xl), modifier = Modifier.fillMaxWidth().enterOnAppear(2)) {
             Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
                 Text(stringResource(error.messageRes()), color = colors.foreground, style = VoxeraTheme.typography.body)
                 val code = if (error is VoxeraError.InternalFailure) "${error.code} · ${error.technicalCode}" else error.code
@@ -199,18 +300,18 @@ internal fun FailedContent(
             }
         }
         Spacer(Modifier.height(VoxeraSpacing.xxl))
-        ExitActions(onExit, onRejoin.takeIf { error.isRetryable }, rejoinLabel = stringResource(R.string.voxera_action_retry), onSaveReport)
+        ExitActions(onExit, onRejoin.takeIf { error.isRetryable }, rejoinLabel = stringResource(R.string.voxera_action_retry), onSaveReport, firstIndex = 3)
     }
 }
 
 @Composable
-private fun ExitActions(onExit: () -> Unit, onRejoin: (() -> Unit)?, rejoinLabel: String, onSaveReport: (() -> Unit)?) {
+private fun ExitActions(onExit: () -> Unit, onRejoin: (() -> Unit)?, rejoinLabel: String, onSaveReport: (() -> Unit)?, firstIndex: Int = 0) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-        if (onRejoin != null) VoxeraButton(rejoinLabel, onClick = onRejoin, icon = VoxeraIcons.Refresh, modifier = Modifier.fillMaxWidth())
+        if (onRejoin != null) VoxeraButton(rejoinLabel, onClick = onRejoin, icon = VoxeraIcons.Refresh, modifier = Modifier.fillMaxWidth().enterOnAppear(firstIndex))
         if (onSaveReport != null) {
-            VoxeraButton(stringResource(R.string.voxera_action_save_report), onClick = onSaveReport, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
+            VoxeraButton(stringResource(R.string.voxera_action_save_report), onClick = onSaveReport, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth().enterOnAppear(firstIndex + 1))
         }
-        VoxeraButton(stringResource(R.string.voxera_action_close), onClick = onExit, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth())
+        VoxeraButton(stringResource(R.string.voxera_action_close), onClick = onExit, tone = VoxeraButtonTone.Secondary, modifier = Modifier.fillMaxWidth().enterOnAppear(firstIndex + 2))
     }
 }
 

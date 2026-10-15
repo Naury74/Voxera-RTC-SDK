@@ -53,6 +53,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
 import com.naury.voxerartc.ui.theme.VoxeraThemeMode
+import com.naury.voxerartc.ui.theme.enterOnAppear
 
 /** 홈 목록 한 줄. [tile]은 테마 색 중 하나를 고른다. */
 private data class HomeItem(
@@ -95,7 +96,7 @@ fun HomeScreen(
                     .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
             ) {
-                Column(Modifier.padding(horizontal = VoxeraSpacing.xs)) {
+                Column(Modifier.padding(horizontal = VoxeraSpacing.xs).enterOnAppear(0)) {
                     Text(stringResource(R.string.showcase_brand), color = colors.primary, style = VoxeraTheme.typography.label)
                     Text(
                         stringResource(R.string.showcase_title),
@@ -106,13 +107,13 @@ fun HomeScreen(
                     Text(stringResource(R.string.showcase_subtitle), color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
                 }
                 Spacer(Modifier.height(VoxeraSpacing.xs))
-                Hero(onTry = { onStart(DemoScenario.GROUP_FOUR) })
+                Box(Modifier.enterOnAppear(1, scale = true)) { Hero(onTry = { onStart(DemoScenario.GROUP_FOUR) }) }
 
-                SectionHeader(R.string.showcase_offline_title, R.string.showcase_offline_body)
-                GlassListGroup(Modifier.fillMaxWidth()) {
+                SectionHeader(R.string.showcase_offline_title, R.string.showcase_offline_body, Modifier.enterOnAppear(2))
+                GlassListGroup(Modifier.fillMaxWidth().enterOnAppear(3)) {
                     calls.forEachIndexed { index, item ->
                         if (index > 0) GlassListDivider()
-                        GlassListRow(stringResource(item.title), item.onClick, icon = item.icon, tileColor = item.tile(colors), subtitle = stringResource(item.body))
+                        GlassListRow(stringResource(item.title), item.onClick, icon = item.icon, tileColor = item.tile(colors), subtitle = stringResource(item.body), modifier = Modifier.enterOnAppear(4 + index))
                     }
                 }
 
@@ -153,9 +154,9 @@ fun HomeScreen(
 }
 
 @Composable
-private fun SectionHeader(@StringRes title: Int, @StringRes body: Int?) {
+private fun SectionHeader(@StringRes title: Int, @StringRes body: Int?, modifier: Modifier = Modifier) {
     val colors = VoxeraTheme.colors
-    Column(Modifier.padding(start = VoxeraSpacing.xs, end = VoxeraSpacing.xs, top = VoxeraSpacing.lg, bottom = VoxeraSpacing.xxs)) {
+    Column(modifier.padding(start = VoxeraSpacing.xs, end = VoxeraSpacing.xs, top = VoxeraSpacing.lg, bottom = VoxeraSpacing.xxs)) {
         Text(stringResource(title), color = colors.foreground, style = VoxeraTheme.typography.title, modifier = Modifier.semantics { heading() })
         if (body != null) Text(stringResource(body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
     }
@@ -180,6 +181,7 @@ private fun Hero(onTry: () -> Unit) {
                     Box(
                         Modifier
                             .offset(x = (-14 * index).dp)
+                            .enterOnAppear(2 + index, scale = true)
                             .size(62.dp)
                             .clip(CircleShape)
                             .background(cut),

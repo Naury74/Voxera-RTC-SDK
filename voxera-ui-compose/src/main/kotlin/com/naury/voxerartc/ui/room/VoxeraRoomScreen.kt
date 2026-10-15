@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import com.naury.voxerartc.ui.glass.pressScale
+import com.naury.voxerartc.ui.theme.enterOnAppear
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -360,10 +361,11 @@ private fun CallContent(
                 verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
             ) {
                 TopBar(
-                    participants.size,
-                    elapsed,
-                    simulated,
-                    health,
+                    modifier = Modifier.enterOnAppear(0),
+                    count = participants.size,
+                    elapsed = elapsed,
+                    simulated = simulated,
+                    health = health,
                     onPeople = { sheet = RoomSheet.PEOPLE },
                     onQuality = { sheet = RoomSheet.QUALITY },
                     onPictureInPicture = onEnterPictureInPicture,
@@ -457,7 +459,8 @@ private fun CallContent(
                 },
                 modifier = Modifier
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
+                    .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
+                    .enterOnAppear(3, scale = true),
             )
         }
 
@@ -502,6 +505,7 @@ private fun CallContent(
 
 @Composable
 private fun TopBar(
+    modifier: Modifier,
     count: Int,
     elapsed: String,
     simulated: Boolean,
@@ -512,7 +516,7 @@ private fun TopBar(
     stageView: StageView?,
     onToggleView: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
         // 글꼴이 커지면 상태 알약이 줄어들고 말줄임되어, 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
             GlassSurface(
@@ -584,7 +588,12 @@ private fun RoomSheetHost(visible: Boolean, onDismiss: () -> Unit, content: @Com
     }
     BackHandler(enabled = visible, onBack = onDismiss)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        AnimatedVisibility(visible, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
+        // 시트는 아래에서 스프링처럼 올라와 살짝 넘쳤다 자리 잡는다.
+        AnimatedVisibility(
+            visible,
+            enter = slideInVertically(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(tween(120)),
+            exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(200)),
+        ) {
             GlassSurface(
                 level = GlassLevel.High,
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),

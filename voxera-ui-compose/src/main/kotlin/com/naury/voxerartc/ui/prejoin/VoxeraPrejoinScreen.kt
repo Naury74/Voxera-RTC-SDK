@@ -11,6 +11,11 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,6 +78,7 @@ import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
+import com.naury.voxerartc.ui.theme.enterOnAppear
 
 /**
  * 입장 전 선택. 권한이 거부된 미디어는 꺼진 값으로 온다.
@@ -182,13 +188,13 @@ public fun VoxeraPrejoinScreen(
                         CallMode.VOICE to stringResource(R.string.voxera_prejoin_mode_voice),
                         CallMode.VIDEO to stringResource(R.string.voxera_prejoin_mode_video),
                     ),
+                    modifier = Modifier.fillMaxWidth().enterOnAppear(1),
                     selected = mode,
                     onSelect = {
                         // 영상으로 바꾸면 카메라를 켠 채 시작하도록 맞춘다. 권한은 입장할 때 묻는다.
                         if (it == CallMode.VIDEO && mode != CallMode.VIDEO) cameraWanted = true
                         mode = it
                     },
-                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 // 미리보기 위에 이름표와 유리 조작 막대를 겹친다(G-03).
@@ -196,6 +202,7 @@ public fun VoxeraPrejoinScreen(
                     Modifier
                         .fillMaxWidth()
                         .aspectRatio(3f / 4f)
+                        .enterOnAppear(2, scale = true)
                         .voxeraGlass(RoundedCornerShape(VoxeraRadius.xxl), GlassLevel.Low),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -242,7 +249,8 @@ public fun VoxeraPrejoinScreen(
                     }
                 }
 
-                if (micOn) MicLevelMeter(level)
+                // 마이크를 켜고 끌 때 레벨 막대가 펼쳐지고 접힌다.
+                AnimatedVisibility(micOn, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) { MicLevelMeter(level) }
                 PermissionNotice(micWanted, mic, R.string.voxera_prejoin_mic_denied, R.string.voxera_prejoin_mic_blocked, context)
                 if (video) PermissionNotice(cameraWanted, camera, R.string.voxera_prejoin_camera_denied, R.string.voxera_prejoin_camera_blocked, context)
 
@@ -250,7 +258,7 @@ public fun VoxeraPrejoinScreen(
                     stringResource(R.string.voxera_prejoin_join),
                     onClick = ::join,
                     icon = if (video) VoxeraIcons.Videocam else VoxeraIcons.Call,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().enterOnAppear(3),
                 )
             }
         }

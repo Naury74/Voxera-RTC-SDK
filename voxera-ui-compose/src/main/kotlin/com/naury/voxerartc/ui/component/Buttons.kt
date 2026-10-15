@@ -2,6 +2,26 @@ package com.naury.voxerartc.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
@@ -125,12 +145,34 @@ public fun CallControlButton(
         haptics.performHapticFeedback(if (danger) HapticFeedbackType.Confirm else HapticFeedbackType.ContextClick)
         onClick()
     }
-    val (container, tint) = when {
+    val (containerTarget, tintTarget) = when {
         danger -> colors.danger to colors.onDanger
         accent -> colors.primary to colors.onPrimary
         active -> colors.foreground.copy(alpha = 0.92f) to colors.canvas
         else -> colors.foreground.copy(alpha = if (colors.isDark) 0.14f else 0.08f) to colors.foreground
     }
+    // 켜짐/꺼짐이 바뀌면 색이 부드럽게 넘어가고 원이 한 번 통 튄다.
+    val container by animateColorAsState(containerTarget, tween(220), label = "container")
+    val tint by animateColorAsState(tintTarget, tween(220), label = "tint")
+    val reduced = rememberReducedMotion()
+    val bounce = remember { Animatable(1f) }
+    val seen = remember { mutableStateOf(false) }
+    LaunchedEffect(active) {
+        // 처음 그릴 때는 튀지 않는다. 사용자가 바꾼 뒤부터.
+        if (!seen.value) {
+            seen.value = true
+            return@LaunchedEffect
+        }
+        if (reduced) return@LaunchedEffect
+        bounce.snapTo(0.86f)
+        bounce.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMedium))
+    }
+    // 진행 중이면 테두리가 맥박처럼 옅어졌다 진해진다.
+    val pulse = if (pending && !reduced) {
+        val transition = rememberInfiniteTransition(label = "pending")
+        val value by transition.animateFloat(0.35f, 1f, infiniteRepeatable(tween(600), RepeatMode.Reverse), label = "pulse")
+        value
+    } else 1f
     Column(
         modifier = modifier
             .width(circleSize.coerceAtLeast(48.dp) + 8.dp)
@@ -152,14 +194,27 @@ public fun CallControlButton(
         Box(
             modifier = Modifier
                 .pressScale(interaction, pressed = 0.9f)
+                .graphicsLayer {
+                    scaleX = bounce.value
+                    scaleY = bounce.value
+                }
                 .size(circleSize.coerceAtLeast(48.dp))
                 .clip(CircleShape)
                 .background(container)
-                .then(if (pending) Modifier.border(2.dp, colors.secondary, CircleShape) else Modifier)
+                .then(if (pending) Modifier.border(2.dp, colors.secondary.copy(alpha = pulse), CircleShape) else Modifier)
                 .indication(interaction, LocalIndication.current),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp).alpha(if (pending) 0.6f else 1f))
+            // 아이콘이 바뀌면(마이크 ↔ 마이크 꺼짐) 작아지며 사라지고 새 아이콘이 커지며 나온다.
+            AnimatedContent(
+                targetState = icon,
+                transitionSpec = {
+                    (scaleIn(tween(180), initialScale = 0.6f) + fadeIn(tween(180))) togetherWith (scaleOut(tween(120), targetScale = 0.6f) + fadeOut(tween(120)))
+                },
+                label = "icon",
+            ) { shown ->
+                Icon(shown, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp).alpha(if (pending) 0.6f else 1f))
+            }
         }
         // 막대 폭은 고정이라 이름표 글꼴만 최대 1.3배까지 키운다. 전체 이름은 contentDescription으로 읽힌다.
         val fontScale = LocalDensity.current.fontScale
