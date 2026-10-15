@@ -20,5 +20,5 @@ public enum class Reaction(public val wireName: String) {
     }
 }
 
-/** 받은(또는 내가 보낸) 반응 하나. [atMs]는 [VoxeraSession] 시계 기준이다. */
+/** 받은(또는 내가 보낸) 반응 하나. [atMs]는 `VoxeraSession` 시계 기준이다. */
 public data class ReactionEvent(val participantId: String, val reaction: Reaction, val atMs: Long)

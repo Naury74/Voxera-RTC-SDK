@@ -24,7 +24,7 @@ public enum class ConnectionQuality { EXCELLENT, GOOD, POOR, LOST, UNKNOWN }
  * @property audioLevel 0.0~1.0. 엔진이 주지 않으면 0이다.
  * @property camera 카메라가 켜져 있고 구독할 수 있을 때만 값이 있다. `null`이면 아바타를 보여 준다.
  * @property screenShare 화면 공유 중일 때만 값이 있다.
- * @property handRaisedAtMs 손을 든 시각([VoxeraSession] 시계 기준). 손을 들지 않았으면 `null`. 먼저 든 사람부터 보여 줄 때 쓴다.
+ * @property handRaisedAtMs 손을 든 시각(`VoxeraSession` 시계 기준). 손을 들지 않았으면 `null`. 먼저 든 사람부터 보여 줄 때 쓴다.
  */
 public data class Participant(
     val id: String,

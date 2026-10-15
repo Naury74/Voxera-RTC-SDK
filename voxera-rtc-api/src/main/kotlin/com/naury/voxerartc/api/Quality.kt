@@ -3,7 +3,7 @@ package com.naury.voxerartc.api
 /** 측정 방향. 송신과 수신을 섞지 않는다. */
 public enum class MetricDirection { SEND, RECEIVE, NONE }
 
-/** 측정 항목. 단위는 [unit]으로 함께 준다. */
+/** 측정 항목. 단위는 [QualityMetric.unit]으로 함께 준다. */
 public enum class MetricKind {
     ROUND_TRIP_TIME,
     JITTER,

@@ -7,7 +7,7 @@ package com.naury.voxerartc.api
  * 로그에도 남기지 않는다.
  *
  * @property id 보낸 쪽이 만든 메시지 ID. 같은 메시지가 두 번 도착하면 이 값으로 걸러 낸다.
- * @property atMs 받은(보낸) 시각. [VoxeraSession] 시계 기준이다.
+ * @property atMs 받은(보낸) 시각. `VoxeraSession` 시계 기준이다.
  */
 public data class ChatMessage(
     val id: String,
