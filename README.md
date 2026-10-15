@@ -87,7 +87,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-004 | Fake RTC Engine | 완료 | 1/3/8명 원격 참가자 시뮬레이션 테스트 |
 | VOX-005 | 오프라인 쇼케이스 | 완료 | 에뮬레이터(API 36, 폴더블)에서 시나리오 5개 직접 확인 |
 | VOX-006 | 자격 증명·URL 검사 | 완료 | JVM 단위 테스트 |
-| VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 무채색 단색 바탕에 외곽선·테두리 반사광, 캡슐 버튼, 선택 알약, 스위치로 정리. 대비 테스트 통과. API 26~36 에뮬레이터와 Fold7에서 확인 |
+| VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 완료 | 화면 색은 모두 토큰. 배경 흐림 대신 반투명 단색과 외곽선을 쓰며 API 26~36 에뮬레이터와 Fold7에서 같은 모습. 대비 테스트 통과 |
 | VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터와 로컬 LiveKit으로 실통화 |
 | VOX-010 | BYO 설정(개발 토큰 서버, 기존 토큰, endpoint) | 부분 | 기존 토큰과 endpoint는 로컬 서버와 LiveKit Cloud(wss, release 빌드 포함)로 확인. 개발 토큰 서버(Sandbox)는 확인 안 함 |
 | VOX-011 | 입장 전 화면(권한, 카메라 미리보기) | 완료 | 거부, 영구 거부, 설정에서 돌아오기를 에뮬레이터에서 확인. 마이크 레벨 막대는 Fold7에서 확인 |
@@ -99,7 +99,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-020 | 품질 진단(실제 통계) | 완료 | 샘플러 JVM 테스트, 실통화에서 값 표시 확인 |
 | VOX-018 | 화면 공유 | 완료 | 에뮬레이터 실통화에서 시작, 승인 취소, 시스템에서 중지 확인 |
 | VOX-021 | 진단 리포트(로컬 JSON) | 완료 | 민감한 값이 빠지는지 JVM 테스트, 실제 저장된 파일 확인 |
-| VOX-017 | 카메라 색 효과(밝기, 대비, 채도) | 부분 | 에뮬레이터에서 게시, 적용, 폴백 확인. Fold7에서 프레임당 5.0~7.8ms(예산 15ms) |
+| VOX-017 | 카메라 색 효과(밝기, 대비, 채도) | 완료 | 효과 켜기·끄기, 성능·발열 시 원본으로 폴백, 처리 시간 지표. Fold7에서 프레임당 5.0~7.8ms(예산 15ms). 배경 흐림은 v1.1 범위 |
 | VOX-026 | 접근성, 작은 화면, 큰 글꼴 | 부분 | 320dp·글꼴 200% 테스트와 에뮬레이터 확인, TalkBack 읽기 순서 지정. TalkBack을 켜고 직접 써 보지는 않음 |
 | VOX-028 | 배포 리허설 | 부분 | 로컬 Maven과 `samples/consumer`로 확인, POM에 Apache 2.0 라이선스. Maven Central 게시는 안 함 |
 | VOX-027 | 기기·API 매트릭스 | 완료 | 에뮬레이터 API 26·30·31·33·34·35·36과 Fold7(API 36)에서 PiP, 종료 화면, 실통화, 통화 서비스 확인. 크래시 없음 |
