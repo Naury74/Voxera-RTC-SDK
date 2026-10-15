@@ -212,7 +212,8 @@ private fun AcceptPulse(modifier: Modifier) {
 private fun RingingActions(ringing: CallState.Ringing, onAccept: () -> Unit, onDecline: () -> Unit, onCancel: () -> Unit) {
     val call = ringing.call
     if (ringing.direction == CallDirection.INCOMING) {
-        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2), modifier = Modifier.enterOnAppear(4, scale = true)) {
+        // 수락 고리가 버튼 밖으로 퍼지므로, 스크롤 영역에 잘리지 않게 둘레를 비워 둔다.
+        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxl * 2), modifier = Modifier.enterOnAppear(4, scale = true).padding(28.dp)) {
             CallControlButton(icon = VoxeraIcons.CallEnd, label = stringResource(R.string.voxera_call_decline), danger = true, onClick = onDecline, circleSize = 72.dp)
             // 수락 버튼 뒤로 고리가 맥박처럼 퍼져 누를 곳을 알려 준다.
             Box(contentAlignment = Alignment.TopCenter) {
