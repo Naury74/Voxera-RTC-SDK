@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voxera_demo_badge">데모</string>
-    <string name="voxera_demo_notice">시뮬레이션 · 실제 통화가 아닙니다</string>
+    <string name="voxera_demo_notice">실제 통화가 아닌 시뮬레이션입니다</string>
 
     <string name="voxera_state_preparing">준비 중…</string>
     <string name="voxera_state_connecting">연결 중…</string>
     <string name="voxera_state_reconnecting">다시 연결하는 중…</string>
     <string name="voxera_state_ending">통화를 끝내는 중…</string>
     <string name="voxera_reconnecting_hint">네트워크가 돌아오면 통화가 이어집니다.</string>
-    <string name="voxera_waiting_others">다른 참가자를 기다리는 중</string>
+    <string name="voxera_waiting_others">다른 사람이 들어오기를 기다리는 중</string>
     <plurals name="voxera_participant_count">
         <item quantity="other">참가자 %d명</item>
     </plurals>
@@ -43,22 +43,22 @@
     <string name="voxera_dropped_title">통화가 끊겼습니다</string>
     <string name="voxera_error_code">코드 %1$s</string>
     <string name="voxera_error_config">서버 정보를 확인하고 다시 시도하세요.</string>
-    <string name="voxera_error_config_insecure">이 앱은 암호화되지 않은(ws://) 서버를 허용하지 않습니다. wss:// 주소를 쓰세요.</string>
+    <string name="voxera_error_config_insecure">이 앱에서는 암호화되지 않은 ws:// 서버에 연결할 수 없습니다. wss:// 주소를 입력하세요.</string>
     <string name="voxera_error_config_token_source">토큰 서버가 요청을 거절했습니다. 토큰 서버 ID나 주소를 확인하세요.</string>
     <string name="voxera_error_permission_mic">설정에서 마이크 권한을 허용하세요.</string>
     <string name="voxera_error_permission_camera">설정에서 카메라 권한을 허용하세요.</string>
-    <string name="voxera_error_auth_expired">서버가 접근 토큰을 거부했거나 토큰이 만료되었습니다. 새 토큰으로 다시 시도하세요.</string>
-    <string name="voxera_error_host_unauthorized">앱에 다시 로그인하세요.</string>
+    <string name="voxera_error_auth_expired">토큰이 만료됐거나 서버가 토큰을 받아 주지 않았습니다. 새 토큰으로 다시 시도하세요.</string>
+    <string name="voxera_error_host_unauthorized">다시 로그인해 주세요.</string>
     <string name="voxera_error_unreachable">서버에 연결할 수 없습니다. 주소와 네트워크를 확인하세요.</string>
     <string name="voxera_error_incompatible">LiveKit 호환 서버가 아닙니다.</string>
-    <string name="voxera_error_network">네트워크가 없거나 다시 연결하는 데 너무 오래 걸렸습니다.</string>
-    <string name="voxera_error_device">마이크나 카메라를 쓸 수 없거나 다른 앱이 사용 중입니다.</string>
-    <string name="voxera_error_concurrent">이미 다른 통화가 진행 중입니다.</string>
+    <string name="voxera_error_network">네트워크에 연결되어 있지 않거나 재연결이 너무 오래 걸렸습니다.</string>
+    <string name="voxera_error_device">마이크나 카메라를 쓸 수 없습니다. 다른 앱에서 사용 중인지 확인하세요.</string>
+    <string name="voxera_error_concurrent">이미 다른 통화 중입니다.</string>
     <string name="voxera_error_not_connected">아직 통화가 연결되지 않았습니다.</string>
     <string name="voxera_error_cancelled">입장을 취소했습니다.</string>
     <string name="voxera_error_remote_ended">상대방이 통화를 끝냈습니다.</string>
-    <string name="voxera_error_duplicate_identity">같은 identity로 다른 기기에서 입장했습니다.</string>
-    <string name="voxera_error_internal">문제가 발생했습니다.</string>
+    <string name="voxera_error_duplicate_identity">다른 기기에서 같은 identity로 입장했습니다.</string>
+    <string name="voxera_error_internal">알 수 없는 문제가 생겼습니다.</string>
 
     <string name="voxera_routes_title">오디오 출력</string>
     <string name="voxera_route_earpiece">휴대전화</string>
@@ -71,9 +71,9 @@
     <string name="voxera_route_unavailable">지금 사용할 수 없음</string>
 
     <string name="voxera_stats_title">통화 품질</string>
-    <string name="voxera_stats_simulated">시뮬레이션 값 · 데모 전용</string>
+    <string name="voxera_stats_simulated">데모용 시뮬레이션 값</string>
     <string name="voxera_stats_waiting">첫 측정값을 기다리는 중…</string>
-    <string name="voxera_stats_rtt_note">RTT는 네트워크 왕복 시간이며 귀로 느끼는 지연과 다릅니다.</string>
+    <string name="voxera_stats_rtt_note">RTT는 네트워크 왕복 시간이라 실제로 귀로 느끼는 지연과는 다릅니다.</string>
     <string name="voxera_metric_rtt">왕복 지연(RTT)</string>
     <string name="voxera_metric_jitter">지터(수신)</string>
     <string name="voxera_metric_loss">패킷 손실(수신)</string>
@@ -94,9 +94,9 @@
         <item quantity="other">+%1$d명 더</item>
     </plurals>
 
-    <string name="voxera_call_incoming_voice">음성 통화 수신</string>
-    <string name="voxera_call_incoming_video">영상 통화 수신</string>
-    <string name="voxera_call_outgoing">거는 중…</string>
+    <string name="voxera_call_incoming_voice">걸려 온 음성 통화</string>
+    <string name="voxera_call_incoming_video">걸려 온 영상 통화</string>
+    <string name="voxera_call_outgoing">전화 거는 중…</string>
     <string name="voxera_call_dialing">통화를 시작하는 중…</string>
     <string name="voxera_call_accept">수락</string>
     <string name="voxera_call_decline">거절</string>
@@ -106,10 +106,10 @@
     </plurals>
     <string name="voxera_call_ended">통화 종료</string>
     <string name="voxera_call_end_completed">통화가 끝났습니다.</string>
-    <string name="voxera_call_end_declined">통화가 거절되었습니다.</string>
-    <string name="voxera_call_end_missed">부재중 전화입니다.</string>
+    <string name="voxera_call_end_declined">통화가 거절됐습니다.</string>
+    <string name="voxera_call_end_missed">부재중 통화입니다.</string>
     <string name="voxera_call_end_busy">상대방이 다른 통화 중입니다.</string>
-    <string name="voxera_call_end_cancelled">통화가 취소되었습니다.</string>
+    <string name="voxera_call_end_cancelled">통화가 취소됐습니다.</string>
     <string name="voxera_call_end_expired">상대방이 받지 않았습니다.</string>
     <string name="voxera_call_end_elsewhere">다른 기기에서 받았습니다.</string>
     <string name="voxera_call_end_failed">통화를 연결하지 못했습니다.</string>
@@ -127,9 +127,9 @@
     <string name="voxera_prejoin_open_settings">설정 열기</string>
 
     <string name="voxera_control_share">공유</string>
-    <string name="voxera_share_active">화면을 공유하는 중입니다. 알림을 포함해 화면의 모든 내용이 보입니다.</string>
+    <string name="voxera_share_active">화면 공유 중입니다. 알림을 포함해 화면에 뜨는 모든 내용이 상대방에게 보입니다.</string>
     <string name="voxera_share_stop">공유 중지</string>
-    <string name="voxera_share_label">%1$s의 화면</string>
+    <string name="voxera_share_label">%1$s 님의 화면</string>
 
     <string name="voxera_control_effects">효과</string>
     <string name="voxera_effects_title">카메라 효과</string>
@@ -139,8 +139,8 @@
     <string name="voxera_effect_soft">부드럽게</string>
     <string name="voxera_effect_mono">흑백</string>
     <string name="voxera_effects_unsupported">여기서는 카메라 효과를 쓸 수 없습니다.</string>
-    <string name="voxera_effects_throttled">기기가 처리 속도를 따라가지 못해 효과를 껐습니다. 통화는 원본 영상으로 계속됩니다.</string>
-    <string name="voxera_effects_note">상대에게 보내는 영상과 내 미리보기에 적용됩니다. 처리를 위해 영상을 업로드하지 않습니다.</string>
+    <string name="voxera_effects_throttled">기기가 효과 처리를 따라가지 못해 효과를 껐습니다. 통화는 원본 영상으로 이어집니다.</string>
+    <string name="voxera_effects_note">내 미리보기와 상대방에게 가는 영상에 함께 적용됩니다. 효과를 입히려고 영상을 따로 업로드하지는 않습니다.</string>
     <string name="voxera_tile_pinned">고정됨</string>
     <string name="voxera_weak_connection">연결 약함</string>
     <string name="voxera_tile_swap">화면 바꾸기</string>
@@ -154,14 +154,14 @@
     <string name="voxera_status_poor">연결이 불안정합니다</string>
     <string name="voxera_notice_joined">%1$s 님이 들어왔습니다</string>
     <string name="voxera_notice_left">%1$s 님이 나갔습니다</string>
-    <string name="voxera_control_pip">PIP 창으로 보기</string>
+    <string name="voxera_control_pip">작은 창으로 보기</string>
     <string name="voxera_stats_health">통화 상태</string>
     <string name="voxera_effects_camera_off">카메라를 켜면 효과를 고를 수 있습니다.</string>
-    <string name="voxera_prejoin_level_heard">마이크에 소리가 들어옵니다</string>
-    <string name="voxera_prejoin_level_quiet">마이크가 켜져 있습니다. 말해서 확인해 보세요.</string>
+    <string name="voxera_prejoin_level_heard">마이크에 소리가 잘 들어옵니다</string>
+    <string name="voxera_prejoin_level_quiet">마이크가 켜져 있습니다. 말을 해서 확인해 보세요.</string>
     <string name="voxera_prejoin_level_unavailable">지금은 마이크 소리 크기를 읽을 수 없습니다.</string>
     <string name="voxera_interrupted_title">다른 통화가 오디오를 쓰고 있습니다</string>
-    <string name="voxera_interrupted_body">그 통화가 끝날 때까지 상대에게 내 소리가 가지 않습니다.</string>
+    <string name="voxera_interrupted_body">그 통화가 끝날 때까지 상대방에게 내 목소리가 들리지 않습니다.</string>
     <string name="voxera_control_react">반응</string>
     <string name="voxera_reactions_title">반응 보내기</string>
     <string name="voxera_reaction_thumbs_up">좋아요</string>
@@ -171,7 +171,7 @@
     <string name="voxera_reaction_surprised">놀람</string>
     <string name="voxera_reaction_celebrate">축하</string>
     <string name="voxera_tile_spotlight">크게 보기</string>
-    <string name="voxera_tile_toggle_controls">조작 보이기·숨기기</string>
+    <string name="voxera_tile_toggle_controls">조작 버튼 보이기/숨기기</string>
     <string name="voxera_view_speaker">발표자 보기</string>
     <string name="voxera_view_gallery">갤러리 보기</string>
 </resources>

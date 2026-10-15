@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voxera_demo_badge">DEMO</string>
-    <string name="voxera_demo_notice">Simulated call · not a real connection</string>
+    <string name="voxera_demo_notice">This is a simulated call, not a real connection</string>
 
     <string name="voxera_state_preparing">Getting ready…</string>
     <string name="voxera_state_connecting">Connecting…</string>
@@ -72,7 +72,7 @@
     <string name="voxera_route_unavailable">Not available now</string>
 
     <string name="voxera_stats_title">Call quality</string>
-    <string name="voxera_stats_simulated">Simulated values · demo only</string>
+    <string name="voxera_stats_simulated">Simulated values for the demo</string>
     <string name="voxera_stats_waiting">Waiting for the first sample…</string>
     <string name="voxera_stats_rtt_note">RTT is the network round trip, not the delay you hear.</string>
     <string name="voxera_metric_rtt">Round-trip time</string>
@@ -132,7 +132,7 @@
     <string name="voxera_control_share">Share</string>
     <string name="voxera_share_active">You\'re sharing your screen. Everything on it is visible, including notifications.</string>
     <string name="voxera_share_stop">Stop sharing</string>
-    <string name="voxera_share_label">%1$s · screen</string>
+    <string name="voxera_share_label">%1$s\'s screen</string>
 
     <string name="voxera_control_effects">Effects</string>
     <string name="voxera_effects_title">Camera effects</string>
@@ -164,7 +164,7 @@
     <string name="voxera_prejoin_level_quiet">Microphone is on. Say something to test it.</string>
     <string name="voxera_prejoin_level_unavailable">Can\'t read the microphone level right now.</string>
     <string name="voxera_interrupted_title">Another call is using the audio</string>
-    <string name="voxera_interrupted_body">Others can\'t hear you until that call ends.</string>
+    <string name="voxera_interrupted_body">Nobody can hear you until that call ends.</string>
     <string name="voxera_control_react">React</string>
     <string name="voxera_reactions_title">Send a reaction</string>
     <string name="voxera_reaction_thumbs_up">Thumbs up</string>

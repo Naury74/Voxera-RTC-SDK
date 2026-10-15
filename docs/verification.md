@@ -1,11 +1,11 @@
 # 수동 검증 기록
 
-형식: Date / Device / API / Revision / Environment / Scenario / Expected / Actual / Result.
-실제 2기기 통화가 아니라 **에뮬레이터 1대 + LiveKit CLI 봇**으로 확인한 결과다. 실기기 2대 통화는 아직 하지 않았다.
+항목: Date / Device / API / Revision / Environment / Scenario / Expected / Actual / Result.
+첫 표는 에뮬레이터 한 대와 LiveKit CLI 봇으로 확인한 결과다. 실기기 두 대 사이의 통화는 아직 해 보지 않았다.
 
 공통 환경: 2026-10-14, Android Emulator `voxera_phone`(Pixel 8, API 36, en-US), 로컬 `livekit-server 1.13.10 --dev`
 (127.0.0.1:7880, 개발 기본 키), 상대 참가자 `lk room join --publish-demo`(LiveKit CLI 2.19.0, 데모 영상만 게시),
-연결 방식 "기존 토큰" + 로컬 개발 서버 허용(`ws://10.0.2.2:7880`). Revision은 각 항목의 커밋.
+연결 방식은 "기존 토큰"에 로컬 개발 서버 허용(`ws://10.0.2.2:7880`). Revision은 항목마다 괄호 안의 커밋이다.
 
 | Scenario | Expected | Actual | Result |
 | --- | --- | --- | --- |
@@ -69,7 +69,7 @@
 
 ## 실기기 Galaxy Z Fold7 — 2026-10-15 오전, 새 무대·PiP·알림
 
-로컬 livekit-server + `lk room join --publish-demo` 봇 두 개(bot-demo, bot-two)와 Fold7(접은 상태, 실카메라)로 3인 통화.
+로컬 livekit-server에 `lk room join --publish-demo` 봇 두 개(bot-demo, bot-two)와 Fold7(접은 상태, 실카메라)을 붙여 3인 통화로 확인했다.
 
 | Scenario | Expected | Actual | Result |
 | --- | --- | --- | --- |
@@ -94,12 +94,16 @@
 | 수락 버튼 고리 (63f8f4f) | 같음 | 가장 크게 퍼진 순간까지 둥글게 보임 | Pass |
 | 실통화 카메라 끄기·켜기 | 서버 muted 바뀜, 내 화면은 아바타 ↔ 영상 | CAMERA muted true → false, 작은 화면 아바타 → 영상 | Pass |
 | 실통화 반응 보내기 | 떠오르는 하트, 상대가 받음 | 하트와 "나" 이름표, 봇이 데이터 받음 | Pass |
+| 펼친 안쪽 화면(1968×2184, 약 750dp 폭) 홈 | 가운데 정렬, 너비 제한 | 560dp 폭으로 가운데 | Pass |
+| 펼친 화면 4인·9인 격자 | 조작 8개가 막대에 다 들어감, 격자 꽉 참 | 더보기 없이 8개, 3×3 | Pass |
+| 펼친 화면 크게 보기 | 큰 타일 + 아래 줄, 넘치면 +N | 작은 줄 5칸 + "+3명 더" | Pass |
+| 펼친 화면 1:1·수신 | 내 화면 160dp, 버튼 잘림 없음 | 정상 | Pass |
 | 통화 알림 종료 버튼 | 펼친 알림의 "전화 끊기"로 종료 | 경과 시간 표시, 누르자 종료·서비스 정리·서버에서 퇴장 | Pass |
 | 음성 그룹 격자 (6bd1526 이전) | 마지막 줄 가운데 | 왼쪽으로 쏠림 | Fail → 수정 |
 
 ## 에뮬레이터 voxera_verify (API 36) — 2026-10-15, 새 통화 화면·PiP
 
-데모(가짜 엔진)와 로컬 livekit-server + `lk room join --publish-demo` 봇으로 확인했다.
+데모(가짜 엔진)와, 로컬 livekit-server에 `lk room join --publish-demo` 봇을 붙인 실통화로 확인했다.
 
 | Scenario | Expected | Actual | Result |
 | --- | --- | --- | --- |
@@ -124,7 +128,7 @@
 | 가로 모드 수신·음성·그룹·1:1 | 잘림·겹침 없음 | 정상 | Pass |
 | 입장 전 마이크 레벨 | 말하면 막대가 참 | 에뮬레이터 입력이 모두 0(호스트 마이크가 들어오지 않음) | NOT RUN |
 
-PiP·근접 화면 끄기·마이크 레벨은 아래 Fold7 표에서 확인했다. 발열 때 효과 끄기(E31)는 열 상태를 바꿀 방법이 없어 단위 테스트만 했다.
+실기기 PiP, 근접 화면 끄기, 마이크 레벨은 위 Fold7 표에서 확인했다. 발열 때 효과 끄기(E31)는 열 상태를 바꿀 방법이 없어 단위 테스트만 했다.
 
 ## API 26 (minSdk) — 2026-10-14, AVD `voxera_api26`(Pixel, API 26, google_apis arm64)
 
@@ -141,4 +145,4 @@ API 30·31·33·34·35 기기는 아직 확인하지 않았다. API 26에서 유
 ## 아직 확인하지 않은 것
 
 사람 귀로 듣는 음성 품질(실기기 2대), LiveKit Cloud(wss)와 개발 토큰 서버(Sandbox) 방식, release 빌드의 실통화(wss 필요),
-유선 이어폰 전환, 펼친 화면(Fold7 안쪽), 실기기 PiP, 실제 발열 상황, 와이파이↔LTE 전환, API 26/30 기기, TalkBack, 장시간 통화, 실제 호스트 서버·푸시로 하는 Call Mode.
+유선 이어폰 전환, 실제 발열 상황, 와이파이↔LTE 전환, API 26/30 기기, TalkBack, 장시간 통화, 실제 호스트 서버·푸시로 하는 Call Mode.
