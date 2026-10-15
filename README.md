@@ -15,9 +15,9 @@ Voxera는 Android 앱에 음성·영상 통화를 화면째로 붙이는 RTC SDK
 <table>
   <tr>
     <td align="center" width="25%"><img src="docs/images/showcase-home.png" width="200" alt="홈"><br><b>홈</b><br>오프라인 쇼케이스</td>
-    <td align="center" width="25%"><img src="docs/images/showcase-voice.png" width="200" alt="1:1 음성"><br><b>1:1 음성</b><br>발화 고리·통화 시간</td>
-    <td align="center" width="25%"><img src="docs/images/showcase-group9-dark.png" width="200" alt="9인 그룹"><br><b>9인 그룹 (다크)</b><br>3×3 격자·발화자 강조</td>
-    <td align="center" width="25%"><img src="docs/images/showcase-quality.png" width="200" alt="통화 품질"><br><b>통화 품질</b><br>송신과 수신을 따로, 값 없으면 N/A</td>
+    <td align="center" width="25%"><img src="docs/images/showcase-voice.png" width="200" alt="1:1 음성"><br><b>1:1 음성</b><br>말할 때 퍼지는 물결, 연결 상태</td>
+    <td align="center" width="25%"><img src="docs/images/showcase-group9-dark.png" width="200" alt="9인 그룹 크게 보기"><br><b>9인 그룹 (다크)</b><br>누른 사람 크게 보기</td>
+    <td align="center" width="25%"><img src="docs/images/showcase-quality.png" width="200" alt="통화 품질"><br><b>통화 품질</b><br>상태 요약과 추이 그래프</td>
   </tr>
 </table>
 
