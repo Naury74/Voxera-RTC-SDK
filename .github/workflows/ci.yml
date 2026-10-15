@@ -27,6 +27,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: 테스트·lint·API 검사·빌드
         run: ./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease --stacktrace
+      - name: API 문서 만들기
+        run: ./gradlew :dokkaGenerate
+      - name: API 문서 올리기
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: build/dokka/html
+          retention-days: 14
       - name: 실패 보고서 올리기
         if: failure()
         uses: actions/upload-artifact@v4
