@@ -114,8 +114,10 @@ JDK는 Android Studio에 들어 있는 JBR을 씁니다.
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew test lint :app:assembleDebug :app:assembleRelease
+./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease
 ```
+
+`apiCheck`는 공개 API가 `api/*.api` 목록과 다르면 실패합니다. 의도한 변경이면 `./gradlew apiDump`로 목록을 갱신해 같이 커밋합니다. 지금은 Kotlin JVM 모듈(rtc-api, core, invitation, testkit)만 검사합니다. Android 모듈은 AGP 9의 내장 Kotlin을 검사 도구가 아직 알아보지 못합니다. GitHub Actions(`.github/workflows/ci.yml`)도 같은 명령을 돌립니다.
 
 AGP 9.4.1, Kotlin 2.4.20, compileSdk/targetSdk 37, minSdk 26. 의존성 버전은 `gradle/libs.versions.toml` 한 곳에서만 바꿉니다.
 

@@ -1,0 +1,36 @@
+# 푸시와 PR마다 단위 테스트, lint, 공개 API 검사, debug·release 빌드를 돌린다.
+# 실통화·기기 확인은 사람이 하고 결과를 docs/verification.md에 남긴다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: 테스트·lint·API 검사·빌드
+        run: ./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease --stacktrace
+      - name: 실패 보고서 올리기
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: "**/build/reports/"
+          retention-days: 7
