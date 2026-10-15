@@ -13,6 +13,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
@@ -66,9 +74,30 @@ class MainActivity : ComponentActivity() {
             // 진행 중 통화 알림용(Android 13+). 실제 통화에 들어갈 때 한 번 묻는다.
             val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-            val call = active
-            when {
-                call != null -> {
+            val screen = when {
+                active != null -> Screen.CALL
+                showPrejoin -> Screen.PREJOIN
+                showSetup -> Screen.SETUP
+                else -> Screen.HOME
+            }
+            // 앞으로 가면 오른쪽에서 들어오고, 뒤로 가면 왼쪽에서 돌아온다. 통화는 아래에서 떠오른다.
+            AnimatedContent(
+                targetState = screen,
+                transitionSpec = {
+                    val forward = targetState.ordinal > initialState.ordinal
+                    val enter = if (targetState == Screen.CALL) {
+                        fadeIn(tween(260)) + slideInVertically(tween(320)) { it / 12 }
+                    } else {
+                        fadeIn(tween(240)) + slideInHorizontally(tween(320)) { if (forward) it / 5 else -it / 5 }
+                    }
+                    val exit = fadeOut(tween(180)) + slideOutHorizontally(tween(320)) { if (forward) -it / 8 else it / 8 }
+                    enter togetherWith exit
+                },
+                label = "screen",
+            ) { target ->
+            when (target) {
+                Screen.CALL -> {
+                    val call = active ?: return@AnimatedContent
                     BackHandler(onBack = viewModel::exit)
                     val renderer = if (call.session.engineKind == RtcEngineKind.LIVE) viewModel.liveVideoRenderer else null
                     val coordinator = call.coordinator
@@ -118,7 +147,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                showPrejoin -> {
+                Screen.PREJOIN -> {
                     BackHandler { showPrejoin = false }
                     // 권한은 이 화면에서 마이크·카메라를 켜거나 입장할 때만 묻는다. 거부해도 해당 미디어 없이 입장한다.
                     VoxeraPrejoinScreen(
@@ -136,7 +165,7 @@ class MainActivity : ComponentActivity() {
                         preview = { modifier -> LiveKitCameraPreviewContent(modifier) },
                     )
                 }
-                showSetup -> {
+                Screen.SETUP -> {
                     BackHandler { showSetup = false }
                     ConnectScreen(
                         theme = theme,
@@ -146,7 +175,7 @@ class MainActivity : ComponentActivity() {
                         onConnect = { showPrejoin = true },
                     )
                 }
-                else -> HomeScreen(
+                Screen.HOME -> HomeScreen(
                     theme = theme,
                     onThemeChange = { themeMode = it },
                     onStart = viewModel::startDemo,
@@ -154,6 +183,10 @@ class MainActivity : ComponentActivity() {
                     onConnectLiveKit = { showSetup = true },
                 )
             }
+            }
         }
     }
 }
+
+/** 쇼케이스 화면. 순서는 앞으로 가는 방향이다(전환 방향을 정한다). */
+private enum class Screen { HOME, SETUP, PREJOIN, CALL }
