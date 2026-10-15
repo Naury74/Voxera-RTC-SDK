@@ -89,7 +89,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-006 | 자격 증명·URL 검사 | 완료 | JVM 단위 테스트 |
 | VOX-UI-001~003 | Glass 토큰·유리 표면·불투명 폴백 | 부분 | 무채색 단색 바탕에 외곽선·테두리 반사광, 캡슐 버튼, 선택 알약, 스위치로 정리. 대비 테스트 통과. API 26~36 에뮬레이터와 Fold7에서 확인 |
 | VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터와 로컬 LiveKit으로 실통화 |
-| VOX-010 | BYO 설정(개발 토큰 서버, 기존 토큰, endpoint) | 부분 | 기존 토큰과 endpoint는 로컬 서버로 확인. 개발 토큰 서버(LiveKit Cloud)는 확인 안 함 |
+| VOX-010 | BYO 설정(개발 토큰 서버, 기존 토큰, endpoint) | 부분 | 기존 토큰과 endpoint는 로컬 서버와 LiveKit Cloud(wss, release 빌드 포함)로 확인. 개발 토큰 서버(Sandbox)는 확인 안 함 |
 | VOX-011 | 입장 전 화면(권한, 카메라 미리보기) | 완료 | 거부, 영구 거부, 설정에서 돌아오기를 에뮬레이터에서 확인. 마이크 레벨 막대는 Fold7에서 확인 |
 | VOX-019 | 백그라운드 통화 유지, PiP | 부분 | foreground service로 녹음 유지. PiP 자동 진입, 마이크 버튼, 복귀는 Fold7 실통화로 확인. Telecom 연동은 안 함 |
 | VOX-022~024 | Call Mode 계약, 가짜 호스트 샘플, 수신 화면 | 완료 | 경합 JVM 테스트, 데모 화면 확인. 실제 호스트 서버와 푸시는 확인 안 함 |
@@ -120,7 +120,7 @@ AGP 9.4.1, Kotlin 2.4.20, compileSdk/targetSdk 37, minSdk 26. 의존성 버전�
 
 ## 알려진 제한
 
-- 실기기 확인은 Fold7 한 대와 로컬 서버, CLI 봇으로만 했습니다. 실기기 두 대 사이의 통화, LiveKit Cloud, 유선 이어폰 전환은 아직 확인하지 않았습니다.
+- 실기기 확인은 Fold7 한 대로 했고, 상대는 로컬 서버와 LiveKit Cloud 테스트 프로젝트의 CLI 봇이었습니다. 실기기 두 대 사이의 통화와 유선 이어폰 전환은 아직 확인하지 않았습니다.
 - 배경 흐림(backdrop blur)은 없습니다. 영상 Surface 뒤를 흐리게 할 마땅한 방법이 Android에 없어서 반투명 tint와 테두리로 대신했습니다.
 - TalkBack, 글꼴 200%, 태블릿 레이아웃은 기본 semantics와 최소 터치 영역까지만 맞췄습니다. 기기별로 점검하지는 않았습니다.
 
