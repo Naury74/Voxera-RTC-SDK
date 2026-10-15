@@ -103,6 +103,8 @@ internal fun AudioRouteSheet(media: LocalMediaState, onSelect: (String) -> Unit)
     }
 }
 
+private fun AudioRouteType.isAccessory(): Boolean = this == AudioRouteType.BLUETOOTH || this == AudioRouteType.WIRED_HEADSET || this == AudioRouteType.USB
+
 @Composable
 private fun RouteRow(route: AudioRoute, selected: Boolean, onSelect: () -> Unit) {
     val colors = VoxeraTheme.colors
@@ -123,7 +125,8 @@ private fun RouteRow(route: AudioRoute, selected: Boolean, onSelect: () -> Unit)
             Text(typeLabel, color = colors.foreground, style = VoxeraTheme.typography.body)
             val detail = when {
                 !route.isSelectable -> stringResource(R.string.voxera_route_unavailable)
-                route.label != typeLabel -> route.label
+                // 내장 수화부·스피커의 이름은 시스템 영어 이름("Earpiece")이라 보여 주지 않는다. 이어폰은 기기 이름을 보여 준다.
+                route.type.isAccessory() && route.label != typeLabel -> route.label
                 else -> null
             }
             if (detail != null) Text(detail, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
