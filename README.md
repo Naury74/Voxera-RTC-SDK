@@ -3,6 +3,7 @@
 <p>
   <img src="https://img.shields.io/badge/minSdk-26-3DDC84" alt="minSdk 26">
   <img src="https://img.shields.io/badge/status-0.1.0--alpha01%20(개발%20중)-orange" alt="status">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
 </p>
 
 **Voxera**는 Android 앱에 음성·영상 통화 화면을 붙이는 UI 포함 RTC SDK입니다. 호스트 앱이 자신의 LiveKit 호환 서버 주소와
@@ -98,10 +99,10 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-021 | 진단 리포트(로컬 JSON) | 완료 | 민감 값 제외 JVM 테스트, 실제 저장 파일 확인 |
 | VOX-017 | 카메라 색 효과(밝기·대비·채도) | 부분 | 에뮬레이터에서 게시·적용·폴백 확인. Fold7에서 프레임당 5.0~7.8ms(예산 15ms) |
 | VOX-026 | 접근성·작은 화면·큰 글꼴 | 부분 | 320dp·200% 테스트와 에뮬레이터 확인, TalkBack 읽기 순서 지정. 실제 TalkBack 사용 점검은 안 함 |
-| VOX-028 | 배포 리허설 | 부분 | 로컬 Maven + `samples/consumer`. Maven Central 게시는 라이선스 결정 전이라 안 함 |
+| VOX-028 | 배포 리허설 | 부분 | 로컬 Maven + `samples/consumer`, POM에 Apache 2.0 라이선스. Maven Central 게시는 안 함 |
 | VOX-027 | 기기·API 매트릭스 | 부분 | API 26·36 에뮬레이터, Fold7(API 36) 실기기 확인. 30·31·33~35는 안 함 |
 | VOX-015 | 장치 전환 실기기 검증 | 부분 | Fold7 스피커↔휴대전화↔블루투스, 블루투스 끊김·재연결, 백그라운드 마이크 확인. 유선은 안 함 |
-| VOX-029 | 공개 문서·라이선스 | 미착수 | - |
+| VOX-029 | 공개 문서·라이선스 | 부분 | Apache 2.0(LICENSE·NOTICE·POM). 공개용 사용 설명서는 아직 |
 | 추가 | 통화 중 반응, 통화 알림(경과 시간·종료), 수화부 근접 화면 끄기, 발열·다른 통화 대응 | 부분 | 반응 전송·알림 종료·다른 통화 안내를 에뮬레이터 실통화로 확인. 반응 수신(실통화)·근접 센서는 실기기 필요 |
 
 ## 빌드
@@ -117,7 +118,10 @@ AGP 9.4.1, Kotlin 2.4.20, compileSdk/targetSdk 37, minSdk 26. 버전은 `gradle/
 
 ## 알려진 제한
 
-- 실기기 2대 통화, LiveKit Cloud, 블루투스·유선 전환은 아직 검증하지 않았습니다(에뮬레이터 + 로컬 서버 + CLI 봇만 확인).
+- 실기기 2대 통화, LiveKit Cloud, 유선 이어폰 전환은 아직 검증하지 않았습니다. 실기기는 Fold7 한 대 + 로컬 서버 + CLI 봇으로 확인했습니다.
 - 배경 흐림(backdrop blur)은 하지 않습니다. 영상 Surface 뒤를 흐리게 하는 보편적인 Android 방법이 없어 반투명 tint·테두리로 대신합니다.
 - TalkBack·글꼴 200%·태블릿 레이아웃은 기본 의미 정보와 최소 터치 영역만 반영했고 기기별 점검은 하지 않았습니다.
-- 공개 라이선스는 아직 정하지 않았습니다([NOTICE](NOTICE)).
+
+## License
+
+Apache License 2.0으로 배포됩니다. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요. 일부 아이콘은 [Material Icons](https://github.com/google/material-design-icons)를 사용합니다([NOTICE](NOTICE)).
