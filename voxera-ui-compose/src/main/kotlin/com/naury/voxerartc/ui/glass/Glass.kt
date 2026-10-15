@@ -71,8 +71,8 @@ internal fun glassFill(colors: VoxeraColors, level: GlassLevel, quality: VoxeraG
  * 옆면은 [VoxeraColors.glassStroke] 정도로 어둡게 둔다. 두께감이 생겨 얇은 판이 떠 있는 것처럼 보인다.
  */
 internal fun glassRim(colors: VoxeraColors, size: Size): Brush {
-    val bright = if (colors.isDark) Color.White.copy(alpha = 0.42f) else Color.White
-    val soft = if (colors.isDark) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.75f)
+    val bright = if (colors.isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.9f)
+    val soft = if (colors.isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.4f)
     return Brush.linearGradient(
         0f to bright,
         0.32f to colors.glassStroke,
@@ -84,7 +84,7 @@ internal fun glassRim(colors: VoxeraColors, size: Size): Brush {
 }
 
 /**
- * Voxera 유리 질감. 층 순서는 그림자 → 반투명 채움 → 위쪽 반사광 → 테두리 반사광 → 1dp 외곽선이다.
+ * Voxera 유리 질감. 층 순서는 그림자 → 반투명 단색 채움 → 1dp 외곽선 → 안쪽 테두리 반사광이다. 면 자체에는 그라디언트를 칠하지 않는다.
  *
  * 뒤 배경을 흐리게 하지 않는다. `Modifier.blur`는 대상 자체를 흐리게 하므로 쓰지 않으며, 영상 Surface 위에서는
  * 이 반투명 채움이 대체 표현이다. 불투명(OFF) 품질에서는 반사광을 그리지 않고 외곽선만 남긴다.
@@ -104,10 +104,8 @@ public fun Modifier.voxeraGlass(shape: Shape, level: GlassLevel = GlassLevel.Med
             val stroke = 1.dp.toPx()
             // 안쪽 반사광 선은 외곽선 바로 안에 그린다.
             val inner = shape.createOutline(Size(size.width - stroke * 2, size.height - stroke * 2), layoutDirection, this)
-            val sheen = Brush.verticalGradient(0f to colors.glassHighlight, 0.5f to Color.Transparent)
             val rim = glassRim(colors, size)
             onDrawWithContent {
-                if (translucent) drawRect(sheen)
                 drawContent()
                 drawOutline(outline, colors.glassStroke, style = Stroke(stroke))
                 if (translucent) translate(stroke, stroke) { drawOutline(inner, rim, style = Stroke(stroke)) }
@@ -166,47 +164,13 @@ public fun GlassPill(modifier: Modifier = Modifier, content: @Composable RowScop
 internal const val PILL_MIN_ALPHA = 0.75f
 
 /**
- * 영상이 없는 화면의 배경. [VoxeraColors.canvas] 위에 강조색 빛 번짐 세 개를 크게 깔아, 위에 올린 유리 표면이 비쳐
- * 보이게 한다. 글자 대비는 번짐이 가장 진한 곳에서도 지켜지도록 옅게 둔다.
+ * 영상이 없는 화면의 배경. [VoxeraColors.canvas] 단색이다. 위에 올린 유리 표면은 외곽선과 그림자로 떠 보인다.
  *
- * 번짐은 화면의 1/4 해상도 그림으로 한 번 그려 두고 늘려 붙인다. 커서 깜빡임처럼 위에 있는 것이 다시 그려져도
- * 그라디언트를 다시 계산하지 않으므로 정적인 화면에서 GPU 일이 계속 생기지 않는다.
- *
- * @param emphasis 0~1. 말하는 사람이 있을 때처럼 분위기를 살짝 올릴 때 쓴다. 다섯 단계로 끊어 반영한다.
+ * @param emphasis 예전 호환용. 지금은 쓰지 않는다.
  */
+@Suppress("UNUSED_PARAMETER")
 @Composable
-public fun Modifier.voxeraBackdrop(emphasis: Float = 0f): Modifier {
-    val colors = VoxeraTheme.colors
-    val strength = if (colors.isDark) 0.30f else 0.20f
-    val step = (emphasis.coerceIn(0f, 1f) * 4).roundToInt() / 4f
-    val boost = 1f + step * 0.35f
-    return this
-        .background(colors.canvas)
-        .drawWithCache {
-            val scale = 4
-            val width = (size.width / scale).toInt().coerceAtLeast(1)
-            val height = (size.height / scale).toInt().coerceAtLeast(1)
-            val image = ImageBitmap(width, height)
-            val small = Size(width.toFloat(), height.toFloat())
-            CanvasDrawScope().draw(this, layoutDirection, Canvas(image), small) {
-                fun glow(color: Color, center: Offset, radius: Float, alpha: Float) {
-                    drawCircle(
-                        Brush.radialGradient(listOf(color.copy(alpha = alpha), Color.Transparent), center = center, radius = radius),
-                        radius = radius,
-                        center = center,
-                    )
-                }
-                val w = small.width
-                val h = small.height
-                glow(colors.primary, Offset(w * 0.1f, h * 0.06f), maxOf(w, h) * 0.55f, strength * boost)
-                glow(colors.secondary, Offset(w * 1.0f, h * 0.42f), maxOf(w, h) * 0.5f, strength * 0.85f * boost)
-                glow(lerp(colors.primary, colors.secondary, 0.5f), Offset(w * 0.25f, h * 1.02f), maxOf(w, h) * 0.45f, strength * 0.6f)
-            }
-            onDrawBehind {
-                drawImage(image, dstSize = IntSize(size.width.toInt(), size.height.toInt()), filterQuality = FilterQuality.Low)
-            }
-        }
-}
+public fun Modifier.voxeraBackdrop(emphasis: Float = 0f): Modifier = this.background(VoxeraTheme.colors.canvas)
 
 /** 누르는 동안 살짝 작아졌다가 놓으면 튕기듯 돌아온다. 움직임 줄이기 설정이면 그대로 둔다. */
 @Composable

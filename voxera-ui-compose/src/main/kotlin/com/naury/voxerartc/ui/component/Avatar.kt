@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,17 +38,23 @@ internal fun initialsOf(name: String): String {
     }
 }
 
-/** 같은 id는 항상 같은 테마 색 쌍을 받는다. 화면별 색을 따로 두지 않고 의미 토큰을 섞어 쓴다. */
+/** 아바타 기본 색상(채도 낮은 여섯 색). 바탕색과 섞어 쓰므로 두 테마에서 모두 튀지 않는다. */
+private val AvatarHues = listOf(
+    Color(0xFF5B8DEF), // 파랑
+    Color(0xFF2FB5A0), // 청록
+    Color(0xFFE0A33B), // 호박
+    Color(0xFFD9667A), // 장미
+    Color(0xFF9B7BE0), // 보라
+    Color(0xFF6DB46A), // 초록
+)
+
+/**
+ * 같은 id는 항상 같은 색 쌍(채움, 강조)을 받는다. 채움은 기본 색을 바탕과 섞은 차분한 색이고, 강조는 기본 색 그대로다.
+ */
 internal fun avatarColors(id: String, colors: VoxeraColors): Pair<Color, Color> {
-    val palette = listOf(
-        colors.primary to colors.secondary,
-        colors.secondary to colors.primary,
-        colors.warning to colors.danger,
-        colors.secondary to colors.warning,
-        colors.primary to colors.warning,
-        colors.danger to colors.secondary,
-    )
-    return palette[abs(id.hashCode()) % palette.size]
+    val hue = AvatarHues[abs(id.hashCode()) % AvatarHues.size]
+    val fill = lerp(colors.surfaceElevated, hue, if (colors.isDark) 0.55f else 0.42f)
+    return fill to hue
 }
 
 /**
@@ -64,7 +70,7 @@ public fun VoxeraAvatar(
     audioLevel: Float = 0f,
 ) {
     val ring by animateFloatAsState(if (speaking) 0.5f + audioLevel.coerceIn(0f, 1f) * 0.5f else 0f, tween(180), label = "ring")
-    val (start, end) = avatarColors(id, VoxeraTheme.colors)
+    val (start, _) = avatarColors(id, VoxeraTheme.colors)
     val ringWidth = (size.value * 0.06f * ring).dp
     Box(
         modifier = modifier
@@ -72,7 +78,7 @@ public fun VoxeraAvatar(
             .then(if (ring > 0f) Modifier.border(ringWidth, VoxeraTheme.colors.primary, CircleShape) else Modifier)
             .padding(ringWidth + if (ring > 0f) 2.dp else 0.dp)
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(start, end))),
+            .background(start),
         contentAlignment = Alignment.Center,
     ) {
         Text(initialsOf(name), color = readableOn(start), fontSize = (size.value * 0.34f).sp, style = VoxeraTheme.typography.title)

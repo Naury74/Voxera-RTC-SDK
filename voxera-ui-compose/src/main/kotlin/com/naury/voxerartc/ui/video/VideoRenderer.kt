@@ -13,7 +13,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoSource
@@ -39,33 +38,38 @@ public val LocalVoxeraVideoRenderer: androidx.compose.runtime.ProvidableComposit
 internal val LocalSimulatedEffect = staticCompositionLocalOf { VideoEffect.None }
 
 /**
- * 오프라인 데모용 가짜 영상. 인물 이미지 없이 참가자별 색으로 천천히 움직이는 추상 화면을 그린다.
- * 실제 카메라 영상처럼 보이지 않도록 단순한 그라디언트만 쓴다. 내 영상(mirror)에는 [LocalSimulatedEffect]를 적용한다.
+ * 오프라인 데모용 가짜 영상. 인물 사진 대신 참가자별 차분한 단색 위에 사람 윤곽(머리·어깨)을 그린다.
+ * 말하는 것처럼 윤곽이 아주 조금 숨 쉬듯 움직인다. 내 영상(mirror)에는 [LocalSimulatedEffect]를 적용한다.
  */
 internal val SimulatedVideoRenderer = VoxeraVideoRenderer { track, mirror, modifier ->
     if (track.source == VideoSource.SCREEN_SHARE) {
         SimulatedScreen(modifier)
         return@VoxeraVideoRenderer
     }
-    val (start, end) = avatarColors(track.participantId, VoxeraTheme.colors)
-    val canvas = VoxeraTheme.colors.canvas
-    val phase by rememberInfiniteTransition(label = "demo-video").animateFloat(
+    val colors = VoxeraTheme.colors
+    val (fill, hue) = avatarColors(track.participantId, colors)
+    val effect = if (mirror) LocalSimulatedEffect.current else VideoEffect.None
+    val breath by rememberInfiniteTransition(label = "demo-video").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(6_000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "phase",
+        animationSpec = infiniteRepeatable(tween(3_200, easing = LinearEasing), RepeatMode.Reverse),
+        label = "breath",
     )
-    val effect = if (mirror) LocalSimulatedEffect.current else VideoEffect.None
+    val background = applyEffect(lerp(colors.canvas, fill, 0.7f), effect)
+    val figure = applyEffect(lerp(background, hue, 0.22f), effect)
     Canvas(modifier) {
-        val a = applyEffect(lerp(canvas, start, 0.55f), effect)
-        val b = applyEffect(lerp(canvas, end, 0.45f), effect)
-        drawRect(
-            Brush.linearGradient(
-                listOf(a, b),
-                start = Offset(size.width * phase, 0f),
-                end = Offset(size.width * (1f - phase), size.height),
-            ),
-        )
+        drawRect(background)
+        val unit = minOf(size.width, size.height)
+        val cx = size.width / 2f
+        val head = unit * 0.13f
+        val headY = size.height * 0.5f - unit * 0.12f - unit * 0.015f * breath
+        drawCircle(figure, radius = head, center = Offset(cx, headY))
+        // 어깨는 넓고 낮은 곡선, 그 아래 몸통은 타일 끝까지 곧게 내려 상반신처럼 보이게 한다.
+        val shoulderTop = headY + head * 1.3f
+        val shoulderW = unit * 0.66f
+        val shoulderH = unit * 0.28f
+        drawOval(figure, topLeft = Offset(cx - shoulderW / 2f, shoulderTop), size = Size(shoulderW, shoulderH))
+        drawRect(figure, topLeft = Offset(cx - shoulderW / 2f, shoulderTop + shoulderH / 2f), size = Size(shoulderW, size.height))
     }
 }
 

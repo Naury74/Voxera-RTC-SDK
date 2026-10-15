@@ -76,8 +76,6 @@ public fun VoxeraButton(
         VoxeraButtonTone.Danger -> colors.danger to colors.onDanger
         VoxeraButtonTone.Secondary -> Color.Transparent to colors.foreground
     }
-    // 채움 버튼은 위쪽을 조금 밝게 해 빛을 받는 면처럼 보이게 한다. 글자 대비는 아래쪽 원색 기준으로 지켜진다.
-    val fill = Brush.verticalGradient(listOf(lerp(container, Color.White, 0.14f), container))
     Row(
         modifier = modifier
             .pressScale(interaction)
@@ -85,7 +83,7 @@ public fun VoxeraButton(
             .alpha(if (enabled) 1f else 0.4f)
             .then(
                 if (tone == VoxeraButtonTone.Secondary) Modifier.voxeraGlass(shape, GlassLevel.Low)
-                else Modifier.shadow(6.dp, shape, ambientColor = container.copy(alpha = 0.5f), spotColor = container.copy(alpha = 0.5f)).clip(shape).background(fill)
+                else Modifier.clip(shape).background(container)
             )
             .clickable(interactionSource = interaction, indication = LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = VoxeraSpacing.lg, vertical = VoxeraSpacing.sm),
@@ -133,8 +131,6 @@ public fun CallControlButton(
         active -> colors.foreground.copy(alpha = 0.92f) to colors.canvas
         else -> colors.foreground.copy(alpha = if (colors.isDark) 0.14f else 0.08f) to colors.foreground
     }
-    // 꺼진 버튼은 막대 위 유리 알갱이처럼 위쪽에 얇은 반사광을 둔다.
-    val rim = Brush.verticalGradient(listOf(Color.White.copy(alpha = if (colors.isDark) 0.30f else 0.9f), Color.White.copy(alpha = 0f)))
     Column(
         modifier = modifier
             .width(circleSize.coerceAtLeast(48.dp) + 8.dp)
@@ -159,7 +155,6 @@ public fun CallControlButton(
                 .size(circleSize.coerceAtLeast(48.dp))
                 .clip(CircleShape)
                 .background(container)
-                .then(if (!active && !danger && !accent) Modifier.border(1.dp, rim, CircleShape) else Modifier)
                 .then(if (pending) Modifier.border(2.dp, colors.secondary, CircleShape) else Modifier)
                 .indication(interaction, LocalIndication.current),
             contentAlignment = Alignment.Center,

@@ -40,7 +40,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.readableOn
 
-/** 둥근 사각 안에 아이콘을 담은 색 타일. 목록 행 앞이나 기능 소개에 쓴다. 아이콘은 장식이라 읽지 않는다. */
+/** 둥근 사각 단색 안에 아이콘을 담은 타일. 목록 행 앞이나 기능 소개에 쓴다. 아이콘은 장식이라 읽지 않는다. */
 @Composable
 public fun VoxeraIconTile(icon: ImageVector, color: Color, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 32.dp) {
     val tint = readableOn(color)
@@ -48,7 +48,7 @@ public fun VoxeraIconTile(icon: ImageVector, color: Color, modifier: Modifier = 
         modifier
             .size(size)
             .clip(RoundedCornerShape(size * 0.3f))
-            .background(Brush.verticalGradient(listOf(lerp(color, Color.White, 0.18f), color))),
+            .background(color),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.6f))
@@ -95,13 +95,14 @@ public fun GlassListRow(
     Row(
         modifier
             .fillMaxWidth()
+            .pressScale(interaction, pressed = 0.98f)
             .heightIn(min = 56.dp)
             .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = onClick)
             .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm),
     ) {
-        if (icon != null) VoxeraIconTile(icon, tileColor ?: colors.primary, Modifier.pressScale(interaction))
+        if (icon != null) VoxeraIconTile(icon, tileColor ?: colors.primary)
         Column(Modifier.weight(1f)) {
             Text(title, color = colors.foreground, style = VoxeraTheme.typography.body.copy(fontWeight = VoxeraTheme.typography.label.fontWeight))
             if (subtitle != null) Text(subtitle, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)

@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.luminance
 
 /**
  * Voxera Glass 의미 색상. 모든 화면과 컴포넌트는 이 토큰만 쓰며 화면별 색을 따로 두지 않는다.
+ * 바탕은 무채색 단색이고 색은 강조색 하나로만 쓴다. 표면을 그라디언트로 칠하지 않는다.
  *
  * - [canvas]: 영상이 없는 화면 배경. [surface]/[surfaceElevated]: 설정·목록·카드.
  * - [glassTint]/[glassStroke]/[glassHighlight]: 영상 위 조작 패널의 반투명 채움, 1dp 테두리, 위쪽 반사광.
@@ -36,35 +37,35 @@ public data class VoxeraColors(
 ) {
     public companion object {
         public fun dark(): VoxeraColors = VoxeraColors(
-            canvas = Color(0xFF081322),
-            surface = Color(0xFF102339),
-            surfaceElevated = Color(0xFF19364E),
-            glassTint = Color(0xCC142F49),
-            glassStroke = Color(0x4DA6D9F2),
-            glassHighlight = Color(0x26FFFFFF),
-            foreground = Color(0xFFF5FAFF),
-            foregroundSecondary = Color(0xFFBFD1DF),
+            canvas = Color(0xFF0B0E14),
+            surface = Color(0xFF151A22),
+            surfaceElevated = Color(0xFF1E242E),
+            glassTint = Color(0xCC1A1F28),
+            glassStroke = Color(0x29FFFFFF),
+            glassHighlight = Color(0x14FFFFFF),
+            foreground = Color(0xFFF4F6FA),
+            foregroundSecondary = Color(0xFFA3ACBA),
             primary = Color(0xFF16D2B0),
             onPrimary = Color(0xFF032A23),
             secondary = Color(0xFF5AA3FF),
             danger = Color(0xFFFF5663),
             onDanger = Color(0xFF2B0307),
             warning = Color(0xFFFFB547),
-            scrim = Color(0xB3020D18),
+            scrim = Color(0xB3080A0E),
             onScrim = Color(0xFFF5FAFF),
             focusRing = Color(0xFF9CDFFF),
             isDark = true,
         )
 
         public fun light(): VoxeraColors = VoxeraColors(
-            canvas = Color(0xFFF5FAFE),
+            canvas = Color(0xFFF2F4F7),
             surface = Color(0xFFFFFFFF),
-            surfaceElevated = Color(0xFFF0F6FC),
+            surfaceElevated = Color(0xFFE8EBF0),
             glassTint = Color(0xD9FFFFFF),
-            glassStroke = Color(0x4D6D9FBC),
-            glassHighlight = Color(0xBFFFFFFF),
-            foreground = Color(0xFF102437),
-            foregroundSecondary = Color(0xFF49647B),
+            glassStroke = Color(0x1F0B0E14),
+            glassHighlight = Color(0x66FFFFFF),
+            foreground = Color(0xFF12161D),
+            foregroundSecondary = Color(0xFF5A6372),
             // 설계 초안 #008E78은 흰 글자와 4.09:1이라 WCAG 4.5:1을 넘도록 조정했다.
             primary = Color(0xFF007D69),
             onPrimary = Color(0xFFFFFFFF),
@@ -72,7 +73,7 @@ public data class VoxeraColors(
             danger = Color(0xFFD72841),
             onDanger = Color(0xFFFFFFFF),
             warning = Color(0xFF8A4B00),
-            scrim = Color(0x70061827),
+            scrim = Color(0x8C0B0E14),
             onScrim = Color(0xFFF5FAFF),
             focusRing = Color(0xFF1254AE),
             isDark = false,
