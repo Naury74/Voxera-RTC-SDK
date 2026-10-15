@@ -1,6 +1,9 @@
 package com.naury.voxerartc.ui.room
 
 import com.google.common.truth.Truth.assertThat
+import com.naury.voxerartc.api.AudioRoute
+import com.naury.voxerartc.api.AudioRouteType
+import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MetricDirection
 import com.naury.voxerartc.api.MetricKind
 import com.naury.voxerartc.api.MetricSource
@@ -110,5 +113,33 @@ class RoomLogicTest {
         val same = applyEffect(color, VideoEffect.None)
         assertThat(same.red).isWithin(0.001f).of(color.red)
         assertThat(same.blue).isWithin(0.001f).of(color.blue)
+    }
+
+    private val phone = AudioRoute("earpiece", "Phone", AudioRouteType.EARPIECE)
+    private val speaker = AudioRoute("speaker", "Speaker", AudioRouteType.SPEAKER)
+    private val buds = AudioRoute("bt", "Galaxy Buds", AudioRouteType.BLUETOOTH)
+    private fun media(selected: String, vararg routes: AudioRoute) = LocalMediaState(audioRoutes = routes.toList(), selectedAudioRouteId = selected)
+
+    @Test
+    fun `이어폰이 연결돼 자동으로 옮기면 되돌릴 경로와 함께 알린다`() {
+        val notice = routeNoticeBetween(media("speaker", phone, speaker), media("bt", phone, speaker, buds), userInitiated = false)
+        assertThat(notice).isEqualTo(RouteNotice.SwitchedTo(buds, previous = speaker))
+    }
+
+    @Test
+    fun `연결만 되고 옮기지 않았으면 옮길지 묻는다`() {
+        assertThat(routeNoticeBetween(media("speaker", phone, speaker), media("speaker", phone, speaker, buds), false)).isEqualTo(RouteNotice.Available(buds))
+    }
+
+    @Test
+    fun `쓰던 이어폰이 끊기면 지금 출력과 함께 알린다`() {
+        assertThat(routeNoticeBetween(media("bt", phone, speaker, buds), media("speaker", phone, speaker), false)).isEqualTo(RouteNotice.Lost(buds, now = speaker))
+    }
+
+    @Test
+    fun `사용자가 고른 변화와 처음 채워진 목록은 알리지 않는다`() {
+        assertThat(routeNoticeBetween(media("speaker", phone, speaker), media("bt", phone, speaker, buds), userInitiated = true)).isNull()
+        assertThat(routeNoticeBetween(LocalMediaState(), media("bt", phone, speaker, buds), false)).isNull()
+        assertThat(routeNoticeBetween(media("speaker", phone, speaker), media("earpiece", phone, speaker), false)).isNull()
     }
 }

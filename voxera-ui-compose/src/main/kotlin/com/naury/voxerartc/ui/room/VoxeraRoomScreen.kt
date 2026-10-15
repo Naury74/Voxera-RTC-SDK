@@ -277,6 +277,7 @@ private fun CallContent(
     }
     var sheet by rememberSaveable { mutableStateOf(RoomSheet.NONE) }
     var overflowControls by remember { mutableStateOf(emptyList<DockControl>()) }
+    var lastRouteSelectionMs by remember { mutableLongStateOf(0L) }
     // 더보기 목록은 버튼 동작을 담아 저장할 수 없다. 화면이 다시 만들어져 비었으면 시트를 닫는다.
     LaunchedEffect(sheet, overflowControls) { if (sheet == RoomSheet.MORE && overflowControls.isEmpty()) sheet = RoomSheet.NONE }
     var pinnedId by stage.pinnedId
@@ -340,7 +341,6 @@ private fun CallContent(
                 onTap = if (autoHideControls) toggleChrome else null,
                 chromeVisible = chromeVisible,
                 view = stageView,
-                onShowAll = { sheet = RoomSheet.PEOPLE },
                 modifier = stageModifier,
             )
         } else {
@@ -425,13 +425,21 @@ private fun CallContent(
         }
         // 입퇴장 알림은 조작 막대를 숨겨도 보인다. 상단 줄이 있으면 그 아래에 둔다.
         val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
-        ParticipantNotices(
-            participants,
+        Column(
             Modifier
                 .align(Alignment.TopCenter)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(top = noticeTop + VoxeraSpacing.xs, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
+        ) {
+            ParticipantNotices(participants)
+            // 이어폰이 연결·해제되면 어디로 소리가 가는지 알리고 되돌리거나 옮길 수 있게 한다.
+            AudioRouteNotices(media, lastRouteSelectionMs, onSelect = { id ->
+                lastRouteSelectionMs = System.nanoTime() / 1_000_000
+                scope.launch { session.selectAudioRoute(id) }
+            })
+        }
 
         AnimatedVisibility(
             chromeVisible,
@@ -481,6 +489,7 @@ private fun CallContent(
         ) {
             when (sheet) {
                 RoomSheet.AUDIO -> AudioRouteSheet(media, onSelect = { id ->
+                    lastRouteSelectionMs = System.nanoTime() / 1_000_000
                     scope.launch { session.selectAudioRoute(id) }
                     sheet = RoomSheet.NONE
                 })

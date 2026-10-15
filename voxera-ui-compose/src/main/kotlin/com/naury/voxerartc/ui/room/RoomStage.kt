@@ -6,6 +6,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.composed
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -71,11 +79,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -94,6 +104,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
@@ -111,12 +122,11 @@ private const val SPEAKER_SWITCH_DELAY_MS = 1_500L
  * 영상 무대. 모든 타일을 한 부모 아래에 두고 [planStage]가 정한 자리로 크기·위치를 스프링으로 옮긴다.
  * 그래서 격자 ↔ 크게 보기 ↔ 화면 공유가 바뀌어도 타일이 다시 만들어지지 않고(영상이 끊기지 않고) 자연스럽게 움직인다.
  *
- * - 격자 타일을 누르면 그 사람을 크게 본다. 크게 보이는 타일을 누르면 조작 막대를 숨기거나 보인다.
+ * - 격자 타일을 누르면 그 사람을 크게 보고, 나머지는 손가락으로 넘겨 보는 작은 줄로 간다. 크게 보이는 타일을 누르면 조작 막대를 숨기거나 보인다.
  * - 1:1은 상대가 화면 전체, 나는 끌어 옮기는 작은 화면. 작은 화면을 누르면 서로 바뀐다.
  * - 9명이 넘는 갤러리는 9칸씩 쪽을 넘긴다.
  *
  * @param onTap 크게 보이는 타일을 누름(조작 막대 보이기/숨기기).
- * @param onShowAll 작은 줄의 "+N" 칸을 누름.
  * @param chromeVisible 조작 막대가 보이는지. 숨기면 무대가 아래까지 넓어진다.
  */
 @Composable
@@ -131,7 +141,6 @@ internal fun VideoStage(
     onTap: (() -> Unit)? = null,
     chromeVisible: Boolean = true,
     view: StageView = StageView.GALLERY,
-    onShowAll: () -> Unit = {},
 ) {
     val top by animateDpAsState(if (chromeVisible) maxOf(topReserve, TopReserve) else HiddenBottomReserve, label = "top")
     val bottom by animateDpAsState(if (chromeVisible) BottomReserve else HiddenBottomReserve, label = "bottom")
@@ -176,26 +185,95 @@ internal fun VideoStage(
         }
         val localId = participants.firstOrNull { it.isLocal }?.id
         val full = TileRect(0f, 0f, constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
-        plan.tiles.forEach { placement ->
-            key(placement.key) {
-                AnimatedTile(
-                    placement,
-                    draggable = placement.role == TileRole.FLOATING,
-                    onDropped = { center -> corner = nearestCorner(center, full) },
-                ) {
-                    StageTileContent(
+        // 작은 줄 넘기기. 줄 모양이 바뀌면(크게 보기 시작·회전) 처음으로 돌아간다.
+        val strip = plan.strip
+        val scroll = remember(strip?.horizontal, plan.focusKey) { Animatable(0f) }
+        LaunchedEffect(strip?.maxScroll) {
+            scroll.updateBounds(0f, strip?.maxScroll ?: 0f)
+            if (scroll.value > (strip?.maxScroll ?: 0f)) scroll.snapTo(strip?.maxScroll ?: 0f)
+        }
+        val stripModifier = if (strip != null && strip.maxScroll > 0f) Modifier.stripScroll(strip, scroll) else Modifier
+        Box(Modifier.fillMaxSize().then(stripModifier)) {
+            plan.tiles.forEach { placement ->
+                val thumb = placement.role == TileRole.THUMB && strip != null
+                // 보이는 칸 밖으로 한 칸 넘게 벗어난 작은 화면은 그리지 않는다(영상 렌더 부하를 보이는 만큼으로 제한).
+                if (thumb && !strip!!.isNearlyVisible(placement.rect, scroll.value)) return@forEach
+                key(placement.key) {
+                    AnimatedTile(
                         placement,
-                        renderer,
-                        pinnedId = pinnedId,
-                        hidden = plan.hidden,
-                        bottomLabel = insets.calculateBottomPadding() + bottom,
-                        startLabel = insets.calculateStartPadding(direction),
-                        onTogglePin = onTogglePin,
-                        onTap = onTap,
-                        onSwap = { localId?.let(onTogglePin) },
-                        onShowAll = onShowAll,
-                    )
+                        draggable = placement.role == TileRole.FLOATING,
+                        onDropped = { center -> corner = nearestCorner(center, full) },
+                        shift = if (thumb) ({ strip!!.shift(scroll.value) }) else NoShift,
+                    ) {
+                        StageTileContent(
+                            placement,
+                            renderer,
+                            pinnedId = pinnedId,
+                            bottomLabel = insets.calculateBottomPadding() + bottom,
+                            startLabel = insets.calculateStartPadding(direction),
+                            onTogglePin = onTogglePin,
+                            onTap = onTap,
+                            onSwap = { localId?.let(onTogglePin) },
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+private val NoShift: () -> IntOffset = { IntOffset.Zero }
+
+/** 넘긴 거리만큼 작은 화면을 옮길 양. */
+internal fun StripLayout.shift(scroll: Float): IntOffset =
+    if (horizontal) IntOffset(-scroll.roundToInt(), 0) else IntOffset(0, -scroll.roundToInt())
+
+/** [rect]를 [scroll]만큼 옮겼을 때 보이는 칸과 겹치거나 한 칸 안쪽으로 가까우면 `true`. */
+internal fun StripLayout.isNearlyVisible(rect: TileRect, scroll: Float): Boolean = if (horizontal) {
+    val x = rect.x - scroll
+    x + rect.width > area.x - rect.width && x < area.right + rect.width
+} else {
+    val y = rect.y - scroll
+    y + rect.height > area.y - rect.height && y < area.bottom + rect.height
+}
+
+/**
+ * 작은 줄 위에서 시작한 끌기만 받아 줄을 넘긴다. 손을 떼면 속도만큼 미끄러지다 멈춘다.
+ * 타일보다 먼저(Initial 단계에서) 움직임을 보고, 줄 방향으로 터치 여유 거리를 넘게 움직였을 때만 가로챈다.
+ * 그 전까지는 아무것도 소비하지 않으므로 타일 누르기·길게 누르기는 그대로 타일이 받는다.
+ */
+private fun Modifier.stripScroll(strip: StripLayout, scroll: Animatable<Float, AnimationVector1D>): Modifier = composed {
+    val scope = rememberCoroutineScope()
+    val decay = rememberSplineBasedDecay<Float>()
+    pointerInput(strip) {
+        val slop = viewConfiguration.touchSlop
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            val start = down.position
+            if (start.x !in strip.area.x..strip.area.right || start.y !in strip.area.y..strip.area.bottom) return@awaitEachGesture
+            scope.launch { scroll.stop() }
+            val tracker = VelocityTracker()
+            tracker.addPosition(down.uptimeMillis, down.position)
+            var dragging = false
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                if (!change.pressed) break
+                tracker.addPosition(change.uptimeMillis, change.position)
+                val along = if (strip.horizontal) change.position.x - start.x else change.position.y - start.y
+                val across = if (strip.horizontal) change.position.y - start.y else change.position.x - start.x
+                if (!dragging) {
+                    if (abs(across) > slop && abs(across) > abs(along)) return@awaitEachGesture
+                    if (abs(along) > slop) dragging = true else continue
+                }
+                val delta = if (strip.horizontal) change.positionChange().x else change.positionChange().y
+                change.consume()
+                scope.launch { scroll.snapTo((scroll.value - delta).coerceIn(0f, strip.maxScroll)) }
+            }
+            if (dragging) {
+                val v = tracker.calculateVelocity()
+                val velocity = -(if (strip.horizontal) v.x else v.y)
+                scope.launch { scroll.animateDecay(velocity, decay) }
             }
         }
     }
@@ -223,6 +301,7 @@ private fun AnimatedTile(
     placement: TilePlacement,
     draggable: Boolean,
     onDropped: (Offset) -> Unit,
+    shift: () -> IntOffset = NoShift,
     content: @Composable () -> Unit,
 ) {
     val reduced = rememberReducedMotion()
@@ -247,7 +326,7 @@ private fun AnimatedTile(
     Box(
         Modifier
             .zIndex(placement.role.z)
-            .offset { offset.value }
+            .offset { offset.value + shift() }
             .size(with(density) { DpSize(size.value.width.toDp(), size.value.height.toDp()) })
             .graphicsLayer {
                 alpha = appear.value
@@ -282,7 +361,7 @@ private fun AnimatedTile(
 private val TileRole.z: Float
     get() = when (this) {
         TileRole.FULL, TileRole.FOCUS, TileRole.GRID -> 0f
-        TileRole.THUMB, TileRole.OVERFLOW -> 1f
+        TileRole.THUMB -> 1f
         TileRole.FLOATING -> 2f
     }
 
@@ -291,30 +370,24 @@ private fun StageTileContent(
     placement: TilePlacement,
     renderer: VoxeraVideoRenderer?,
     pinnedId: String?,
-    hidden: Int,
     bottomLabel: Dp,
     startLabel: Dp,
     onTogglePin: (String) -> Unit,
     onTap: (() -> Unit)?,
     onSwap: () -> Unit,
-    onShowAll: () -> Unit,
 ) {
     val role = placement.role
     val radius by animateDpAsState(
         when (role) {
             TileRole.FULL -> 0.dp
-            TileRole.THUMB, TileRole.OVERFLOW -> VoxeraRadius.md
+            TileRole.THUMB -> VoxeraRadius.md
             TileRole.FLOATING -> VoxeraRadius.lg
             TileRole.GRID, TileRole.FOCUS -> VoxeraRadius.xl
         },
         label = "radius",
     )
     val shape = RoundedCornerShape(radius)
-    val person = placement.participant
-    if (person == null) {
-        OverflowCell(hidden, shape, onShowAll)
-        return
-    }
+    val person = placement.participant ?: return
     val spotlight = stringResource(R.string.voxera_tile_spotlight)
     val swap = stringResource(R.string.voxera_tile_swap)
     val controls = stringResource(R.string.voxera_tile_toggle_controls)
@@ -342,21 +415,6 @@ private fun StageTileContent(
     )
 }
 
-@Composable
-private fun OverflowCell(hidden: Int, shape: RoundedCornerShape, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-    Box(
-        Modifier
-            .fillMaxSize()
-            .pressScale(interaction)
-            .clip(shape)
-            .background(VoxeraTheme.colors.surfaceElevated)
-            .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(pluralStringResource(R.plurals.voxera_more_participants, hidden, hidden), color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label)
-    }
-}
 
 @Composable
 private fun GridStage(
@@ -508,15 +566,19 @@ internal fun SpeakingRipple(speaking: Boolean, level: Float, size: Dp) {
     }
 }
 
-/** 음성 그룹 통화: 아바타 격자. 말하는 사람은 고리로 표시한다. */
+/** 음성 그룹 통화: 아바타 격자. 말하는 사람은 고리로 표시한다. 화면보다 많으면 위아래로 넘겨 모두 본다. */
 @Composable
 internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier = Modifier) {
-    val (shown, hidden) = visibleTiles(participants)
+    val shown = participants
     val columns = if (shown.size <= 4) 2 else 3
     BoxWithConstraints(modifier.fillMaxSize().padding(horizontal = VoxeraSpacing.md)) {
         val cellWidth = (maxWidth - VoxeraSpacing.md * (columns - 1)) / columns
         val avatar = (cellWidth * 0.6f).coerceIn(56.dp, 120.dp)
-        Column(Modifier.align(Alignment.Center), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.lg)) {
+        // 적을 때는 가운데에 모으고, 많으면 위에서부터 넘긴다.
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(vertical = VoxeraSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.lg, Alignment.CenterVertically),
+        ) {
             shown.chunked(columns).forEachIndexed { rowIndex, row ->
                 // 덜 찬 마지막 줄도 가운데로 모은다.
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.md, Alignment.CenterHorizontally)) {
@@ -542,14 +604,6 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                         }
                     }
                 }
-            }
-            if (hidden > 0) {
-                Text(
-                    pluralStringResource(R.plurals.voxera_more_participants, hidden, hidden),
-                    color = VoxeraTheme.colors.foregroundSecondary,
-                    style = VoxeraTheme.typography.body,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                )
             }
         }
     }

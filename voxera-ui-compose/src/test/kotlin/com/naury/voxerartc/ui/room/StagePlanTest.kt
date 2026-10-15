@@ -5,6 +5,7 @@ import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
 import org.junit.Test
 
 class StagePlanTest {
@@ -55,12 +56,24 @@ class StagePlanTest {
     }
 
     @Test
-    fun `작은 줄에 다 못 넣으면 말하는 사람을 넣고 마지막 칸은 +N`() {
+    fun `크게 보기의 작은 줄은 모두를 한 줄에 놓고 넘친 만큼 넘겨 볼 수 있다`() {
         val plan = plan(people(12, speaking = 11), pinned = "p1")
-        val thumbs = plan.tiles.filter { it.role == TileRole.THUMB }.map { it.key }
-        assertThat(thumbs).contains("p11")
-        assertThat(plan.tiles.last().key).isEqualTo(OVERFLOW_KEY)
-        assertThat(plan.hidden + thumbs.size).isEqualTo(11)
+        val thumbs = plan.tiles.filter { it.role == TileRole.THUMB }
+        assertThat(thumbs).hasSize(11)
+        assertThat(thumbs.map { it.key }).isEqualTo((0 until 12).map { "p$it" }.filter { it != "p1" })
+        val strip = plan.strip!!
+        assertThat(strip.horizontal).isTrue()
+        assertThat(strip.maxScroll).isGreaterThan(0f)
+        // 처음에는 오른쪽 끝 사람이 안 보이고, 끝까지 넘기면 보인다.
+        val last = thumbs.last().rect
+        assertThat(strip.isNearlyVisible(last, 0f)).isFalse()
+        assertThat(strip.isNearlyVisible(last, strip.maxScroll)).isTrue()
+        assertThat(strip.shift(30f)).isEqualTo(IntOffset(-30, 0))
+    }
+
+    @Test
+    fun `다 들어가면 넘기지 않는다`() {
+        assertThat(plan(people(3), pinned = "p1").strip!!.maxScroll).isEqualTo(0f)
     }
 
     @Test

@@ -7,7 +7,7 @@ internal data class GridSpec(val columns: Int, val rows: Int) {
     val capacity: Int get() = columns * rows
 }
 
-/** 한 화면에 보여 줄 최대 타일 수. 넘치면 마지막 칸에 남은 인원을 보여 준다. */
+/** 한 화면 격자에 넣는 최대 타일 수. 넘치면 쪽을 나눈다. */
 internal const val MAX_VISIBLE_TILES = 9
 
 /**
@@ -20,20 +20,6 @@ internal fun gridFor(count: Int, landscape: Boolean): GridSpec = when {
     count <= 4 -> GridSpec(2, 2)
     count <= 6 -> if (landscape) GridSpec(3, 2) else GridSpec(2, 3)
     else -> GridSpec(3, 3)
-}
-
-/**
- * 보여 줄 타일과 숨겨진 인원 수. 많을 때는 로컬 참가자와 말하는 참가자를 먼저 보여 주고, 나머지는 원래 순서를 지킨다.
- * 넘치면 마지막 칸 하나를 "+N" 칸으로 비워 둔다.
- */
-internal fun visibleTiles(participants: List<Participant>, capacity: Int = MAX_VISIBLE_TILES): Pair<List<Participant>, Int> {
-    if (participants.size <= capacity) return participants to 0
-    val prioritized = participants.withIndex()
-        .sortedWith(compareByDescending<IndexedValue<Participant>> { it.value.isLocal }.thenByDescending { it.value.isSpeaking }.thenBy { it.index })
-        .map { it.value }
-    val shown = prioritized.take(capacity - 1)
-    val order = participants.map { it.id }
-    return shown.sortedBy { order.indexOf(it.id) } to participants.size - shown.size
 }
 
 /** 격자 한 쪽의 최대 타일 수. */
@@ -58,10 +44,10 @@ internal data class TileRect(val x: Float, val y: Float, val width: Float, val h
 }
 
 /** 타일 역할. 모서리 모양과 누를 때 동작이 달라진다. */
-internal enum class TileRole { GRID, FOCUS, THUMB, FULL, FLOATING, OVERFLOW }
+internal enum class TileRole { GRID, FOCUS, THUMB, FULL, FLOATING }
 
 /**
- * 타일 하나의 자리. [key]는 참가자 id, 화면 공유는 `screen:<id>`, 넘친 인원 칸은 [OVERFLOW_KEY]이다.
+ * 타일 하나의 자리. [key]는 참가자 id, 화면 공유는 `screen:<id>`이다.
  * 같은 key는 보기 방식이 바뀌어도 같은 타일로 이어져 자리만 움직인다.
  */
 internal data class TilePlacement(
@@ -72,10 +58,20 @@ internal data class TilePlacement(
     val screenShare: Boolean = false,
 )
 
-/** 배치 결과. [paged]면 9명 넘는 갤러리라 쪽 넘김 격자로 그린다. [hidden]은 작은 줄에 다 못 넣은 인원. */
-internal data class StagePlan(val tiles: List<TilePlacement>, val hidden: Int = 0, val paged: Boolean = false, val focusKey: String? = null)
+/** 작은 줄. [area]는 보이는 칸, [content]는 모든 작은 화면을 늘어놓은 길이(가로 줄이면 너비, 세로 줄이면 높이). */
+internal data class StripLayout(val area: TileRect, val content: Float, val horizontal: Boolean) {
+    /** 넘겨 볼 수 있는 최대 거리. 다 들어가면 0. */
+    val maxScroll: Float get() = maxOf(0f, content - (if (horizontal) area.width else area.height))
+}
 
-internal const val OVERFLOW_KEY = "voxera:overflow"
+/** 배치 결과. [paged]면 9명 넘는 갤러리라 쪽 넘김 격자로 그린다. [strip]이 있으면 작은 줄을 손가락으로 넘겨 본다. */
+internal data class StagePlan(
+    val tiles: List<TilePlacement>,
+    val paged: Boolean = false,
+    val focusKey: String? = null,
+    val strip: StripLayout? = null,
+)
+
 
 /**
  * 영상 무대 배치를 계산한다. 결과는 사각형 목록이며 화면은 이 자리로 타일을 부드럽게 옮긴다.
@@ -164,46 +160,33 @@ internal fun grid(people: List<Participant>, area: TileRect, landscape: Boolean,
 }
 
 /**
- * 큰 타일 + 작은 줄. 세로 화면은 아래, 가로 화면은 오른쪽에 둔다. 다 못 넣으면 말하는 사람을 먼저 넣고
- * 마지막 칸을 "+N"으로 쓴다.
+ * 큰 타일 + 작은 줄. 세로 화면은 아래(가로로 넘김), 가로 화면은 오른쪽(세로로 넘김)에 둔다.
+ * 작은 화면은 모두 한 줄에 늘어놓고, 화면에 다 안 들어가면 [StripLayout]으로 넘겨 본다. 순서는 들어온 순서를 지킨다.
  */
 private fun withStrip(focus: TilePlacement, others: List<Participant>, area: TileRect, landscape: Boolean, gap: Float, strip: Float): StagePlan {
     if (others.isEmpty()) return StagePlan(listOf(focus.copy(rect = area)), focusKey = focus.key)
-    val ordered = others
     val thumbW: Float
     val thumbH: Float
     val focusRect: TileRect
+    val stripArea: TileRect
     if (landscape) {
         thumbW = strip
         thumbH = strip * 3f / 4f
         focusRect = TileRect(area.x, area.y, area.width - strip - gap, area.height)
+        stripArea = TileRect(focusRect.right + gap, area.y, strip, area.height)
     } else {
         thumbH = strip
         thumbW = strip * 3f / 4f
         focusRect = TileRect(area.x, area.y, area.width, area.height - strip - gap)
+        stripArea = TileRect(area.x, focusRect.bottom + gap, area.width, strip)
     }
-    val length = if (landscape) area.height else area.width
     val step = (if (landscape) thumbH else thumbW) + gap
-    val capacity = maxOf(1, ((length + gap) / step).toInt())
-    val needsOverflow = ordered.size > capacity
-    // 다 들어가면 순서를 지켜 작은 화면이 자리를 바꾸지 않게 한다. 넘칠 때만 말하는 사람을 앞쪽 칸에 넣는다.
-    val shown = if (needsOverflow) {
-        ordered.withIndex()
-            .sortedWith(compareByDescending<IndexedValue<Participant>> { it.value.isSpeaking }.thenBy { it.index })
-            .take(capacity - 1)
-            .sortedBy { it.index }
-            .map { it.value }
-    } else ordered
-    val hidden = ordered.size - shown.size
-    fun slot(i: Int): TileRect = if (landscape) {
-        TileRect(focusRect.right + gap, area.y + i * step, thumbW, thumbH)
-    } else {
-        TileRect(area.x + i * step, focusRect.bottom + gap, thumbW, thumbH)
-    }
     val tiles = buildList {
         add(focus.copy(rect = focusRect))
-        shown.forEachIndexed { i, person -> add(TilePlacement(person.id, person, slot(i), TileRole.THUMB)) }
-        if (hidden > 0) add(TilePlacement(OVERFLOW_KEY, null, slot(shown.size), TileRole.OVERFLOW))
+        others.forEachIndexed { i, person ->
+            val rect = if (landscape) TileRect(stripArea.x, stripArea.y + i * step, thumbW, thumbH) else TileRect(stripArea.x + i * step, stripArea.y, thumbW, thumbH)
+            add(TilePlacement(person.id, person, rect, TileRole.THUMB))
+        }
     }
-    return StagePlan(tiles, hidden = hidden, focusKey = focus.key)
+    return StagePlan(tiles, focusKey = focus.key, strip = StripLayout(stripArea, others.size * step - gap, horizontal = !landscape))
 }

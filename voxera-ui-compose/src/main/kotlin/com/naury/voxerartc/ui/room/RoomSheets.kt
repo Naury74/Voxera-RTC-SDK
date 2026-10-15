@@ -98,7 +98,8 @@ internal fun LocalMediaState.selectedRouteIcon(): ImageVector =
 internal fun AudioRouteSheet(media: LocalMediaState, onSelect: (String) -> Unit) {
     SheetTitle(stringResource(R.string.voxera_routes_title))
     Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
-        media.audioRoutes.forEach { route -> RouteRow(route, selected = route.id == media.selectedAudioRouteId, onSelect = { onSelect(route.id) }) }
+        // 지금 쓸 수 없는 경로(연결이 끊긴 이어폰 등)는 목록에 두지 않는다. 연결되면 엔진이 알려 주어 바로 나타난다.
+        media.audioRoutes.filter { it.isSelectable }.forEach { route -> RouteRow(route, selected = route.id == media.selectedAudioRouteId, onSelect = { onSelect(route.id) }) }
     }
 }
 

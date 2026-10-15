@@ -25,16 +25,6 @@ class RoomLayoutTest {
     }
 
     @Test
-    fun `9명까지는 모두 보이고 넘치면 로컬과 발화자를 먼저 보여 준다`() {
-        assertThat(visibleTiles(people(9)).second).isEqualTo(0)
-        val (shown, hidden) = visibleTiles(people(20, speaking = setOf(17)))
-        assertThat(shown).hasSize(8)
-        assertThat(hidden).isEqualTo(12)
-        assertThat(shown.map { it.id }).containsAtLeast("p0", "p17")
-        assertThat(shown.map { it.id }).isInOrder(compareBy<String> { it.removePrefix("p").toInt() })
-    }
-
-    @Test
     fun `통화 시간과 측정값 문구`() {
         assertThat(formatDuration(0)).isEqualTo("0:00")
         assertThat(formatDuration(65_400)).isEqualTo("1:05")

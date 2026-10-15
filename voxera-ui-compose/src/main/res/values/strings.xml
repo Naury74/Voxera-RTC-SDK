@@ -91,10 +91,6 @@
     <string name="voxera_camera_off">Camera off</string>
     <string name="voxera_tile_pin">Pin</string>
     <string name="voxera_tile_unpin">Unpin</string>
-    <plurals name="voxera_more_participants">
-        <item quantity="one">+%1$d more</item>
-        <item quantity="other">+%1$d more</item>
-    </plurals>
 
     <string name="voxera_call_incoming_voice">Incoming voice call</string>
     <string name="voxera_call_incoming_video">Incoming video call</string>
@@ -177,4 +173,11 @@
     <string name="voxera_tile_toggle_controls">Show or hide controls</string>
     <string name="voxera_view_speaker">Speaker view</string>
     <string name="voxera_view_gallery">Gallery view</string>
+    <string name="voxera_route_notice_switched">Sound and mic moved to this device</string>
+    <string name="voxera_route_notice_available">%1$s connected</string>
+    <string name="voxera_route_notice_available_body">Use it for this call?</string>
+    <string name="voxera_route_notice_lost">%1$s disconnected</string>
+    <string name="voxera_route_notice_now">Now playing on: %1$s</string>
+    <string name="voxera_route_notice_undo">Undo</string>
+    <string name="voxera_route_notice_switch">Switch</string>
 </resources>

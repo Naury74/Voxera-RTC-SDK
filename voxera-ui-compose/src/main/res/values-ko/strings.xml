@@ -90,9 +90,6 @@
     <string name="voxera_camera_off">카메라 꺼짐</string>
     <string name="voxera_tile_pin">고정</string>
     <string name="voxera_tile_unpin">고정 해제</string>
-    <plurals name="voxera_more_participants">
-        <item quantity="other">+%1$d명 더</item>
-    </plurals>
 
     <string name="voxera_call_incoming_voice">걸려 온 음성 통화</string>
     <string name="voxera_call_incoming_video">걸려 온 영상 통화</string>
@@ -174,4 +171,11 @@
     <string name="voxera_tile_toggle_controls">조작 버튼 보이기/숨기기</string>
     <string name="voxera_view_speaker">발표자 보기</string>
     <string name="voxera_view_gallery">갤러리 보기</string>
+    <string name="voxera_route_notice_switched">소리와 마이크를 이 기기로 옮겼어요</string>
+    <string name="voxera_route_notice_available">%1$s 연결됨</string>
+    <string name="voxera_route_notice_available_body">이 기기로 통화할까요?</string>
+    <string name="voxera_route_notice_lost">%1$s 연결이 끊겼어요</string>
+    <string name="voxera_route_notice_now">지금 출력: %1$s</string>
+    <string name="voxera_route_notice_undo">되돌리기</string>
+    <string name="voxera_route_notice_switch">전환</string>
 </resources>
