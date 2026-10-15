@@ -37,7 +37,7 @@
 | `voxera-ui-compose` | Compose | `VoxeraTheme`(Light/Dark Glass 토큰), `VoxeraRoomScreen`, 조작 막대·참가자 타일 |
 | `app` | Showcase | 오프라인 쇼케이스. 배포하지 않음 |
 
-구조와 결정 사항은 [docs/architecture.md](docs/architecture.md)에 있습니다.
+구조와 결정 사항은 [docs/architecture.md](docs/architecture.md), 호스트 연동 방법은 [docs/integration.md](docs/integration.md), 변경 이력은 [docs/release-notes.md](docs/release-notes.md), 보안 정책은 [SECURITY.md](SECURITY.md)에 있습니다.
 
 ## 빠른 시작 (오프라인 데모)
 
@@ -102,7 +102,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-028 | 배포 리허설 | 부분 | 로컬 Maven + `samples/consumer`, POM에 Apache 2.0 라이선스. Maven Central 게시는 안 함 |
 | VOX-027 | 기기·API 매트릭스 | 부분 | API 26·36 에뮬레이터, Fold7(API 36) 실기기 확인. 30·31·33~35는 안 함 |
 | VOX-015 | 장치 전환 실기기 검증 | 부분 | Fold7 스피커↔휴대전화↔블루투스, 블루투스 끊김·재연결, 백그라운드 마이크 확인. 유선은 안 함 |
-| VOX-029 | 공개 문서·라이선스 | 부분 | Apache 2.0(LICENSE·NOTICE·POM). 공개용 사용 설명서는 아직 |
+| VOX-029 | 공개 문서·라이선스 | 완료 | Apache 2.0(LICENSE·NOTICE·POM), 연동 가이드, 릴리스 노트, SECURITY.md |
 | 추가 | 통화 중 반응, 통화 알림(경과 시간·종료), 수화부 근접 화면 끄기, 발열·다른 통화 대응 | 부분 | 반응 전송·알림 종료·다른 통화 안내를 에뮬레이터 실통화로 확인. 반응 수신(실통화)·근접 센서는 실기기 필요 |
 
 ## 빌드
