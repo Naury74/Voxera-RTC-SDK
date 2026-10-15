@@ -70,7 +70,7 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 토큰 | 13종 | `onPrimary`, `onDanger`, `onScrim`, `warning` 추가 | 버튼 글자, 영상 위 글자, 테스트 전용 경고 문구에 필요 |
 | GlassLevel.High | alpha ≥ 0.88 | 0.96 | 바텀 시트 글자 뒤로 조작 막대가 비쳐 보임 |
 | PiP | UI 축소만 언급 | `voxera-android`의 `VoxeraPictureInPicture`(자동 진입·마이크/종료 버튼), `VoxeraRoomScreen(pictureInPicture)` | Activity·PendingIntent가 필요한 부분은 android 모듈, 그리는 부분은 ui 모듈에 둠 |
-| 다른 통화 끼어듦 | Telecom 연동 | `LocalMediaState.audioInterrupted`(Android 12+ 오디오 모드) | READ_PHONE_STATE 없이 알 수 있는 범위만. Telecom 연동은 아직 없음 |
+| 다른 통화 끼어듦 | Telecom 연동 | `VoxeraTelecomCall`(androidx core-telecom, 선택 사용) + `LocalMediaState.audioInterrupted` | 시스템이 보류를 맡고, 보류된 VoIP 통화를 시스템이 다시 잇지 않으므로 오디오를 돌려받으면 앱이 이어 간다 |
 | 아이콘 | 내부 | `VoxeraIcons` 공개 | 호스트가 Voxera 화면과 같은 모양의 조작을 만들 수 있게 |
 | 데모 효과 | 미지원 표시 | 가짜 영상에 효과 적용 | 오프라인 데모에서 효과 화면을 끝까지 써 볼 수 있게 |
 | 반응 | 없음 | `Reaction` 6종, `VoxeraSession.reactions/sendReaction`, LiveKit 데이터 메시지(주제 `voxera.reaction`) | 정해진 종류만 주고받아 네트워크에서 온 임의 문자열을 그리지 않음. 1초 5개 제한 |

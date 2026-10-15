@@ -130,6 +130,18 @@
 
 실기기 PiP, 근접 화면 끄기, 마이크 레벨은 위 Fold7 표에서 확인했다. 발열 때 효과 끄기(E31)는 열 상태를 바꿀 방법이 없어 단위 테스트만 했다.
 
+## Telecom 등록 (에뮬레이터 API 36) — 2026-10-15
+
+로컬 서버 음성 통화 중 `emu gsm call`로 휴대전화를 걸고 통화 키로 받았다.
+
+| Scenario | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| 통화 등록 | 시스템 통화 목록에 self-managed 통화 | `dumpsys telecom`에 ACTIVE, self_mng, 보류 가능 | Pass |
+| 휴대전화를 받음 | Voxera 통화 보류, 마이크 끔 | ON_HOLD, 서버에서 MICROPHONE muted=true | Pass |
+| 휴대전화가 끝남 (이어 가기 추가 전) | 다시 이어짐 | ON_HOLD로 남음(시스템은 VoIP 통화를 다시 잇지 않음) | Fail → 수정 |
+| 휴대전화가 끝남 (수정 후) | 같음 | ACTIVE로 돌아오고 마이크 muted=false | Pass |
+| 차량·시계에서 끊기 | onHangUp | 해당 장치가 없어 확인 못 함 | NOT RUN |
+
 ## TalkBack (에뮬레이터 API 36) — 2026-10-15
 
 | Scenario | Expected | Actual | Result |

@@ -131,7 +131,9 @@ val inPip by pip.isInPictureInPicture.collectAsStateWithLifecycle()
   Android 11 이하에서는 화면 공유 승인 창처럼 앱이 스스로 다른 화면을 띄우기 직전에 `pip.ignoreNextUserLeave()`를 불러 주세요. 그러지 않으면 PiP로 들어가 버립니다.
 - 근접 화면 끄기: 음성 통화를 수화부(휴대전화)로 들을 때 귀에 대면 화면이 꺼집니다. 음성 통화는 수화부로, 영상 통화는 스피커로 시작하고, 이어폰이 연결돼 있으면 이어폰이 우선입니다.
 
-셋 다 돌려받은 `AutoCloseable`을 닫거나 Activity가 끝나면 정리됩니다.
+- **시스템 통화 등록(Telecom)**: `VoxeraTelecomCall.registerWhileConnected(context, session, title)`을 부르면 통화가 Android 통화 목록에 올라갑니다. 휴대전화가 걸려 와서 받으면 시스템이 Voxera 통화를 보류하고(이때 마이크를 끕니다), 그 전화가 끝나면 통화를 이어 가며 마이크를 원래대로 켭니다. 차량이나 시계에서 끊으면 `onHangUp`(기본은 `session.leave()`)이 불립니다. 시스템에는 `title`만 넘기고 전화번호나 토큰은 넘기지 않습니다.
+
+넷 다 돌려받은 `AutoCloseable`을 닫거나 Activity가 끝나면 정리됩니다.
 
 ## Call Mode (`voxera-invitation`)
 

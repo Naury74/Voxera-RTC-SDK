@@ -91,7 +91,7 @@ CompositionLocalProvider(LocalVoxeraVideoRenderer provides engines.videoTracks.a
 | VOX-007~009 | LiveKit 연결·참가자·마이크/카메라 어댑터 | 완료 | 매핑 JVM 테스트, 에뮬레이터와 로컬 LiveKit으로 실통화 |
 | VOX-010 | BYO 설정(개발 토큰 서버, 기존 토큰, endpoint) | 부분 | 기존 토큰과 endpoint는 로컬 서버와 LiveKit Cloud(wss, release 빌드 포함)로 확인. 개발 토큰 서버(Sandbox)는 확인 안 함 |
 | VOX-011 | 입장 전 화면(권한, 카메라 미리보기) | 완료 | 거부, 영구 거부, 설정에서 돌아오기를 에뮬레이터에서 확인. 마이크 레벨 막대는 Fold7에서 확인 |
-| VOX-019 | 백그라운드 통화 유지, PiP | 부분 | foreground service로 녹음 유지. PiP 자동 진입, 마이크 버튼, 복귀는 Fold7 실통화로 확인. Telecom 연동은 안 함 |
+| VOX-019 | 백그라운드 통화 유지, PiP, Telecom | 완료 | foreground service로 녹음 유지. PiP 자동 진입, 마이크 버튼, 복귀는 Fold7 실통화로 확인. Telecom 등록(core-telecom)으로 휴대전화가 오면 보류·마이크 끄기, 끝나면 이어 가기를 에뮬레이터에서 확인 |
 | VOX-022~024 | Call Mode 계약, 가짜 호스트 샘플, 수신 화면 | 완료 | 경합 JVM 테스트, 데모 화면 확인. 실제 호스트 서버와 푸시는 확인 안 함 |
 | VOX-025 | Java facade | 완료 | Java 소스 테스트 |
 | VOX-014 | 실제 영상 렌더링 | 완료 | 에뮬레이터에서 원격 영상과 내 영상 확인 |

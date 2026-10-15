@@ -17,6 +17,8 @@
 | 항목 | 런타임 요청 | 용도 |
 | --- | --- | --- |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MICROPHONE`, `FOREGROUND_SERVICE_CAMERA` | 아니요 | 통화 중 foreground service(`VoxeraCallService`, 타입 microphone\|camera) |
+| `WAKE_LOCK` | 아니요 | 수화부로 통화할 때 귀에 대면 화면 끄기(`VoxeraProximityScreenOff`) |
+| `MANAGE_OWN_CALLS` | 아니요 | 통화를 Android 통화 시스템에 등록(`VoxeraTelecomCall`). core-telecom이 `BIND_TELECOM_CONNECTION_SERVICE`로 보호된 서비스도 합친다 |
 | `POST_NOTIFICATIONS` (호스트가 선언) | 예(Android 13+) | 진행 중 통화 알림 표시. 거부해도 서비스는 돈다 |
 
 서비스 타입은 실제로 허용된 권한에 맞춰서만 켭니다. 마이크 권한이 없으면 서비스를 아예 띄우지 않고, camera 타입은 카메라가 켜져 있을 때만 씁니다.
