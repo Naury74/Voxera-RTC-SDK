@@ -24,6 +24,7 @@ import com.twilio.audioswitch.AudioDevice
 import com.twilio.audioswitch.AudioDeviceChangeListener
 import io.livekit.android.LiveKit
 import io.livekit.android.RoomOptions
+import io.livekit.android.room.datastream.StreamTextOptions
 import io.livekit.android.events.RoomEvent
 import io.livekit.android.room.Room
 import io.livekit.android.room.track.CameraPosition
@@ -123,6 +124,7 @@ internal class LiveKitRtcEngine(
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             room.events.events.collect { event -> onRoomEvent(event) }
         }
+        listenForChat()
         try {
             room.connect(credentials.serverUrl, credentials.accessToken)
         } catch (cancelled: CancellationException) {
@@ -208,8 +210,6 @@ internal class LiveKitRtcEngine(
                     from == null -> emptyList()
                     event.topic == ReactionWire.TOPIC ->
                         listOfNotNull(ReactionWire.decode(event.topic, event.data)?.let { RtcEngineEvent.ReactionReceived(from, it) })
-                    event.topic == ChatWire.TOPIC ->
-                        listOfNotNull(ChatWire.decode(event.topic, event.data)?.let { (id, text) -> RtcEngineEvent.ChatReceived(from, id, text) })
                     event.topic == HandWire.TOPIC ->
                         listOfNotNull(HandWire.decode(event.topic, event.data)?.let { RtcEngineEvent.HandRaisedChanged(from, it) })
                     else -> emptyList()
@@ -316,8 +316,18 @@ internal class LiveKitRtcEngine(
     }
 
     override suspend fun sendChatMessage(messageId: String, text: String): MediaActionResult {
-        val sent = room.localParticipant.publishData(ChatWire.encode(messageId, text), DataPublishReliability.RELIABLE, ChatWire.TOPIC)
+        val sent = room.localParticipant.sendText(text, StreamTextOptions(topic = ChatStream.TOPIC, streamId = messageId))
         return if (sent.isSuccess) MediaActionResult.Applied else MediaActionResult.Failed(VoxeraError.NotConnected)
+    }
+
+    /** 표준 채팅 스트림을 받는다. 내용은 기록하지 않는다. */
+    private fun listenForChat() {
+        room.registerTextStreamHandler(ChatStream.TOPIC) { reader, from ->
+            scope.launch {
+                val text = runCatching { ChatStream.read(reader.flow, reader.info.totalSize) }.getOrNull() ?: return@launch
+                _events.emit(RtcEngineEvent.ChatReceived(from.value, reader.info.id, text))
+            }
+        }
     }
 
     /** 내 손들기 상태. 새 참가자에게 다시 알릴 때 쓴다. */
@@ -422,6 +432,7 @@ internal class LiveKitRtcEngine(
     override suspend fun release() {
         if (!released.compareAndSet(false, true)) return
         videoTracks.unregister(this)
+        room.unregisterTextStreamHandler(ChatStream.TOPIC)
         room.audioSwitchHandler?.unregisterAudioDeviceChangeListener(audioDeviceListener)
         conditions.close()
         scope.cancel()

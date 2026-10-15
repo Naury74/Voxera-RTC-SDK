@@ -1,28 +1,33 @@
 package com.naury.voxerartc.livekit
 
 import com.naury.voxerartc.api.ChatMessage
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
 
 /**
- * 채팅을 LiveKit 데이터 메시지로 주고받는 형식. 주제는 [TOPIC], 내용은 `1:<메시지 ID>:<글>`(UTF-8)이다.
- * 메시지 ID는 영문·숫자·`-`만 쓴다. 모르는 버전, 잘못된 ID, 너무 큰 내용은 버린다. 글을 다듬는 일은 세션이 맡는다.
+ * 채팅은 LiveKit 표준 채팅과 같은 텍스트 스트림(주제 [TOPIC])으로 주고받는다. LiveKit Meet 같은 다른 클라이언트와도 서로 읽힌다.
+ * 메시지 ID는 스트림 ID다. 받는 쪽은 [MAX_BYTES]를 넘는 스트림을 끝까지 읽지 않고 버린다. 글을 다듬는 일은 세션이 맡는다.
  */
-internal object ChatWire {
-    const val TOPIC = "voxera.chat"
-    private const val VERSION = "1"
+internal object ChatStream {
+    const val TOPIC = "lk.chat"
 
-    // 글자 하나가 UTF-8로 최대 4바이트이므로 최대 글자 수의 4배에 머리 부분 여유를 더한다.
-    private const val MAX_BYTES = ChatMessage.MAX_LENGTH * 4 + ChatMessage.MAX_ID_LENGTH + 8
-    private val idPattern = Regex("[A-Za-z0-9-]{1,${ChatMessage.MAX_ID_LENGTH}}")
+    // 글자 하나가 UTF-8로 최대 4바이트다.
+    const val MAX_BYTES = ChatMessage.MAX_LENGTH * 4
 
-    fun encode(messageId: String, text: String): ByteArray = "$VERSION:$messageId:$text".toByteArray(Charsets.UTF_8)
-
-    /** 해석한 (메시지 ID, 글). 형식이 맞지 않으면 `null`. */
-    fun decode(topic: String?, data: ByteArray): Pair<String, String>? {
-        if (topic != TOPIC || data.isEmpty() || data.size > MAX_BYTES) return null
-        val raw = data.toString(Charsets.UTF_8)
-        val parts = raw.split(':', limit = 3)
-        if (parts.size != 3 || parts[0] != VERSION || !idPattern.matches(parts[1])) return null
-        return parts[1] to parts[2]
+    /** [chunks]를 이어 붙인다. 합이 [maxBytes]를 넘으면 그 자리에서 멈추고 `null`. */
+    suspend fun read(chunks: Flow<String>, declaredBytes: Long?, maxBytes: Int = MAX_BYTES): String? {
+        if (declaredBytes != null && declaredBytes > maxBytes) return null
+        val text = StringBuilder()
+        var bytes = 0
+        var overflow = false
+        chunks.takeWhile { chunk ->
+            bytes += chunk.toByteArray(Charsets.UTF_8).size
+            overflow = bytes > maxBytes
+            if (!overflow) text.append(chunk)
+            !overflow
+        }.collect()
+        return if (overflow) null else text.toString()
     }
 }
 
