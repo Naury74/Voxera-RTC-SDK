@@ -478,9 +478,10 @@ private fun CallContent(
                 // 입퇴장·채팅 알림은 상태 표시줄 바로 아래 아일랜드에 차례로 뜬다. 조작 막대를 숨겨도 보인다.
                 ParticipantNotices(participants, island)
                 if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, island = island, onOpen = { sheet = RoomSheet.CHAT })
-                KIslandHost(island)
                 // 손을 든 동안의 알약은 상단 줄이 있으면 그 아래에 둔다.
                 val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
+                // 아일랜드는 상태 표시줄 바로 아래에 뜨므로, 상단 줄이 보이는 동안에는 그 아래로 내려 버튼을 가리지 않게 한다.
+                KIslandHost(island, Modifier.offset { IntOffset(0, noticeTop.roundToPx()) })
                 Column(
                     Modifier
                         .align(Alignment.TopCenter)
