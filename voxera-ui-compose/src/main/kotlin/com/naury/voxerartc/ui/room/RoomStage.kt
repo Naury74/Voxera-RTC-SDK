@@ -1,5 +1,6 @@
 package com.naury.voxerartc.ui.room
 
+import com.naury.kinetica.ui.RollingText
 import com.naury.voxerartc.ui.theme.enterOnAppear
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -525,7 +526,7 @@ internal fun VoiceStage(participants: List<Participant>, elapsed: String, status
                     Spacer(Modifier.height(gap))
                     Text(focus.displayName, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.display, textAlign = TextAlign.Center, modifier = Modifier.enterOnAppear(1))
                     Spacer(Modifier.height(VoxeraSpacing.xxs))
-                    Text(elapsed, color = VoxeraTheme.colors.primary, style = VoxeraTheme.typography.title, modifier = Modifier.enterOnAppear(2))
+                    RollingText(elapsed, style = VoxeraTheme.typography.title.copy(color = VoxeraTheme.colors.primary), modifier = Modifier.enterOnAppear(2))
                     if (status != null) {
                         Spacer(Modifier.height(VoxeraSpacing.xxs))
                         // 연결 상태가 바뀌면 문구가 서서히 바뀐다.
