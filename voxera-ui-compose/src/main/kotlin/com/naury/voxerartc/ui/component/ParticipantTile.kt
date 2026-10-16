@@ -29,6 +29,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -104,16 +110,30 @@ public fun ParticipantTile(
     }.joinToString(", ")
     val pinLabel = stringResource(if (pinned) R.string.voxera_tile_unpin else R.string.voxera_tile_pin)
     val track = if (showScreenShare) participant.screenShare else participant.camera
-    val speakingGlow by animateFloatAsState(if (participant.isSpeaking) 1f else 0f, tween(220), label = "speaking")
+    val speakingGlowState = animateFloatAsState(if (participant.isSpeaking) 1f else 0f, tween(220), label = "speaking")
     val tap = onTap ?: onTogglePin
     val interaction = remember { MutableInteractionSource() }
     // 말하는 동안 타일 둘레를 따라 강조색 빛이 천천히 돌며 바깥으로 살짝 번진다. 움직임 줄이기 설정이면 돌지 않고 머문다.
     val glowColors = remember(colors.primary, colors.secondary) { listOf(colors.primary, colors.secondary, colors.primary.copy(alpha = 0.5f)) }
+    // 통화 화면에서는 자리만 알리고 테두리는 무대 위층이 그린다(SpeakingGlows 참고). 그 밖에서는 타일이 직접 그린다.
+    val glows = LocalSpeakingGlows.current?.takeIf { speakingOutline }
+    val glowId = remember { Any() }
+    val glowLevel = remember(speakingGlowState) { { speakingGlowState.value } }
+    if (glows != null) DisposableEffect(glows) { onDispose { glows.spots.remove(glowId) } }
     BoxWithConstraints(
         modifier = modifier
             .pressScale(interaction, pressed = 0.97f)
             // 세기는 그릴 때 읽으므로 켜지고 꺼지는 동안 다시 구성하지 않는다. 0이면 그리지도 돌지도 않는다.
-            .then(if (speakingOutline) Modifier.glowBorder({ speakingGlow }, shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = 2_400) else Modifier)
+            .then(
+                when {
+                    glows != null -> Modifier.onGloballyPositioned { coordinates ->
+                        val spot = GlowSpot(Rect(coordinates.positionInRoot(), coordinates.size.toSize()), coordinates.boundsInRoot(), shape, glowLevel)
+                        if (glows.spots[glowId] != spot) glows.spots[glowId] = spot
+                    }
+                    speakingOutline -> Modifier.glowBorder(glowLevel, shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = GLOW_PERIOD_MS)
+                    else -> Modifier
+                },
+            )
             .clip(shape)
             .background(colors.surfaceElevated)
             .then(
