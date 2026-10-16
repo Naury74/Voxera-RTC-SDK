@@ -84,3 +84,4 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 손들기 | 없음 | `Participant.handRaisedAtMs`, `setHandRaised`, 데이터 메시지(`voxera.hand`) + 새 참가자에게 다시 보냄 | 참가자 속성(attributes)은 토큰에 `canUpdateOwnMetadata` 권한이 있어야 해서, 기본 토큰으로도 되게 함 |
 | 그룹 통화 수신 | 기본값 | `adaptiveStream`·`dynacast` 켬 | 작은 타일·PiP·화면 밖 타일은 낮은 화질만 받고, 아무도 안 보는 화질 계층은 보내지 않음 |
 | 진행자 기능 | 없음 | 제공하지 않음 | 남의 마이크 끄기·내보내기는 LiveKit 서버 API(관리자 권한)가 필요해 클라이언트 SDK 몫이 아님 |
+| 화면 구성 요소 | Voxera 자체 Glass 컴포넌트 | 시트·아일랜드 알림·스위치·선택 묶음·채팅 말풍선·추이 그래프·블러·움직임 효과는 Kinetica UI 키트(`implementation`)로 그리고, Voxera 공개 컴포넌트 이름과 매개변수는 그대로 둠 | 영상 위 유리에 실제 블러, 뒤 화면이 물러나는 시트, 차례로 뜨는 알림 같은 완성도를 직접 만들지 않고 가져오기 위해. 공개 API에 Kinetica 타입을 내보내지 않아 나중에 바꾸거나 빼기 쉽다 |

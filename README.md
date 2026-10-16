@@ -41,7 +41,7 @@ Voxera는 Android 앱에 음성·영상 통화를 화면째로 붙이는 RTC SDK
 | `voxera-invitation` | Kotlin JVM | Call Mode: `InvitationGateway` 계약, `CallCoordinator`, 푸시 payload 파서 |
 | `voxera-android` | Android | 통화 중 백그라운드 유지(`VoxeraForegroundCall`, foreground service·알림) |
 | `voxera-testkit` | Kotlin JVM | `FakeRtcEngine`(가상 시간), `VoxeraDemo`·`DemoScenario` 오프라인 데모 |
-| `voxera-ui-compose` | Compose | `VoxeraTheme`(Light/Dark Glass 토큰), `VoxeraRoomScreen`, 조작 막대·참가자 타일 |
+| `voxera-ui-compose` | Compose | `VoxeraTheme`(Light/Dark Glass 토큰), `VoxeraRoomScreen`, 조작 막대·참가자 타일. 시트·알림·블러·움직임은 Kinetica UI 키트로 그림 |
 | `app` | Showcase | 오프라인 쇼케이스. 배포하지 않음 |
 
 구조와 설계 결정은 [docs/architecture.md](docs/architecture.md), 연동 방법은 [docs/integration.md](docs/integration.md), 변경 이력은 [docs/release-notes.md](docs/release-notes.md), 보안 정책은 [SECURITY.md](SECURITY.md)에 있습니다.

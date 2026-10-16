@@ -289,3 +289,22 @@ LiveKit Cloud(voxera-test) 음성 통화, Galaxy Buds2가 미리 연결된 상�
 | 로그 | 토큰 없음 | logcat `eyJ` 0건 | Pass |
 
 CallStyle 알림을 펼친 화면에서는 시스템이 작은 아이콘 대신 앱 아이콘을 사람 사진 옆에 붙여 보여 준다. 배지는 상태 표시줄과 잠금 화면 같은 작은 아이콘 자리에서 보인다.
+
+## Kinetica UI 키트 적용 — 2026-10-16, voxera_verify(API 36), 브랜치 feat/kinetica-ui
+
+Kinetica `com.naurylab:kinetica-*:1.0.0-alpha01`(정식 배포 전, 로컬 Maven. 처음 ed3bafc, 이후 94bcdc3 판)을 붙인 뒤 오프라인 데모와 로컬 livekit-server 실통화(`lk room join --publish-demo` 영상, TextureView)로 확인했다.
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 의존성 | 충돌 없이 debug·release(R8) 빌드 | 전체 검사(test, lint, apiCheck, 두 빌드) 통과 | Pass |
+| 외부 앱 | mavenLocal로 Voxera를 받는 `samples/consumer`가 Kinetica까지 받아 실행 | pom에 Kinetica가 runtime 의존성으로 들어가고, release 빌드가 통화 화면까지 크래시 없이 뜸 | Pass |
+| 영상 위 유리 | 도크·상단 바 뒤 영상이 흐리게 비침 | TextureView 영상의 잔디 무늬가 뭉개지고 색만 비침 | Pass |
+| 시트 | 뒤 통화 화면이 물러나며 흐려짐, 끌어 닫기, 뒤로 가기, 키보드 따라 올라감 | 모두 됨. 판 안 카드가 판을 뚫고 배경을 비추던 문제는 KSheet로 바꿔 해결 | Pass |
+| 채팅 시트 + 키보드 | 메시지가 많아도 입력 칸이 키보드 위 | 처음에는 입력 칸이 키보드 뒤로 잘림 → 목록이 줄어들게 고친 뒤 통과 | Fail → 수정 |
+| 아일랜드 알림 | 입퇴장·손들기·채팅이 차례로, 상단 버튼을 가리지 않음 | 처음에는 상단 줄 버튼을 가려 PiP 버튼이 안 눌림 → 상단 줄 아래로 내린 뒤 실통화 입장 알림으로 통과 | Fail → 수정 |
+| 선택 묶음, 글꼴 1.5배 | 이름이 잘리지 않음 | ed3bafc 판은 "Dev toke…"로 잘림 → 피드백 후 94bcdc3 판에서 두 줄로 넘어감 | Fail → 수정 |
+| 스위치·추이 그래프·말풍선·숫자 굴림·빛 테두리·색종이·연결 중 반짝임 | 라이트·다크에서 깨지지 않음 | 화면으로 확인. 빛 테두리는 처음에 타일 안쪽에 얼룩이 생겨 clip 바깥으로 옮김 | Pass |
+| 상태 표시줄 아이콘 | 바탕에 맞는 밝기 | 어두운 테마를 쓰는 외부 앱에서 흰 아이콘이 밝은 바탕에 묻힘 → 화면마다 아이콘 밝기를 고르게 한 뒤 어두운 아이콘 | Fail → 수정 |
+| PiP | 작은 창으로 줄어듦 | pinned, 아바타 표시 | Pass |
+| 입력 오류 흔들림 | 오류가 생길 때 입력란이 흔들림 | 420ms로 짧아 화면 캡처로는 잡지 못함 | NOT RUN |
+| Fold7 실기기 | 같은 화면 | 무선 연결이 끊겨 확인 못 함 | NOT RUN |
