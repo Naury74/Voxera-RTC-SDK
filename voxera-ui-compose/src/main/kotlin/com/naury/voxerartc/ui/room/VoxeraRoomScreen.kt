@@ -616,7 +616,7 @@ private fun TopBar(
                     val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
                         Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
-                        Text("$count", color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1)
+                        RollingText("$count", style = VoxeraTheme.typography.caption.copy(color = VoxeraTheme.colors.foregroundSecondary))
                     }
                 }
             }

@@ -197,10 +197,12 @@ private fun ChatInput(onSend: (String) -> Unit) {
             }
         },
         placeholder = stringResource(R.string.voxera_chat_placeholder),
+        // 화면 판독기가 입력 칸 이름으로 읽는다.
+        label = stringResource(R.string.voxera_chat_placeholder),
         maxLines = 4,
         maxLength = ChatMessage.MAX_LENGTH,
-        // 글자 수는 한도에 가까워졌을 때만 보여 준다.
-        showCounter = draft.text.length > ChatMessage.MAX_LENGTH - COUNTER_MARGIN,
+        // 글자 수는 남은 글자가 얼마 안 될 때만 보여 준다.
+        counterThreshold = COUNTER_MARGIN,
     )
 }
 
