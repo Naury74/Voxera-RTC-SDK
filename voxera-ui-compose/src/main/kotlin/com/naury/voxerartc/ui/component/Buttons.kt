@@ -275,6 +275,6 @@ public fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier,
         horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs),
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
-        Text(text, color = color, style = VoxeraTheme.typography.caption)
+        Text(text, color = color, style = VoxeraTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

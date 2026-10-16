@@ -75,6 +75,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naury.kinetica.ui.KIslandHost
@@ -605,15 +607,16 @@ private fun TopBar(
     onToggleView: () -> Unit,
 ) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-        // 글꼴이 커지면 상태 알약이 줄어들고 말줄임되어, 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
+        // 상태 알약과 데모 표시는 이 칸 안에서만 자리를 나눠, 글꼴이 커져도 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
             GlassSurface(
                 level = GlassLevel.Medium,
                 shape = CircleShape,
-                contentPadding = PaddingValues(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xs),
-                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = VoxeraSpacing.xs),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
+                // 휴대폰 폭에서 버튼 네 개와 데모 표시가 함께 있으면 알약 자리가 90dp 남짓이라 간격을 좁게 둔다.
+                // 넓게 두면 상태 점이 나타날 때 내용이 넘쳐 마지막 칸인 인원수가 밀려난다.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
                     if (health != null) {
                         val label = stringResource(health.labelRes())
                         Box(Modifier.size(8.dp).clip(CircleShape).background(health.color()).semantics { contentDescription = label })
@@ -624,11 +627,12 @@ private fun TopBar(
                     val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
                         Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
-                        Text("$count", color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1)
+                        RollingText("$count", style = VoxeraTheme.typography.caption.copy(color = VoxeraTheme.colors.foregroundSecondary))
                     }
                 }
             }
-            if (simulated) DemoChip()
+            // 자리가 모자라면 시간·인원 알약이 먼저 자리를 잡고, 데모 표시는 다 들어갈 때만 보인다(글자가 잘린 칩은 두지 않는다).
+            if (simulated) ShowIfFits(Modifier.weight(1f, fill = false)) { DemoChip() }
         }
         if (stageView != null) {
             val toSpeaker = stageView == StageView.GALLERY
@@ -641,6 +645,21 @@ private fun TopBar(
         if (onPictureInPicture != null) RoundIconButton(VoxeraIcons.PictureInPicture, stringResource(R.string.voxera_control_pip), onPictureInPicture)
         RoundIconButton(VoxeraIcons.Group, stringResource(R.string.voxera_control_people), onPeople)
         RoundIconButton(VoxeraIcons.Insights, stringResource(R.string.voxera_control_stats), onQuality)
+    }
+}
+
+/** [content]가 받은 폭 안에 다 들어갈 때만 그린다. 들어가지 않으면 자리를 차지하지 않고 숨긴다. */
+@Composable
+private fun ShowIfFits(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity)) }
+        val width = placeables.maxOfOrNull { it.width } ?: 0
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        if (width > constraints.maxWidth) {
+            layout(0, 0) {}
+        } else {
+            layout(width, height) { placeables.forEach { it.placeRelative(0, (height - it.height) / 2) } }
+        }
     }
 }
 
