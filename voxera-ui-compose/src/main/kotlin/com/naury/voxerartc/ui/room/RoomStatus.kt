@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import com.naury.kinetica.ui.ShimmerText
 import com.naury.voxerartc.ui.theme.enterOnAppear
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import kotlinx.coroutines.delay
@@ -126,10 +127,12 @@ internal fun ConnectingContent(state: SessionState, simulated: Boolean, onCancel
             label = "connecting-label",
             modifier = Modifier.enterOnAppear(2).semantics { liveRegion = LiveRegionMode.Polite },
         ) { isConnecting ->
-            Text(
+            // 기다리는 동안 글자 위로 빛이 천천히 지나간다.
+            ShimmerText(
                 stringResource(if (isConnecting) R.string.voxera_state_connecting else R.string.voxera_state_preparing),
-                color = VoxeraTheme.colors.foregroundSecondary,
                 style = VoxeraTheme.typography.body,
+                color = VoxeraTheme.colors.foregroundSecondary,
+                highlight = VoxeraTheme.colors.foreground,
             )
         }
         Spacer(Modifier.height(VoxeraSpacing.md))

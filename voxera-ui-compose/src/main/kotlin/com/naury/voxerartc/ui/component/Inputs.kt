@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import com.naury.kinetica.ui.KSegmentedControl
 import com.naury.kinetica.ui.KSwitch
+import com.naury.kinetica.ui.shake
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.voxeraGlass
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
@@ -39,6 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -89,6 +93,9 @@ public fun VoxeraTextField(
         focused -> colors.focusRing
         else -> colors.glassStroke
     }
+    // 새 오류가 생길 때마다 입력란이 좌우로 짧게 흔들린다. 오류가 사라질 때는 흔들지 않는다.
+    var errorShakes by remember { mutableStateOf(0) }
+    LaunchedEffect(error) { if (error != null) errorShakes++ }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
         Text(label, color = colors.foregroundSecondary, style = VoxeraTheme.typography.label)
         BasicTextField(
@@ -108,6 +115,7 @@ public fun VoxeraTextField(
             ),
             modifier = Modifier
                 .fillMaxWidth()
+                .shake(errorShakes, distance = 8.dp)
                 .semantics {
                     contentDescription = label
                     if (secure) password()
