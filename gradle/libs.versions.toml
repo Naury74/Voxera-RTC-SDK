@@ -14,6 +14,7 @@ androidxCore = "1.19.1"
 androidxLifecycle = "2.11.0"
 kotlinxCoroutines = "1.11.0"
 livekit = "2.29.0"
+kinetica = "1.0.0-alpha01"
 androidxCoreTelecom = "1.0.1"
 
 junit4 = "4.13.2"
@@ -22,6 +23,9 @@ turbine = "1.2.1"
 robolectric = "4.17"
 
 [libraries]
+kinetica-ui = { module = "com.naurylab:kinetica-ui", version.ref = "kinetica" }
+kinetica-render-compose = { module = "com.naurylab:kinetica-render-compose", version.ref = "kinetica" }
+kinetica-presets = { module = "com.naurylab:kinetica-presets", version.ref = "kinetica" }
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-core-telecom = { module = "androidx.core:core-telecom", version.ref = "androidxCoreTelecom" }

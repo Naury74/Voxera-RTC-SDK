@@ -2,9 +2,7 @@ package com.naury.voxerartc.ui.theme
 
 import android.content.Context
 import android.os.PowerManager
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -12,8 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.KineticaColors
+import com.naury.kinetica.ui.KineticaTheme
+import com.naury.kinetica.ui.SurfaceStyle
 
 /** 밝기 테마. [SYSTEM]은 호스트 앱의 uiMode를 따른다. */
 public enum class VoxeraThemeMode { SYSTEM, LIGHT, DARK }
@@ -190,12 +192,36 @@ public fun VoxeraTheme(config: VoxeraThemeConfig = VoxeraThemeConfig(), content:
             rejectedOverrides = resolved.rejected,
         )
     }
-    CompositionLocalProvider(
-        LocalVoxeraTokens provides tokens,
-        LocalIndication provides ripple(color = tokens.colors.foreground),
-        content = content,
-    )
+    CompositionLocalProvider(LocalVoxeraTokens provides tokens) {
+        // 시트·토스트·스위치 같은 구성 요소는 Kinetica UI 키트로 그린다. 같은 색과 글꼴을 쓰도록 Voxera 토큰을 넘기고,
+        // 누름 표시도 요소 모양을 따라 옅게 덮였다 사라지는 Kinetica 방식으로 통일한다.
+        KineticaTheme(
+            darkTheme = tokens.colors.isDark,
+            surface = tokens.colors.kineticaSurface(),
+            colors = tokens.colors.kineticaColors(),
+            textStyle = TextStyle(fontFamily = config.fontFamily ?: FontFamily.Default),
+            content = content,
+        )
+    }
 }
+
+/** Voxera 표면 색을 Kinetica 단색 표면으로 옮긴다. 영상 위 패널은 따로 글래스를 고른다. */
+internal fun VoxeraColors.kineticaSurface(): SurfaceStyle = SurfaceStyle.Solid(
+    color = surface,
+    contentColor = foreground,
+    background = canvas,
+    border = glassStroke,
+    borderWidth = 1.dp,
+)
+
+internal fun VoxeraColors.kineticaColors(): KineticaColors = KineticaColors(
+    accent = primary,
+    onAccent = onPrimary,
+    positive = primary,
+    onPositive = onPrimary,
+    destructive = danger,
+    onDestructive = onDanger,
+)
 
 /** AUTO를 실제 품질로 바꾼다. 배터리 절약이나 고대비면 불투명도를 높인다. */
 internal fun resolveGlassQuality(requested: VoxeraGlassQuality, powerSave: Boolean, highContrast: Boolean): VoxeraGlassQuality = when {

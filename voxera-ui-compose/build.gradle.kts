@@ -40,6 +40,9 @@ dependencies {
     api(libs.androidx.compose.foundation)
     api(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
+    // 화면 구성 요소와 움직임은 Kinetica UI 키트로 그린다. 공개 API에는 Kinetica 타입을 내보내지 않는다.
+    implementation(libs.kinetica.ui)
+    implementation(libs.kinetica.render.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.runtime.compose)
