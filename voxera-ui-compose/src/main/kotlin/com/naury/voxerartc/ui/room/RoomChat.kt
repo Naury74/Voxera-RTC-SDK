@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -61,7 +62,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.KChatBubble
+import com.naury.kinetica.ui.KChatGroupPosition
+import com.naury.kinetica.ui.KChatSide
 import com.naury.kinetica.ui.KIslandContent
+import com.naury.kinetica.ui.LocalKineticaContentColor
 import com.naury.kinetica.ui.KIslandResult
 import com.naury.kinetica.ui.KIslandState
 import com.naury.voxerartc.api.ChatMessage
@@ -102,7 +107,7 @@ private fun nameOf(people: Map<String, Participant>, id: String, fallback: Strin
  * 받은 글은 일반 글자로만 그리고(링크·서식 해석 없음), 길게 눌러 복사할 수 있다.
  */
 @Composable
-internal fun ChatSheet(messages: List<ChatMessage>, participants: List<Participant>, onSend: (String) -> Unit) {
+internal fun ColumnScope.ChatSheet(messages: List<ChatMessage>, participants: List<Participant>, onSend: (String) -> Unit) {
     val colors = VoxeraTheme.colors
     val people = participants.associateBy { it.id }
     val someone = stringResource(R.string.voxera_chat_someone)
@@ -121,15 +126,23 @@ internal fun ChatSheet(messages: List<ChatMessage>, participants: List<Participa
     } else {
         LazyColumn(
             state = list,
-            modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp),
+            // 키보드가 올라와 시트 높이가 줄면 목록이 먼저 줄어들어, 입력 칸은 늘 키보드 위에 보인다.
+            modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).weight(1f, fill = false),
             contentPadding = PaddingValues(bottom = VoxeraSpacing.xs),
         ) {
             itemsIndexed(messages, key = { _, message -> message.id }) { index, message ->
                 val first = startsGroup(messages, index)
+                val last = index == messages.lastIndex || startsGroup(messages, index + 1)
                 ChatBubble(
                     message = message,
                     name = nameOf(people, message.participantId, someone),
                     showSender = first && !message.isLocal,
+                    position = when {
+                        first && last -> KChatGroupPosition.Single
+                        first -> KChatGroupPosition.First
+                        last -> KChatGroupPosition.Last
+                        else -> KChatGroupPosition.Middle
+                    },
                     modifier = Modifier
                         .animateItem()
                         .padding(top = if (first && index > 0) VoxeraSpacing.sm else 2.dp),
@@ -141,15 +154,18 @@ internal fun ChatSheet(messages: List<ChatMessage>, participants: List<Participa
     ChatInput(onSend)
 }
 
+/**
+ * 말풍선 하나. 같은 사람이 이어 보낸 묶음은 붙은 쪽 모서리를 덜 둥글게 하고, 묶음의 마지막 말풍선에만 꼬리를 단다.
+ * 받은 글은 일반 글자로만 그리고 길게 눌러 골라 복사할 수 있다.
+ */
 @Composable
-private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, modifier: Modifier = Modifier) {
+private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, position: KChatGroupPosition, modifier: Modifier = Modifier) {
     val colors = VoxeraTheme.colors
     val mine = message.isLocal
     val you = stringResource(R.string.voxera_you)
     val spoken = stringResource(R.string.voxera_chat_from, if (mine) you else name, message.text)
     Row(
         modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = spoken },
-        horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {
         if (!mine) {
@@ -158,7 +174,7 @@ private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, 
                 if (showSender) VoxeraAvatar(message.participantId, name, size = 28.dp)
             }
         }
-        Column(horizontalAlignment = if (mine) Alignment.End else Alignment.Start, modifier = Modifier.widthIn(max = 280.dp)) {
+        Column(Modifier.weight(1f)) {
             if (showSender) {
                 Text(
                     name,
@@ -169,17 +185,10 @@ private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, 
                     modifier = Modifier.padding(start = VoxeraSpacing.xs, bottom = 2.dp),
                 )
             }
-            val shape = if (mine) RoundedCornerShape(18.dp, 18.dp, 6.dp, 18.dp) else RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp)
-            SelectionContainer {
-                Text(
-                    message.text,
-                    color = if (mine) colors.onPrimary else colors.foreground,
-                    style = VoxeraTheme.typography.body,
-                    modifier = Modifier
-                        .clip(shape)
-                        .background(if (mine) colors.primary else colors.foreground.copy(alpha = if (colors.isDark) 0.12f else 0.06f))
-                        .padding(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xs),
-                )
+            KChatBubble(side = if (mine) KChatSide.Sent else KChatSide.Received, position = position, maxWidthFraction = 0.82f) {
+                SelectionContainer {
+                    Text(message.text, color = LocalKineticaContentColor.current, style = VoxeraTheme.typography.body)
+                }
             }
         }
     }

@@ -39,6 +39,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -659,9 +660,7 @@ private fun RoundIconButton(icon: ImageVector, label: String, onClick: () -> Uni
  * 바깥을 누르거나, 뒤로 가기, 아래로 끌어(안쪽 목록이 맨 위일 때는 목록째로) 닫는다. 판은 뒤 영상을 흐리게 비추는 유리다.
  */
 @Composable
-private fun RoomSheetHost(visible: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
+private fun RoomSheetHost(visible: Boolean, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     val sheetGlass = SurfaceStyle.Glass(VoxeraTheme.colors.glassStyle(GlassLevel.High))
-    KSheet(visible, onDismissRequest = onDismiss, surface = sheetGlass) {
-        content()
-    }
+    KSheet(visible, onDismissRequest = onDismiss, surface = sheetGlass, content = content)
 }
