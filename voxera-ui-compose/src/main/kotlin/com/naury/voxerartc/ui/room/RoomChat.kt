@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +61,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.KIslandContent
+import com.naury.kinetica.ui.KIslandResult
+import com.naury.kinetica.ui.KIslandState
 import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
@@ -247,59 +251,34 @@ private fun ChatInput(onSend: (String) -> Unit) {
 }
 
 /**
- * 시트를 닫아 둔 사이 온 채팅을 위에서 내려오는 캡슐로 잠깐 보여 준다. 누르면 채팅을 연다.
- * 화면이 처음 그려질 때 이미 있던 메시지는 띄우지 않는다. 4초 뒤 사라지고, 그사이 새 메시지가 오면 내용만 바뀐다.
+ * 시트를 닫아 둔 사이 온 채팅을 화면 위 아일랜드에 잠깐 보여 준다. 누르면 채팅을 연다.
+ * 화면이 처음 그려질 때 이미 있던 메시지는 띄우지 않는다. 4초 뒤 줄어들며 사라지고, 다른 알림이 있으면 차례로 이어진다.
  */
 @Composable
-internal fun ChatNotices(messages: List<ChatMessage>, participants: List<Participant>, suppressed: Boolean, onOpen: () -> Unit) {
+internal fun ChatNotices(messages: List<ChatMessage>, participants: List<Participant>, suppressed: Boolean, island: KIslandState, onOpen: () -> Unit) {
     val latest = messages.lastOrNull { !it.isLocal }
     var baseline by remember { mutableStateOf(latest?.id) }
-    var shown by remember { mutableStateOf<ChatMessage?>(null) }
+    val someone = stringResource(R.string.voxera_chat_someone)
+    val accent = VoxeraTheme.colors.primary
+    val people by rememberUpdatedState(participants.associateBy { it.id })
+    val open by rememberUpdatedState(onOpen)
     LaunchedEffect(latest?.id, suppressed) {
         if (suppressed || latest == null || latest.id == baseline) {
-            if (suppressed) {
-                shown = null
-                baseline = latest?.id
-            }
+            if (suppressed) baseline = latest?.id
             return@LaunchedEffect
         }
         baseline = latest.id
-        shown = latest
-        delay(4_000)
-        shown = null
-    }
-    val someone = stringResource(R.string.voxera_chat_someone)
-    val people = participants.associateBy { it.id }
-    AnimatedVisibility(
-        visible = shown != null,
-        enter = slideInVertically { -it } + fadeIn(),
-        exit = slideOutVertically { -it } + fadeOut(),
-    ) {
-        val message = shown ?: return@AnimatedVisibility
-        val name = nameOf(people, message.participantId, someone)
-        val open = stringResource(R.string.voxera_chat_open)
-        val interaction = remember { MutableInteractionSource() }
-        GlassSurface(
-            level = GlassLevel.Medium,
-            shape = RoundedCornerShape(24.dp),
-            contentPadding = PaddingValues(start = VoxeraSpacing.xs, end = VoxeraSpacing.md, top = VoxeraSpacing.xs, bottom = VoxeraSpacing.xs),
-            modifier = Modifier
-                .widthIn(max = 420.dp)
-                .pressScale(interaction, pressed = 0.97f)
-                .clip(RoundedCornerShape(24.dp))
-                .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClickLabel = open, onClick = onOpen)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                VoxeraAvatar(message.participantId, name, size = 32.dp)
-                Column(Modifier.weight(1f, fill = false)) {
-                    Text(name, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(message.text, color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-            }
-        }
+        val content = KIslandContent(
+            title = nameOf(people, latest.participantId, someone),
+            subtitle = latest.text,
+            icon = VoxeraIcons.Chat,
+            accent = accent,
+        )
+        if (island.show(content, CHAT_NOTICE_MS) == KIslandResult.Clicked) open()
     }
 }
+
+private const val CHAT_NOTICE_MS = 4_000L
 
 /** 내가 손을 든 동안 위에 남아 있는 알약. 누르면 손을 내린다. */
 @Composable

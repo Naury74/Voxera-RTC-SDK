@@ -43,6 +43,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import com.naury.kinetica.ui.KIslandContent
+import com.naury.kinetica.ui.KIslandState
+import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.api.AudioRoute
 import com.naury.voxerartc.api.AudioRouteType
 import com.naury.voxerartc.api.LocalMediaState
@@ -100,11 +103,11 @@ internal fun noticesBetween(previous: List<Participant>?, current: List<Particip
 }
 
 /**
- * 위에서 내려오는 유리 캡슐 알림. 화면에 들어온 뒤 1.5초 동안의 변화는 알리지 않는다. 한 번에 하나씩 2.5초 보여 주며, TalkBack에는 조용히 읽힌다.
- * 여러 명이 한꺼번에 바뀌면 차례로 보여 준다(최대 3건, 그 이상은 버린다).
+ * 누가 들어오고 나가거나 손을 들면 화면 위 아일랜드에 잠깐 알린다. 화면에 들어온 뒤 1.5초 동안의 변화는 알리지 않는다.
+ * 한 번에 하나씩 2.5초 보여 주고, 여러 명이 한꺼번에 바뀌면 캡슐이 줄었다 부풀며 차례로 보여 준다(최대 3건, 그 이상은 버린다).
  */
 @Composable
-internal fun ParticipantNotices(participants: List<Participant>, modifier: Modifier = Modifier) {
+internal fun ParticipantNotices(participants: List<Participant>, island: KIslandState) {
     var previous by remember { mutableStateOf<List<Participant>?>(null) }
     var queue by remember { mutableStateOf(emptyList<RoomNotice>()) }
     var counter by remember { mutableStateOf(0L) }
@@ -120,43 +123,23 @@ internal fun ParticipantNotices(participants: List<Participant>, modifier: Modif
         if (fresh.isNotEmpty()) queue = (queue + fresh).takeLast(3)
     }
     val current = queue.firstOrNull()
+    val joined = stringResource(R.string.voxera_notice_joined, current?.name.orEmpty())
+    val left = stringResource(R.string.voxera_notice_left, current?.name.orEmpty())
+    val hand = stringResource(R.string.voxera_notice_hand, current?.name.orEmpty())
+    val colors = VoxeraTheme.colors
     LaunchedEffect(current?.id) {
-        if (current != null) {
-            delay(2_500)
-            queue = queue.drop(1)
+        val notice = current ?: return@LaunchedEffect
+        val content = when (notice.kind) {
+            NoticeKind.JOINED -> KIslandContent(joined, icon = VoxeraIcons.Person, accent = colors.primary)
+            NoticeKind.LEFT -> KIslandContent(left, icon = VoxeraIcons.Person, accent = colors.foregroundSecondary)
+            NoticeKind.HAND_RAISED -> KIslandContent(hand, icon = VoxeraIcons.Hand, accent = colors.warning)
         }
-    }
-    AnimatedVisibility(
-        visible = current != null,
-        enter = slideInVertically { -it } + fadeIn(),
-        exit = slideOutVertically { -it } + fadeOut(),
-        modifier = modifier,
-    ) {
-        val notice = current ?: return@AnimatedVisibility
-        val text = stringResource(
-            when (notice.kind) {
-                NoticeKind.JOINED -> R.string.voxera_notice_joined
-                NoticeKind.LEFT -> R.string.voxera_notice_left
-                NoticeKind.HAND_RAISED -> R.string.voxera_notice_hand
-            },
-            notice.name,
-        )
-        GlassSurface(
-            level = GlassLevel.Medium,
-            shape = CircleShape,
-            contentPadding = PaddingValues(start = VoxeraSpacing.xxs, end = VoxeraSpacing.md, top = VoxeraSpacing.xxs, bottom = VoxeraSpacing.xxs),
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-                Box {
-                    VoxeraAvatar(notice.participantId, notice.name, size = 32.dp)
-                    if (notice.kind == NoticeKind.HAND_RAISED) HandBadge(Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp), size = 18.dp)
-                }
-                Text(text, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
+        island.show(content, PARTICIPANT_NOTICE_MS)
+        queue = queue.drop(1)
     }
 }
+
+private const val PARTICIPANT_NOTICE_MS = 2_500L
 
 /** 오디오 경로가 바뀌었을 때 띄울 알림. */
 internal sealed interface RouteNotice {

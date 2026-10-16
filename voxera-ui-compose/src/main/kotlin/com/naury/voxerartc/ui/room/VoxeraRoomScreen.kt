@@ -16,7 +16,9 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import com.naury.kinetica.ui.KIslandHost
 import com.naury.kinetica.ui.KSheet
+import com.naury.kinetica.ui.rememberKIslandState
 import com.naury.kinetica.ui.KineticaScaffold
 import com.naury.kinetica.ui.SurfaceStyle
 import com.naury.voxerartc.ui.glass.glassStyle
@@ -339,6 +341,7 @@ private fun CallContent(
     // 오디오 알림 말풍선의 기준점: 이 화면 상자와 오디오(또는 더보기) 버튼의 화면 위치. 값으로 들고 있어야 움직일 때 다시 그려진다.
     var screenOrigin by remember { mutableStateOf(Offset.Zero) }
     var audioButtonBounds by remember { mutableStateOf<Rect?>(null) }
+    val island = rememberKIslandState()
     val roomGlass = SurfaceStyle.Glass(VoxeraTheme.colors.glassStyle(GlassLevel.Medium))
     // TalkBack 읽기 순서: 상단 상태·안내 → 영상 무대 → 조작 막대. 그리는 순서(무대가 맨 아래)와 다르므로 따로 정한다.
     Box(
@@ -462,7 +465,11 @@ private fun CallContent(
                         }
                     }
                 }
-                // 입퇴장 알림은 조작 막대를 숨겨도 보인다. 상단 줄이 있으면 그 아래에 둔다.
+                // 입퇴장·채팅 알림은 상태 표시줄 바로 아래 아일랜드에 차례로 뜬다. 조작 막대를 숨겨도 보인다.
+                ParticipantNotices(participants, island)
+                if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, island = island, onOpen = { sheet = RoomSheet.CHAT })
+                KIslandHost(island)
+                // 손을 든 동안의 알약은 상단 줄이 있으면 그 아래에 둔다.
                 val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
                 Column(
                     Modifier
@@ -473,8 +480,6 @@ private fun CallContent(
                     verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
                 ) {
                     if (handRaiseEnabled) RaisedHandChip(myHand, onLower = { scope.launch { session.setHandRaised(false) } })
-                    ParticipantNotices(participants)
-                    if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, onOpen = { sheet = RoomSheet.CHAT })
                 }
 
                 AnimatedVisibility(
