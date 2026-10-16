@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,8 @@ import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.Canvas
+import com.naury.kinetica.ui.GlassStyle
+import com.naury.kinetica.ui.glass
 import com.naury.voxerartc.ui.theme.VoxeraColors
 import com.naury.voxerartc.ui.theme.VoxeraGlassQuality
 import com.naury.voxerartc.ui.theme.VoxeraRadius
@@ -67,33 +70,18 @@ internal fun glassFill(colors: VoxeraColors, level: GlassLevel, quality: VoxeraG
 }
 
 /**
- * 테두리 반사광. 빛이 왼쪽 위에서 들어온다고 보고 왼쪽 위 모서리를 가장 밝게, 오른쪽 아래를 그다음으로 밝게 하며
- * 옆면은 [VoxeraColors.glassStroke] 정도로 어둡게 둔다. 두께감이 생겨 얇은 판이 떠 있는 것처럼 보인다.
- */
-internal fun glassRim(colors: VoxeraColors, size: Size): Brush {
-    val bright = if (colors.isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.9f)
-    val soft = if (colors.isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.4f)
-    return Brush.linearGradient(
-        0f to bright,
-        0.32f to colors.glassStroke,
-        0.68f to colors.glassStroke,
-        1f to soft,
-        start = Offset.Zero,
-        end = Offset(size.width, size.height),
-    )
-}
-
-/**
- * Voxera 유리 질감. 층 순서는 그림자 → 반투명 단색 채움 → 1dp 외곽선 → 안쪽 테두리 반사광이다. 면 자체에는 그라디언트를 칠하지 않는다.
+ * Voxera 유리 질감.
  *
- * 뒤 배경은 흐리게 하지 않는다. `Modifier.blur`는 뒤가 아니라 대상 자체를 흐리게 하므로 쓰지 않고, 영상 Surface 위에서는
- * 반투명 채움으로 대신한다. 품질이 불투명(OFF)이면 반사광 없이 외곽선만 남긴다.
+ * 통화 화면처럼 배경을 기록하는 화면 안에서는 뒤에 있는 영상과 화면을 실제로 흐리게 비추고, 그 위에 [GlassLevel]만큼 옅은 색을 덮는다.
+ * 기록하는 배경이 없거나 블러를 못 쓰는 기기(Android 11 이하)에서는 지금까지처럼 반투명 단색으로 칠한다.
+ * 품질이 줄임(REDUCED)이나 불투명(OFF)이면 블러 없이 거의 불투명하게 칠하고, 불투명이면 반사광 없이 외곽선만 남긴다.
  */
 @Composable
 public fun Modifier.voxeraGlass(shape: Shape, level: GlassLevel = GlassLevel.Medium): Modifier {
     val colors = VoxeraTheme.colors
     val quality = VoxeraTheme.glassQuality
     val translucent = quality == VoxeraGlassQuality.FULL || quality == VoxeraGlassQuality.AUTO
+    if (translucent) return this.glass(remember(colors, level) { colors.glassStyle(level) }, shape).clip(shape)
     val shadowColor = Color.Black.copy(alpha = if (colors.isDark) 0.35f else 0.14f)
     return this
         .shadow(level.shadow, shape, ambientColor = shadowColor, spotColor = shadowColor)
@@ -101,17 +89,40 @@ public fun Modifier.voxeraGlass(shape: Shape, level: GlassLevel = GlassLevel.Med
         .background(glassFill(colors, level, quality))
         .drawWithCache {
             val outline = shape.createOutline(size, layoutDirection, this)
-            val stroke = 1.dp.toPx()
-            // 안쪽 반사광 선은 외곽선 바로 안에 그린다.
-            val inner = shape.createOutline(Size(size.width - stroke * 2, size.height - stroke * 2), layoutDirection, this)
-            val rim = glassRim(colors, size)
             onDrawWithContent {
                 drawContent()
-                drawOutline(outline, colors.glassStroke, style = Stroke(stroke))
-                if (translucent) translate(stroke, stroke) { drawOutline(inner, rim, style = Stroke(stroke)) }
+                drawOutline(outline, colors.glassStroke, style = Stroke(1.dp.toPx()))
             }
         }
 }
+
+/**
+ * Voxera 색으로 만든 블러 유리. 흐린 배경 위에 덮는 색([GlassStyle.tint])은 블러가 글자 뒤를 가려 주므로 단색 채움보다 옅게 두고,
+ * 블러를 못 쓸 때 칠하는 색([GlassStyle.fallback])은 지금까지의 반투명 채움과 같게 둔다.
+ */
+internal fun VoxeraColors.glassStyle(level: GlassLevel): GlassStyle = GlassStyle(
+    blur = when (level) {
+        GlassLevel.Low -> 20.dp
+        GlassLevel.Medium -> 24.dp
+        GlassLevel.High -> 32.dp
+    },
+    saturation = 1.5f,
+    brightness = if (isDark) -0.04f else 0.02f,
+    tint = glassTint.copy(alpha = level.blurTintAlpha),
+    edgeLight = if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.9f),
+    edgeWidth = 1.dp,
+    shadow = level.shadow,
+    fallback = glassFill(this, level, VoxeraGlassQuality.FULL),
+    onGlass = foreground,
+)
+
+/** 블러 위에 덮는 색의 불투명도. 시트는 글자가 많아 진하게 둔다. */
+private val GlassLevel.blurTintAlpha: Float
+    get() = when (this) {
+        GlassLevel.Low -> 0.62f
+        GlassLevel.Medium -> 0.48f
+        GlassLevel.High -> 0.78f
+    }
 
 /** 유리 질감 상자. */
 @Composable
