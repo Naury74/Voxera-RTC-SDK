@@ -1,15 +1,17 @@
 package com.naury.voxerartc.ui.component
 
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,20 +20,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.customActions
-import com.naury.kinetica.ui.glowBorder
-import com.naury.voxerartc.ui.glass.pressScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,21 +34,26 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.glowBorder
 import com.naury.voxerartc.api.ConnectionQuality
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.glass.GlassPill
+import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
@@ -108,13 +108,12 @@ public fun ParticipantTile(
     val tap = onTap ?: onTogglePin
     val interaction = remember { MutableInteractionSource() }
     // 말하는 동안 타일 둘레를 따라 강조색 빛이 천천히 돌며 바깥으로 살짝 번진다. 움직임 줄이기 설정이면 돌지 않고 머문다.
-    val glowColors = if (speakingOutline && speakingGlow > 0f) {
-        listOf(colors.primary, colors.secondary, colors.primary.copy(alpha = 0.5f)).map { it.copy(alpha = it.alpha * speakingGlow) }
-    } else null
+    val glowColors = remember(colors.primary, colors.secondary) { listOf(colors.primary, colors.secondary, colors.primary.copy(alpha = 0.5f)) }
     BoxWithConstraints(
         modifier = modifier
             .pressScale(interaction, pressed = 0.97f)
-            .then(if (glowColors != null) Modifier.glowBorder(shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = 2_400) else Modifier)
+            // 세기는 그릴 때 읽으므로 켜지고 꺼지는 동안 다시 구성하지 않는다. 0이면 그리지도 돌지도 않는다.
+            .then(if (speakingOutline) Modifier.glowBorder({ speakingGlow }, shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = 2_400) else Modifier)
             .clip(shape)
             .background(colors.surfaceElevated)
             .then(

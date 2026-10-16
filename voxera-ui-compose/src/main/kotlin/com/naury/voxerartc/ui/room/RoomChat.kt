@@ -1,13 +1,10 @@
 package com.naury.voxerartc.ui.room
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,65 +19,54 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.naury.kinetica.ui.KChatBubble
 import com.naury.kinetica.ui.KChatGroupPosition
+import com.naury.kinetica.ui.KChatInput
 import com.naury.kinetica.ui.KChatSide
 import com.naury.kinetica.ui.KIslandContent
-import com.naury.kinetica.ui.LocalKineticaContentColor
 import com.naury.kinetica.ui.KIslandResult
 import com.naury.kinetica.ui.KIslandState
+import com.naury.kinetica.ui.LocalKineticaContentColor
 import com.naury.voxerartc.api.ChatMessage
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.component.HandBadge
 import com.naury.voxerartc.ui.component.VoxeraAvatar
-import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
 import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * [lastReadId] 뒤에 온, 내가 보내지 않은 메시지 수. [lastReadId]가 `null`이거나 목록에서 밀려나 없으면 남의 메시지 전부를 센다.
@@ -194,69 +180,28 @@ private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, 
     }
 }
 
-/** 글 입력 칸과 보내기 버튼. 글이 있을 때만 버튼이 강조색으로 바뀐다. 키보드의 보내기로도 보낸다. */
+/**
+ * 글 입력 칸과 보내기 버튼. 글이 있을 때만 버튼이 강조색으로 바뀌고, 여러 줄이면 네 줄까지 늘어난다. 키보드의 보내기로도 보낸다.
+ * 상태 기반 입력 칸이라 화면이 자주 다시 그려져도(말하는 사람 표시 등) 키보드 입력을 잃지 않는다.
+ */
 @Composable
 private fun ChatInput(onSend: (String) -> Unit) {
-    val colors = VoxeraTheme.colors
-    // 상태 기반 입력 칸은 화면이 자주 다시 그려져도(말하는 사람 표시 등) 키보드 입력을 잃지 않는다.
     val draft = rememberTextFieldState()
-    val canSend = ChatMessage.sanitize(draft.text.toString()) != null
-    val send = {
-        if (canSend) {
-            onSend(draft.text.toString())
-            draft.clearText()
-        }
-    }
-    val placeholder = stringResource(R.string.voxera_chat_placeholder)
-    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-        Box(
-            Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(24.dp))
-                .background(colors.foreground.copy(alpha = if (colors.isDark) 0.10f else 0.05f))
-                .padding(horizontal = VoxeraSpacing.md, vertical = 12.dp),
-        ) {
-            if (draft.text.isEmpty()) Text(placeholder, color = colors.foregroundSecondary, style = VoxeraTheme.typography.body)
-            BasicTextField(
-                state = draft,
-                textStyle = VoxeraTheme.typography.body.copy(color = colors.foreground),
-                cursorBrush = SolidColor(colors.primary),
-                lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 4),
-                inputTransformation = InputTransformation.maxLength(ChatMessage.MAX_LENGTH),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
-                onKeyboardAction = { send() },
-                modifier = Modifier.fillMaxWidth().semantics { contentDescription = placeholder },
-            )
-        }
-        val interaction = remember { MutableInteractionSource() }
-        val container by animateColorAsState(if (canSend) colors.primary else colors.foreground.copy(alpha = 0.08f), tween(180), label = "send")
-        val tint by animateColorAsState(if (canSend) colors.onPrimary else colors.foregroundSecondary, tween(180), label = "send-tint")
-        val label = stringResource(R.string.voxera_chat_send)
-        Box(
-            Modifier
-                .size(48.dp)
-                .pressScale(interaction, pressed = 0.88f)
-                .clip(CircleShape)
-                .background(container)
-                .clickable(interactionSource = interaction, indication = null, enabled = canSend, role = Role.Button, onClick = send)
-                .clearAndSetSemantics {
-                    contentDescription = label
-                    role = Role.Button
-                    if (canSend) onClick(label = label) { send(); true }
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(VoxeraIcons.Send, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
-        }
-    }
-    if (draft.text.length > ChatMessage.MAX_LENGTH - 100) {
-        Text(
-            "${draft.text.length} / ${ChatMessage.MAX_LENGTH}",
-            color = colors.foregroundSecondary,
-            style = VoxeraTheme.typography.caption,
-            modifier = Modifier.fillMaxWidth().padding(top = VoxeraSpacing.xxs, end = VoxeraSpacing.md),
-        )
-    }
+    KChatInput(
+        draft,
+        onSend = {
+            val text = draft.text.toString()
+            if (ChatMessage.sanitize(text) != null) {
+                onSend(text)
+                draft.clearText()
+            }
+        },
+        placeholder = stringResource(R.string.voxera_chat_placeholder),
+        maxLines = 4,
+        maxLength = ChatMessage.MAX_LENGTH,
+        // 글자 수는 한도에 가까워졌을 때만 보여 준다.
+        showCounter = draft.text.length > ChatMessage.MAX_LENGTH - COUNTER_MARGIN,
+    )
 }
 
 /**
@@ -268,25 +213,36 @@ internal fun ChatNotices(messages: List<ChatMessage>, participants: List<Partici
     val latest = messages.lastOrNull { !it.isLocal }
     var baseline by remember { mutableStateOf(latest?.id) }
     val someone = stringResource(R.string.voxera_chat_someone)
-    val accent = VoxeraTheme.colors.primary
     val people by rememberUpdatedState(participants.associateBy { it.id })
     val open by rememberUpdatedState(onOpen)
+    val scope = rememberCoroutineScope()
+    var showing by remember { mutableStateOf<Job?>(null) }
     LaunchedEffect(latest?.id, suppressed) {
         if (suppressed || latest == null || latest.id == baseline) {
-            if (suppressed) baseline = latest?.id
+            if (suppressed) {
+                baseline = latest?.id
+                // 채팅 시트를 열면 같은 글을 위에 또 보여 줄 필요가 없으므로 미리보기를 닫는다.
+                showing?.cancel()
+            }
             return@LaunchedEffect
         }
         baseline = latest.id
+        val name = nameOf(people, latest.participantId, someone)
         val content = KIslandContent(
-            title = nameOf(people, latest.participantId, someone),
+            title = name,
             subtitle = latest.text,
-            icon = VoxeraIcons.Chat,
-            accent = accent,
+            leading = { VoxeraAvatar(latest.participantId, name, size = 32.dp) },
         )
-        if (island.show(content, CHAT_NOTICE_MS) == KIslandResult.Clicked) open()
+        // 채팅 미리보기는 하나만 둔다. 보이는 중에 새 메시지가 오면 쌓지 않고 내용만 바꾸고 시간을 다시 잰다.
+        showing = scope.launch {
+            if (island.show(content, CHAT_NOTICE_MS, key = CHAT_NOTICE_KEY, replaceShowing = true) == KIslandResult.Clicked) open()
+        }
     }
 }
 
+private const val CHAT_NOTICE_KEY = "voxera.chat"
+
+private const val COUNTER_MARGIN = 100
 private const val CHAT_NOTICE_MS = 4_000L
 
 /** 내가 손을 든 동안 위에 남아 있는 알약. 누르면 손을 내린다. */

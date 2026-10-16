@@ -1,41 +1,21 @@
 package com.naury.voxerartc.ui.room
 
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.geometry.Rect
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
-import com.naury.kinetica.ui.KIslandHost
-import com.naury.kinetica.ui.KSheet
-import com.naury.kinetica.ui.RollingText
-import com.naury.kinetica.ui.rememberKIslandState
-import com.naury.kinetica.ui.KineticaScaffold
-import com.naury.kinetica.ui.SurfaceStyle
-import com.naury.kinetica.ui.KSystemBarIcons
-import com.naury.voxerartc.ui.glass.glassStyle
-import com.naury.voxerartc.ui.glass.pressScale
-import com.naury.voxerartc.ui.theme.enterOnAppear
-import com.naury.voxerartc.ui.theme.rememberReducedMotion
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,44 +23,44 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -94,10 +74,16 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.naury.kinetica.ui.KIslandHost
+import com.naury.kinetica.ui.KSheet
+import com.naury.kinetica.ui.KSystemBarIcons
+import com.naury.kinetica.ui.KineticaScaffold
+import com.naury.kinetica.ui.RollingText
+import com.naury.kinetica.ui.SurfaceStyle
+import com.naury.kinetica.ui.rememberKIslandState
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MonotonicClock
@@ -110,19 +96,21 @@ import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.component.VoxeraButton
 import com.naury.voxerartc.ui.component.VoxeraButtonTone
 import com.naury.voxerartc.ui.component.VoxeraIcons
-import com.naury.voxerartc.ui.component.SheetGrabber
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
+import com.naury.voxerartc.ui.glass.glassStyle
+import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.glass.voxeraBackdrop
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
-import com.naury.voxerartc.ui.theme.rememberTouchExploration
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
+import com.naury.voxerartc.ui.theme.enterOnAppear
+import com.naury.voxerartc.ui.theme.rememberReducedMotion
+import com.naury.voxerartc.ui.theme.rememberTouchExploration
 import com.naury.voxerartc.ui.video.LocalSimulatedEffect
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
 import com.naury.voxerartc.ui.video.SimulatedVideoRenderer
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
-import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -628,7 +616,7 @@ private fun TopBar(
                     val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
                         Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
-                        RollingText("$count", style = VoxeraTheme.typography.caption.copy(color = VoxeraTheme.colors.foregroundSecondary))
+                        Text("$count", color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1)
                     }
                 }
             }

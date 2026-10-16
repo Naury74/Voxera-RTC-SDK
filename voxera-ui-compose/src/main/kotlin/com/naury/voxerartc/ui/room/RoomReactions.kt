@@ -1,10 +1,5 @@
 package com.naury.voxerartc.ui.room
 
-import com.naury.kinetica.ui.ConfettiHost
-import com.naury.kinetica.ui.rememberConfettiState
-import com.naury.voxerartc.ui.component.VoxeraIcons
-import com.naury.voxerartc.ui.component.VoxeraButtonTone
-import com.naury.voxerartc.ui.component.VoxeraButton
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -34,12 +29,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -55,11 +50,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.naury.kinetica.ui.ConfettiHost
+import com.naury.kinetica.ui.rememberConfettiState
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.ReactionEvent
 import com.naury.voxerartc.core.VoxeraSession
 import com.naury.voxerartc.ui.R
+import com.naury.voxerartc.ui.component.VoxeraButton
+import com.naury.voxerartc.ui.component.VoxeraButtonTone
+import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.ui.glass.GlassPill
 import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.VoxeraSpacing

@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -224,8 +225,8 @@ class VoxeraRoomScreenTest {
         compose.onNode(hasContentDescription("Chat").and(stateIs("1 unread message"))).assertExists()
         compose.onNodeWithContentDescription("Chat").performClick()
         compose.onNodeWithText("hello there").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Message").performTextInput("hi Alex")
-        compose.onNodeWithContentDescription("Message").performImeAction()
+        compose.onNode(hasSetTextAction()).performTextInput("hi Alex")
+        compose.onNode(hasSetTextAction()).performImeAction()
         compose.waitUntil(5_000) { factory.last.sentChatMessages.isNotEmpty() }
         assertThat(factory.last.sentChatMessages.map { it.second }).containsExactly("hi Alex")
         compose.waitForIdle()

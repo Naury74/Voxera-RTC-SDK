@@ -1,83 +1,77 @@
 package com.naury.voxerartc.ui.room
 
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.PathOperation
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
-import com.naury.kinetica.ui.KIslandContent
-import com.naury.kinetica.ui.KIslandState
-import com.naury.voxerartc.ui.component.VoxeraIcons
-import com.naury.voxerartc.api.AudioRoute
-import com.naury.voxerartc.api.AudioRouteType
-import com.naury.voxerartc.api.LocalMediaState
-import com.naury.voxerartc.ui.component.VoxeraIconTile
-import com.naury.voxerartc.ui.glass.pressScale
-import com.naury.voxerartc.ui.theme.VoxeraRadius
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.KIslandContent
+import com.naury.kinetica.ui.KIslandState
+import com.naury.voxerartc.api.AudioRoute
+import com.naury.voxerartc.api.AudioRouteType
+import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.component.HandBadge
 import com.naury.voxerartc.ui.component.VoxeraAvatar
+import com.naury.voxerartc.ui.component.VoxeraIconTile
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.GlassSurface
+import com.naury.voxerartc.ui.glass.pressScale
+import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import kotlinx.coroutines.delay
@@ -126,14 +120,21 @@ internal fun ParticipantNotices(participants: List<Participant>, island: KIsland
     val joined = stringResource(R.string.voxera_notice_joined, current?.name.orEmpty())
     val left = stringResource(R.string.voxera_notice_left, current?.name.orEmpty())
     val hand = stringResource(R.string.voxera_notice_hand, current?.name.orEmpty())
-    val colors = VoxeraTheme.colors
     LaunchedEffect(current?.id) {
         val notice = current ?: return@LaunchedEffect
-        val content = when (notice.kind) {
-            NoticeKind.JOINED -> KIslandContent(joined, icon = VoxeraIcons.Person, accent = colors.primary)
-            NoticeKind.LEFT -> KIslandContent(left, icon = VoxeraIcons.Person, accent = colors.foregroundSecondary)
-            NoticeKind.HAND_RAISED -> KIslandContent(hand, icon = VoxeraIcons.Hand, accent = colors.warning)
+        // 앞에는 그 사람 얼굴을 두고, 손을 들었으면 얼굴 모서리에 손 표시를 붙인다.
+        val face: @Composable () -> Unit = {
+            Box {
+                VoxeraAvatar(notice.participantId, notice.name, size = 32.dp)
+                if (notice.kind == NoticeKind.HAND_RAISED) HandBadge(Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp), size = 18.dp)
+            }
         }
+        val title = when (notice.kind) {
+            NoticeKind.JOINED -> joined
+            NoticeKind.LEFT -> left
+            NoticeKind.HAND_RAISED -> hand
+        }
+        val content = KIslandContent(title, leading = face)
         island.show(content, PARTICIPANT_NOTICE_MS)
         queue = queue.drop(1)
     }
