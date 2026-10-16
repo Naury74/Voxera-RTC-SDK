@@ -16,6 +16,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import com.naury.kinetica.ui.KSheet
 import com.naury.kinetica.ui.KineticaScaffold
 import com.naury.kinetica.ui.SurfaceStyle
 import com.naury.voxerartc.ui.glass.glassStyle
@@ -379,6 +380,8 @@ private fun CallContent(
                     VoiceStage(participants, elapsed, health?.let { stringResource(it.statusRes()) }, modifier = stageModifier)
                 }
             },
+            // 시트가 열려 무대가 물러날 때 드러나는 바탕. 상태 표시줄 글자가 그대로 읽히도록 화면 바탕색을 쓴다.
+            backdropColor = VoxeraTheme.colors.canvas,
             edgeFade = false,
             systemBarIcons = false,
         ) {
@@ -533,11 +536,14 @@ private fun CallContent(
                     )
                 }
 
+                // 닫히며 내려가는 동안에도 마지막 시트 내용을 그대로 보여 준다.
+                var shownSheet by remember { mutableStateOf(sheet) }
+                if (sheet != RoomSheet.NONE) shownSheet = sheet
                 RoomSheetHost(
                     visible = sheet != RoomSheet.NONE,
                     onDismiss = { sheet = RoomSheet.NONE },
                 ) {
-                    when (sheet) {
+                    when (shownSheet) {
                         RoomSheet.AUDIO -> AudioRouteSheet(media, onSelect = { id ->
                             lastRouteSelectionMs = System.nanoTime() / 1_000_000
                             scope.launch { session.selectAudioRoute(id) }
@@ -641,59 +647,14 @@ private fun RoundIconButton(icon: ImageVector, label: String, onClick: () -> Uni
     }
 }
 
-/** 통화 화면 바텀 시트의 공통 틀. 바깥을 누르거나, 뒤로 가기, 손잡이 쪽을 아래로 끌어 닫는다. */
+/**
+ * 통화 화면 바텀 시트의 공통 틀. 아래에서 스프링처럼 올라오고, 열리는 동안 뒤 통화 화면이 살짝 물러난다.
+ * 바깥을 누르거나, 뒤로 가기, 아래로 끌어(안쪽 목록이 맨 위일 때는 목록째로) 닫는다. 판은 뒤 영상을 흐리게 비추는 유리다.
+ */
 @Composable
 private fun RoomSheetHost(visible: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    val dismissInteraction = remember { MutableInteractionSource() }
-    val scope = rememberCoroutineScope()
-    val drag = remember { Animatable(0f) }
-    LaunchedEffect(visible) { if (visible) drag.snapTo(0f) }
-    AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(VoxeraTheme.colors.scrim)
-                .clickable(interactionSource = dismissInteraction, indication = null, onClick = onDismiss),
-        )
-    }
-    BackHandler(enabled = visible, onBack = onDismiss)
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        // 시트는 아래에서 스프링처럼 올라와 살짝 넘쳤다 자리 잡는다.
-        AnimatedVisibility(
-            visible,
-            enter = slideInVertically(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(tween(120)),
-            exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(200)),
-        ) {
-            GlassSurface(
-                level = GlassLevel.High,
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 640.dp)
-                    .offset { IntOffset(0, drag.value.roundToInt()) }
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onDragEnd = {
-                                if (drag.value > 120.dp.toPx()) onDismiss() else scope.launch { drag.animateTo(0f) }
-                            },
-                            onDragCancel = { scope.launch { drag.animateTo(0f) } },
-                        ) { change, amount ->
-                            change.consume()
-                            scope.launch { drag.snapTo((drag.value + amount).coerceAtLeast(0f)) }
-                        }
-                    },
-            ) {
-                Column(
-                    Modifier
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
-                        .padding(start = VoxeraSpacing.lg, end = VoxeraSpacing.lg, bottom = VoxeraSpacing.lg, top = VoxeraSpacing.xs),
-                ) {
-                    SheetGrabber(Modifier.align(Alignment.CenterHorizontally))
-                    Spacer(Modifier.height(VoxeraSpacing.sm))
-                    content()
-                }
-            }
-        }
+    val sheetGlass = SurfaceStyle.Glass(VoxeraTheme.colors.glassStyle(GlassLevel.High))
+    KSheet(visible, onDismissRequest = onDismiss, surface = sheetGlass) {
+        content()
     }
 }

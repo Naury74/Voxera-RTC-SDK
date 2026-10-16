@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import com.naury.kinetica.ui.Sparkline as KSparkline
 import com.naury.voxerartc.api.ConnectionQuality
 import com.naury.voxerartc.ui.component.VoxeraIconTile
 import androidx.compose.foundation.selection.selectable
@@ -284,27 +285,9 @@ internal fun QualitySheet(history: QualityHistory) {
 /** 최근 값의 꺾은선. 축은 그 구간의 최소~최대로 맞춘다. 장식이며 TalkBack은 위 숫자를 읽는다. */
 @Composable
 internal fun Sparkline(values: List<Double>, color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.clearAndSetSemantics { }) {
-        if (values.size < 2) return@Canvas
-        val min = values.min()
-        val max = values.max()
-        val span = (max - min).takeIf { it > 0.0 } ?: 1.0
-        val step = size.width / (values.size - 1)
-        val path = Path()
-        values.forEachIndexed { index, value ->
-            val x = index * step
-            val y = size.height - ((value - min) / span * size.height * 0.85 + size.height * 0.075).toFloat()
-            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        val fill = Path().apply {
-            addPath(path)
-            lineTo(size.width, size.height)
-            lineTo(0f, size.height)
-            close()
-        }
-        drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.28f), Color.Transparent)))
-        drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-    }
+    val points = values.filter { it.isFinite() }.map { it.toFloat() }
+    if (points.size < 2) return
+    KSparkline(points, modifier.clearAndSetSemantics { }, color = color, lineWidth = 2.dp)
 }
 
 /** 효과 프리셋. 값은 [VideoEffect] 범위 안의 보수적인 값만 쓴다. */

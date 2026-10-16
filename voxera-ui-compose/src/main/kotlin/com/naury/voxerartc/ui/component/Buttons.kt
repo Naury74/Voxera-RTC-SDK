@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
+import com.naury.kinetica.ui.jellyPress
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -199,7 +200,8 @@ public fun CallControlButton(
         Box {
         Box(
             modifier = Modifier
-                .pressScale(interaction, pressed = 0.9f)
+                // 누르는 동안 원이 젤리처럼 옆으로 퍼지며 눌리고, 놓으면 출렁이며 돌아온다.
+                .jellyPress(0.1f)
                 .graphicsLayer {
                     scaleX = bounce.value
                     scaleY = bounce.value

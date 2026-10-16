@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import com.naury.kinetica.ui.KSegmentedControl
+import com.naury.kinetica.ui.KSwitch
 import com.naury.voxerartc.ui.glass.GlassLevel
 import com.naury.voxerartc.ui.glass.voxeraGlass
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
@@ -39,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
@@ -136,11 +139,34 @@ public fun VoxeraTextField(
 }
 
 /**
- * 하나만 고르는 알약 모양 선택 묶음. 고르면 밝은 선택 알약이 유리 홈 위로 튕기듯 옮겨 간다. 항목 폭은 모두 같고 최소 48dp다.
- * TalkBack에서는 라디오 버튼으로 읽힌다.
+ * 하나만 고르는 알약 모양 선택 묶음. 고르면 선택 표시가 액체처럼 늘어났다 줄며 옮겨 간다. 항목 폭은 모두 같다.
+ * TalkBack에서는 탭으로 읽힌다. 항목이 하나뿐이면 고를 것이 없으므로 이름만 보여 준다.
  */
 @Composable
 public fun <T> VoxeraSegmentedControl(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (options.size < 2) {
+        options.firstOrNull()?.let { Text(it.second, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, modifier = modifier) }
+        return
+    }
+    // 글꼴을 크게 키우면 이름이 한 줄에 다 들어가지 않는다. 그때는 두 줄까지 넘겨 그리는 선택 묶음을 쓴다.
+    if (LocalDensity.current.fontScale > WRAP_FONT_SCALE) {
+        WrappingSegmentedControl(options, selected, onSelect, modifier)
+        return
+    }
+    val index = options.indexOfFirst { it.first == selected }.coerceAtLeast(0)
+    KSegmentedControl(options.map { it.second }, index, onSelect = { onSelect(options[it].first) }, modifier = modifier)
+}
+
+private const val WRAP_FONT_SCALE = 1.3f
+
+/** 두 줄까지 넘기는 선택 묶음. 고르면 선택 알약이 튕기듯 옮겨 간다. TalkBack에서는 라디오 버튼으로 읽힌다. */
+@Composable
+private fun <T> WrappingSegmentedControl(
     options: List<Pair<T, String>>,
     selected: T,
     onSelect: (T) -> Unit,
@@ -199,6 +225,7 @@ public fun <T> VoxeraSegmentedControl(
     }
 }
 
+
 /** 켜고 끄는 한 줄 설정. 줄 전체를 누를 수 있고 상태는 글자로도 보여 준다. */
 @Composable
 public fun VoxeraToggleRow(
@@ -230,24 +257,5 @@ public fun VoxeraToggleRow(
 /** 켜짐/꺼짐 스위치 그림. 색과 함께 손잡이 위치로도 상태를 보여 준다. 누르기·읽기는 감싼 줄이 맡는다. */
 @Composable
 private fun VoxeraSwitch(checked: Boolean) {
-    val colors = VoxeraTheme.colors
-    val reduced = rememberReducedMotion()
-    val knob by animateDpAsState(if (checked) 20.dp else 0.dp, if (reduced) snap() else spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium), label = "knob")
-    val track by animateColorAsState(if (checked) colors.primary else colors.foreground.copy(alpha = 0.18f), label = "track")
-    Box(
-        Modifier
-            .size(width = 51.dp, height = 31.dp)
-            .clip(CircleShape)
-            .background(track)
-            .padding(2.dp),
-    ) {
-        Box(
-            Modifier
-                .offset { IntOffset(knob.roundToPx(), 0) }
-                .size(27.dp)
-                .shadow(2.dp, CircleShape)
-                .clip(CircleShape)
-                .background(Color.White),
-        )
-    }
+    KSwitch(checked, onCheckedChange = null)
 }
