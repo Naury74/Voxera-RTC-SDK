@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import com.naury.kinetica.ui.KSystemBarIcons
 import com.naury.voxerartc.ui.glass.GlassDock
 import com.naury.voxerartc.ui.glass.GlassPill
 import com.naury.voxerartc.ui.glass.voxeraBackdrop
@@ -162,6 +163,8 @@ public fun VoxeraPrejoinScreen(
 
     VoxeraTheme(theme) {
         val colors = VoxeraTheme.colors
+        // 상태 표시줄 아이콘을 이 화면 바탕 밝기에 맞춘다. 화면을 떠나면 호스트 설정으로 돌아간다.
+        KSystemBarIcons(light = colors.isDark)
         val micOn = micWanted && mic == PermissionStatus.GRANTED
         val level by rememberMicLevel(micOn)
         Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = level ?: 0f), contentAlignment = Alignment.TopCenter) {

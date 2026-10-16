@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
+import com.naury.kinetica.ui.KSystemBarIcons
 import com.naury.voxerartc.ui.theme.enterOnAppear
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.layout.Arrangement
@@ -100,6 +101,8 @@ public fun VoxeraCallScreen(
                 onEnterPictureInPicture = onEnterPictureInPicture,
             )
         else -> VoxeraTheme(theme) {
+            // 상태 표시줄 아이콘을 이 화면 바탕 밝기에 맞춘다. 화면을 떠나면 호스트 설정으로 돌아간다.
+            KSystemBarIcons(light = VoxeraTheme.colors.isDark)
             Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = if (current is CallState.Ringing) 0.6f else 0f).windowInsetsPadding(WindowInsets.safeDrawing)) {
                 if (session.engineKind == RtcEngineKind.SIMULATED) {
                     StatusChip(stringResource(R.string.voxera_demo_badge), VoxeraTheme.colors.warning, Modifier.align(Alignment.TopCenter).padding(top = VoxeraSpacing.md))

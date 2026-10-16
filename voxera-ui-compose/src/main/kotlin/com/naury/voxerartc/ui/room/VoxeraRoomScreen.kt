@@ -22,6 +22,7 @@ import com.naury.kinetica.ui.RollingText
 import com.naury.kinetica.ui.rememberKIslandState
 import com.naury.kinetica.ui.KineticaScaffold
 import com.naury.kinetica.ui.SurfaceStyle
+import com.naury.kinetica.ui.KSystemBarIcons
 import com.naury.voxerartc.ui.glass.glassStyle
 import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.enterOnAppear
@@ -177,6 +178,13 @@ public fun VoxeraRoomScreen(
         val scope = rememberCoroutineScope()
         val leave: () -> Unit = onEnd ?: { scope.launch { session.leave() } }
         val speaking = participants.filter { !it.isLocal && it.isSpeaking }.maxOfOrNull { it.audioLevel } ?: 0f
+        // 상태 표시줄 아이콘은 이 화면의 바탕을 따른다. 영상 통화는 영상이 대개 어두워 밝은 아이콘을 쓴다. 화면을 떠나면 호스트 설정으로 돌아간다.
+        val videoCall = when (val s = state) {
+            is SessionState.Connected -> s.mode == CallMode.VIDEO
+            is SessionState.Reconnecting -> s.mode == CallMode.VIDEO
+            else -> false
+        }
+        KSystemBarIcons(light = VoxeraTheme.colors.isDark || videoCall)
 
         CompositionLocalProvider(LocalSimulatedEffect provides if (simulated) media.videoEffect else VideoEffect.None) {
             Box(modifier.fillMaxSize().voxeraBackdrop(emphasis = speaking)) {
