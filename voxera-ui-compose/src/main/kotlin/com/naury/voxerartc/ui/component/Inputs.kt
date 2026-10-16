@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import com.naury.kinetica.ui.KSegmentSizing
 import com.naury.kinetica.ui.KSegmentedControl
+import com.naury.kinetica.ui.KTone
 import com.naury.kinetica.ui.KSwitch
 import com.naury.kinetica.ui.shake
 import com.naury.voxerartc.ui.glass.GlassLevel
@@ -148,7 +150,7 @@ public fun VoxeraTextField(
 
 /**
  * 하나만 고르는 알약 모양 선택 묶음. 고르면 선택 표시가 액체처럼 늘어났다 줄며 옮겨 간다. 항목 폭은 모두 같다.
- * TalkBack에서는 탭으로 읽힌다. 항목이 하나뿐이면 고를 것이 없으므로 이름만 보여 준다.
+ * TalkBack에서는 라디오 버튼으로 읽힌다. 항목이 하나뿐이면 고를 것이 없으므로 이름만 보여 준다.
  */
 @Composable
 public fun <T> VoxeraSegmentedControl(
@@ -161,78 +163,18 @@ public fun <T> VoxeraSegmentedControl(
         options.firstOrNull()?.let { Text(it.second, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, modifier = modifier) }
         return
     }
-    // 글꼴을 크게 키우면 이름이 한 줄에 다 들어가지 않는다. 그때는 두 줄까지 넘겨 그리는 선택 묶음을 쓴다.
-    if (LocalDensity.current.fontScale > WRAP_FONT_SCALE) {
-        WrappingSegmentedControl(options, selected, onSelect, modifier)
-        return
-    }
     val index = options.indexOfFirst { it.first == selected }.coerceAtLeast(0)
-    KSegmentedControl(options.map { it.second }, index, onSelect = { onSelect(options[it].first) }, modifier = modifier)
+    // 이름 길이가 크게 달라도 짧은 칸의 남는 폭을 긴 칸에 주고, 글꼴을 키우면 칸 높이가 늘며 세 줄까지 넘긴다.
+    KSegmentedControl(
+        options.map { it.second },
+        index,
+        onSelect = { onSelect(options[it].first) },
+        modifier = modifier,
+        tone = KTone.Accent,
+        maxLines = 3,
+        sizing = KSegmentSizing.Proportional,
+    )
 }
-
-private const val WRAP_FONT_SCALE = 1.3f
-
-/** 두 줄까지 넘기는 선택 묶음. 고르면 선택 알약이 튕기듯 옮겨 간다. TalkBack에서는 라디오 버튼으로 읽힌다. */
-@Composable
-private fun <T> WrappingSegmentedControl(
-    options: List<Pair<T, String>>,
-    selected: T,
-    onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = VoxeraTheme.colors
-    val reduced = rememberReducedMotion()
-    val index = options.indexOfFirst { it.first == selected }.coerceAtLeast(0)
-    BoxWithConstraints(
-        modifier
-            .heightIn(min = 48.dp)
-            .voxeraGlass(CircleShape, GlassLevel.Low)
-            .padding(VoxeraSpacing.xxs),
-    ) {
-        val segment = maxWidth / options.size.coerceAtLeast(1)
-        val offset by animateDpAsState(
-            segment * index,
-            if (reduced) snap() else spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
-            label = "segment",
-        )
-        // 선택 알약. 밝은 면과 그림자로 홈 위에 떠 있는 것처럼 보인다.
-        Box(Modifier.matchParentSize()) {
-            Box(
-                Modifier
-                    .offset { IntOffset(offset.roundToPx(), 0) }
-                    .width(segment)
-                    .fillMaxHeight()
-                    .shadow(3.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.25f))
-                    .clip(CircleShape)
-                    .background(if (colors.isDark) colors.primary.copy(alpha = 0.32f) else colors.surface)
-                    .border(1.dp, if (colors.isDark) colors.primary.copy(alpha = 0.5f) else colors.glassStroke, CircleShape),
-            )
-        }
-        Row(Modifier.fillMaxWidth().selectableGroup()) {
-            options.forEach { (value, label) ->
-                val isSelected = value == selected
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .heightIn(min = 40.dp)
-                        .clip(CircleShape)
-                        .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(value) })
-                        .padding(horizontal = VoxeraSpacing.sm, vertical = VoxeraSpacing.xs),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        label,
-                        color = if (isSelected) colors.foreground else colors.foregroundSecondary,
-                        style = VoxeraTheme.typography.label,
-                        maxLines = 2,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 /** 켜고 끄는 한 줄 설정. 줄 전체를 누를 수 있고 상태는 글자로도 보여 준다. */
 @Composable
