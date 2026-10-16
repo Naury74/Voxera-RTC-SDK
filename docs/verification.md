@@ -272,7 +272,7 @@ LiveKit Cloud(voxera-test) 음성 통화, Galaxy Buds2가 미리 연결된 상�
 
 ## 통화 알림 아이콘 — 2026-10-16, voxera_verify(API 36), 로컬 livekit-server 음성 통화
 
-알림 작은 아이콘을 Voxera 마크로 바꾸고 상황 배지를 붙인 뒤, 실제 통화 알림에서 아이콘 리소스와 상태 표시줄을 확인했다.
+알림 작은 아이콘을 Voxera 마크로 바꾸고 상황 배지를 붙인 뒤, 실제 통화 알림에서 아이콘 리소스와 상태 표시줄을 확인했다. 영상·화면 공유·보류는 영상으로 다시 입장해 확인했다(`emu gsm accept`로 받으면 시스템이 Voxera 통화를 보류하지 않아, 앞선 Telecom 확인처럼 통화 키로 받았다).
 
 | 상황 | 기대 | 실제 | Result |
 | --- | --- | --- | --- |
@@ -281,6 +281,11 @@ LiveKit Cloud(voxera-test) 음성 통화, Galaxy Buds2가 미리 연결된 상�
 | 마이크 다시 켬 | 배지 없는 마크로 돌아감 | `voxera_ic_notification` | Pass |
 | 서버를 멈춰 재연결 | 점 세 개 배지 | `voxera_ic_notification_reconnecting`. 에뮬레이터가 느려 바뀌기까지 25초 남짓 걸림 | Pass |
 | 재연결 시간 초과 | 통화가 끝나면 알림도 사라짐 | "Call disconnected", 알림 없어짐 | Pass |
-| 보류·화면 공유·영상 배지 | 상황에 맞는 배지 | 단위 테스트(상황 고르는 순서)만 확인 | NOT RUN |
+| 영상으로 입장 | 카메라 배지 | `voxera_ic_notification_video`, 상태 표시줄에 카메라 배지 | Pass |
+| 화면 공유 시작 | 화면 공유 배지 | `voxera_ic_notification_sharing`. 공유 중에는 상태 표시줄에 시스템의 빨간 화면 공유 칩이 대신 보임 | Pass |
+| 화면 공유 멈춤 | 카메라 배지로 돌아감 | `voxera_ic_notification_video` | Pass |
+| `emu gsm call` 후 통화 키로 받음 | 보류 배지 | Voxera 통화 ON_HOLD, 오디오 모드 MODE_IN_CALL, `voxera_ic_notification_on_hold`, 상태 표시줄에 일시정지 배지 | Pass |
+| 휴대전화 끊음 | 이어 가고 카메라 배지로 돌아감 | ACTIVE, `voxera_ic_notification_video` | Pass |
+| 로그 | 토큰 없음 | logcat `eyJ` 0건 | Pass |
 
 CallStyle 알림을 펼친 화면에서는 시스템이 작은 아이콘 대신 앱 아이콘을 사람 사진 옆에 붙여 보여 준다. 배지는 상태 표시줄과 잠금 화면 같은 작은 아이콘 자리에서 보인다.
