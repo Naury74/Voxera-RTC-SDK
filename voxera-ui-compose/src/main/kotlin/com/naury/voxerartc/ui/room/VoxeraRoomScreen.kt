@@ -18,6 +18,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import com.naury.kinetica.ui.KIslandHost
 import com.naury.kinetica.ui.KSheet
+import com.naury.kinetica.ui.RollingText
 import com.naury.kinetica.ui.rememberKIslandState
 import com.naury.kinetica.ui.KineticaScaffold
 import com.naury.kinetica.ui.SurfaceStyle
@@ -611,12 +612,13 @@ private fun TopBar(
                         val label = stringResource(health.labelRes())
                         Box(Modifier.size(8.dp).clip(CircleShape).background(health.color()).semantics { contentDescription = label })
                     }
-                    Text(elapsed, color = VoxeraTheme.colors.foreground, style = VoxeraTheme.typography.label, maxLines = 1)
+                    // 바뀐 자리 숫자만 위로 굴러 올라간다.
+                    RollingText(elapsed, style = VoxeraTheme.typography.label.copy(color = VoxeraTheme.colors.foreground))
                     // 좁은 상단 줄에서도 잘리지 않게 숫자만 보이고, 전체 문구는 읽어 준다.
                     val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
                         Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
-                        Text("$count", color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1)
+                        RollingText("$count", style = VoxeraTheme.typography.caption.copy(color = VoxeraTheme.colors.foregroundSecondary))
                     }
                 }
             }

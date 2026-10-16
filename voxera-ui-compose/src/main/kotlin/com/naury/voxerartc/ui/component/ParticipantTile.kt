@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
+import com.naury.kinetica.ui.glowBorder
 import com.naury.voxerartc.ui.glass.pressScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,9 +107,14 @@ public fun ParticipantTile(
     val speakingGlow by animateFloatAsState(if (participant.isSpeaking) 1f else 0f, tween(220), label = "speaking")
     val tap = onTap ?: onTogglePin
     val interaction = remember { MutableInteractionSource() }
+    // 말하는 동안 타일 둘레를 따라 강조색 빛이 천천히 돌며 바깥으로 살짝 번진다. 움직임 줄이기 설정이면 돌지 않고 머문다.
+    val glowColors = if (speakingOutline && speakingGlow > 0f) {
+        listOf(colors.primary, colors.secondary, colors.primary.copy(alpha = 0.5f)).map { it.copy(alpha = it.alpha * speakingGlow) }
+    } else null
     BoxWithConstraints(
         modifier = modifier
             .pressScale(interaction, pressed = 0.97f)
+            .then(if (glowColors != null) Modifier.glowBorder(shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = 2_400) else Modifier)
             .clip(shape)
             .background(colors.surfaceElevated)
             .then(
@@ -155,9 +161,6 @@ public fun ParticipantTile(
                 audioLevel = participant.audioLevel,
                 modifier = Modifier.align(Alignment.Center),
             )
-        }
-        if (speakingOutline && speakingGlow > 0f) {
-            Box(Modifier.fillMaxSize().border(3.dp, colors.primary.copy(alpha = speakingGlow), shape))
         }
         GlassPill(Modifier.align(Alignment.BottomStart).padding(labelPadding).padding(if (compact) VoxeraSpacing.xs else VoxeraSpacing.sm)) {
             Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), verticalAlignment = Alignment.CenterVertically) {

@@ -1,5 +1,7 @@
 package com.naury.voxerartc.ui.room
 
+import com.naury.kinetica.ui.ConfettiHost
+import com.naury.kinetica.ui.rememberConfettiState
 import com.naury.voxerartc.ui.component.VoxeraIcons
 import com.naury.voxerartc.ui.component.VoxeraButtonTone
 import com.naury.voxerartc.ui.component.VoxeraButton
@@ -32,6 +34,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
@@ -142,6 +147,9 @@ internal fun ReactionOverlay(session: VoxeraSession, participants: List<Particip
     var counter by remember(session) { mutableStateOf(0L) }
     val random = remember { Random(System.nanoTime()) }
     val you = stringResource(R.string.voxera_you)
+    var celebrate by remember(session) { mutableStateOf(0) }
+    val confetti = rememberConfettiState()
+    val confettiColors = VoxeraTheme.colors.let { remember(it) { listOf(it.primary, it.secondary, it.warning, it.danger, Color.White) } }
     LaunchedEffect(session) {
         session.reactions.collect { event ->
             val participant = names[event.participantId]
@@ -152,6 +160,8 @@ internal fun ReactionOverlay(session: VoxeraSession, participants: List<Particip
             }
             counter++
             floating = (floating + FloatingReaction(counter, event, name, 0.08f + random.nextFloat() * 0.5f)).takeLast(8)
+            // 축하 반응은 떠오르는 그림과 함께 색종이를 터뜨린다.
+            if (event.reaction == Reaction.CELEBRATE) celebrate++
             announce = "$name: ${event.reaction.emoji}"
         }
     }
@@ -169,6 +179,13 @@ internal fun ReactionOverlay(session: VoxeraSession, participants: List<Particip
                 )
             }
         }
+        val density = LocalDensity.current
+        LaunchedEffect(celebrate) {
+            if (celebrate == 0) return@LaunchedEffect
+            val origin = with(density) { Offset(width.toPx() / 2, (height - bottomInset).toPx()) }
+            confetti.burst(origin, count = 90, colors = confettiColors)
+        }
+        ConfettiHost(confetti, Modifier.fillMaxSize())
         // 읽기 전용 알림. 화면에는 보이지 않는다.
         val text = announce
         if (text != null) {
