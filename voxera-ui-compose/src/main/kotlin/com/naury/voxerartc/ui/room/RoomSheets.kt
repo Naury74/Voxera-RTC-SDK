@@ -45,7 +45,18 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.naury.kinetica.ui.Sparkline as KSparkline
+import com.naury.kinetica.ui.KListSection
+import com.naury.kinetica.ui.KRadioRow
+import com.naury.kinetica.ui.KStatCard
+import com.naury.kinetica.ui.KListLeading
+import com.naury.kinetica.ui.KListTrailing
+import com.naury.kinetica.ui.KListItem
+import com.naury.kinetica.ui.kListSection
+import com.naury.kinetica.ui.SurfaceStyle
+import com.naury.kinetica.ui.KIconButton
+import com.naury.kinetica.ui.KVariant
+import com.naury.kinetica.ui.KTone
+import com.naury.voxerartc.ui.glass.glassStyle
 import com.naury.voxerartc.api.AudioRoute
 import com.naury.voxerartc.api.AudioRouteType
 import com.naury.voxerartc.api.ConnectionQuality
@@ -95,41 +106,43 @@ internal fun AudioRouteSheet(media: LocalMediaState, onSelect: (String) -> Unit)
     SheetTitle(stringResource(R.string.voxera_routes_title))
     Column(verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
         // 지금 쓸 수 없는 경로(연결이 끊긴 이어폰 등)는 목록에 두지 않는다. 연결되면 엔진이 알려 주어 바로 나타난다.
-        media.audioRoutes.filter { it.isSelectable }.forEach { route -> RouteRow(route, selected = route.id == media.selectedAudioRouteId, onSelect = { onSelect(route.id) }) }
+        // 연결된 장치만 판 하나에 모은다. 행 전체가 라디오 버튼이고 고른 행 앞 타일이 강조색으로 바뀐다.
+        val routes = media.audioRoutes.filter { it.isSelectable }
+        val surface = sheetCardSurface()
+        KListSection(surface = surface) {
+            routes.forEach { route ->
+                item(route.id) { RouteRow(route, selected = route.id == media.selectedAudioRouteId, surface = surface, onSelect = { onSelect(route.id) }) }
+            }
+        }
     }
 }
 
 private fun AudioRouteType.isAccessory(): Boolean = this == AudioRouteType.BLUETOOTH || this == AudioRouteType.WIRED_HEADSET || this == AudioRouteType.USB
 
 @Composable
-private fun RouteRow(route: AudioRoute, selected: Boolean, onSelect: () -> Unit) {
+private fun RouteRow(route: AudioRoute, selected: Boolean, surface: SurfaceStyle, onSelect: () -> Unit) {
     val colors = VoxeraTheme.colors
     val typeLabel = stringResource(route.type.labelRes())
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .clip(RoundedCornerShape(VoxeraRadius.sm))
-            .clickable(enabled = route.isSelectable && !selected, role = Role.RadioButton, onClick = onSelect)
-            .semantics { this.selected = selected }
-            .padding(horizontal = VoxeraSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm),
-    ) {
-        VoxeraIconTile(route.type.icon(), if (selected) colors.primary else colors.foregroundSecondary, size = 36.dp)
-        Column(Modifier.weight(1f)) {
-            Text(typeLabel, color = colors.foreground, style = VoxeraTheme.typography.body)
-            val detail = when {
-                !route.isSelectable -> stringResource(R.string.voxera_route_unavailable)
-                // 내장 수화부·스피커의 이름은 시스템 영어 이름("Earpiece")이라 보여 주지 않는다. 이어폰은 기기 이름을 보여 준다.
-                route.type.isAccessory() && route.label != typeLabel -> route.label
-                else -> null
-            }
-            if (detail != null) Text(detail, color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        if (selected) Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.voxera_route_selected), tint = colors.primary)
+    val detail = when {
+        !route.isSelectable -> stringResource(R.string.voxera_route_unavailable)
+        // 내장 수화부·스피커의 이름은 시스템 영어 이름("Earpiece")이라 보여 주지 않는다. 이어폰은 기기 이름을 보여 준다.
+        route.type.isAccessory() && route.label != typeLabel -> route.label
+        else -> null
     }
+    KRadioRow(
+        typeLabel,
+        selected = selected,
+        onSelect = onSelect,
+        subtitle = detail,
+        leading = KListLeading.Icon(route.type.icon(), container = if (selected) colors.primary else colors.foregroundSecondary),
+        enabled = route.isSelectable,
+        surface = surface,
+    )
 }
+
+/** 시트 안에 놓는 판. 시트 유리 위에 얹힌 옅은 한 겹으로 그려진다. */
+@Composable
+internal fun sheetCardSurface(): SurfaceStyle = SurfaceStyle.Glass(VoxeraTheme.colors.glassStyle(GlassLevel.Low))
 
 /** 참가자 목록 순서: 손을 든 사람이 먼저 든 순서대로 맨 위, 나머지는 원래 순서. */
 internal fun peopleOrder(participants: List<Participant>): List<Participant> =
@@ -142,55 +155,58 @@ internal fun peopleOrder(participants: List<Participant>): List<Participant> =
 @Composable
 internal fun PeopleSheet(participants: List<Participant>, pinnedId: String?, onTogglePin: ((String) -> Unit)?) {
     val colors = VoxeraTheme.colors
+    val you = stringResource(R.string.voxera_you)
+    val surface = sheetCardSurface()
     SheetTitle(stringResource(R.string.voxera_people_title, participants.size))
-    LazyColumn(Modifier.heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
-        items(peopleOrder(participants), key = { it.id }) { participant ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm), modifier = Modifier.heightIn(min = 56.dp)) {
-                VoxeraAvatar(participant.id, participant.displayName, size = 40.dp, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
-                Column(Modifier.weight(1f)) {
-                    val you = stringResource(R.string.voxera_you)
-                    Text(
-                        if (participant.isLocal && participant.displayName != you) "${participant.displayName} ($you)" else participant.displayName,
-                        color = colors.foreground,
-                        style = VoxeraTheme.typography.body,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    val detail = when {
-                        participant.isSpeaking -> stringResource(R.string.voxera_speaking)
-                        !participant.isLocal && (participant.connectionQuality == ConnectionQuality.POOR || participant.connectionQuality == ConnectionQuality.LOST) ->
-                            stringResource(R.string.voxera_weak_connection)
-                        else -> null
-                    }
-                    if (detail != null) Text(detail, color = if (participant.isSpeaking) colors.primary else colors.warning, style = VoxeraTheme.typography.caption)
-                }
-                if (participant.isHandRaised) {
-                    Icon(VoxeraIcons.Hand, contentDescription = stringResource(R.string.voxera_hand_raised), tint = colors.warning, modifier = Modifier.size(20.dp))
-                }
-                Icon(
-                    if (participant.isMicrophoneEnabled) VoxeraIcons.Mic else VoxeraIcons.MicOff,
-                    contentDescription = if (participant.isMicrophoneEnabled) null else stringResource(R.string.voxera_mic_off),
-                    tint = if (participant.isMicrophoneEnabled) colors.foregroundSecondary else colors.danger,
-                    modifier = Modifier.size(20.dp),
-                )
-                Icon(
-                    if (participant.camera != null) VoxeraIcons.Videocam else VoxeraIcons.VideocamOff,
-                    contentDescription = if (participant.camera != null) null else stringResource(R.string.voxera_camera_off),
-                    tint = colors.foregroundSecondary,
-                    modifier = Modifier.size(20.dp),
-                )
-                if (onTogglePin != null) {
-                    val pinned = participant.id == pinnedId
-                    IconButton(onClick = { onTogglePin(participant.id) }, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            VoxeraIcons.PushPin,
-                            contentDescription = stringResource(if (pinned) R.string.voxera_tile_unpin else R.string.voxera_tile_pin),
-                            tint = if (pinned) colors.primary else colors.foregroundSecondary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-            }
+    LazyColumn(Modifier.heightIn(max = 420.dp)) {
+        kListSection(peopleOrder(participants), key = { it.id }, surface = surface) { participant ->
+            val weak = !participant.isLocal && (participant.connectionQuality == ConnectionQuality.POOR || participant.connectionQuality == ConnectionQuality.LOST)
+            KListItem(
+                if (participant.isLocal && participant.displayName != you) "${participant.displayName} ($you)" else participant.displayName,
+                supporting = when {
+                    participant.isSpeaking -> stringResource(R.string.voxera_speaking)
+                    weak -> stringResource(R.string.voxera_weak_connection)
+                    else -> null
+                },
+                leading = KListLeading.Custom {
+                    VoxeraAvatar(participant.id, participant.displayName, size = 40.dp, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
+                },
+                trailing = KListTrailing.Custom { PersonStatus(participant, pinned = participant.id == pinnedId, onTogglePin = onTogglePin) },
+                surface = surface,
+            )
+        }
+    }
+}
+
+/** 참가자 행 끝의 손들기·마이크·카메라 표시와 고정 버튼. 켜진 상태 아이콘은 읽지 않고, 꺼진 상태만 읽는다. */
+@Composable
+private fun PersonStatus(participant: Participant, pinned: Boolean, onTogglePin: ((String) -> Unit)?) {
+    val colors = VoxeraTheme.colors
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
+        if (participant.isHandRaised) {
+            Icon(VoxeraIcons.Hand, contentDescription = stringResource(R.string.voxera_hand_raised), tint = colors.warning, modifier = Modifier.size(20.dp))
+        }
+        Icon(
+            if (participant.isMicrophoneEnabled) VoxeraIcons.Mic else VoxeraIcons.MicOff,
+            contentDescription = if (participant.isMicrophoneEnabled) null else stringResource(R.string.voxera_mic_off),
+            tint = if (participant.isMicrophoneEnabled) colors.foregroundSecondary else colors.danger,
+            modifier = Modifier.size(20.dp),
+        )
+        Icon(
+            if (participant.camera != null) VoxeraIcons.Videocam else VoxeraIcons.VideocamOff,
+            contentDescription = if (participant.camera != null) null else stringResource(R.string.voxera_camera_off),
+            tint = colors.foregroundSecondary,
+            modifier = Modifier.size(20.dp),
+        )
+        if (onTogglePin != null) {
+            KIconButton(
+                VoxeraIcons.PushPin,
+                stringResource(if (pinned) R.string.voxera_tile_unpin else R.string.voxera_tile_pin),
+                onClick = { onTogglePin(participant.id) },
+                variant = if (pinned) KVariant.Tonal else KVariant.Text,
+                tone = if (pinned) KTone.Accent else KTone.Neutral,
+                size = 40.dp,
+            )
         }
     }
 }
@@ -255,34 +271,21 @@ internal fun QualitySheet(history: QualityHistory) {
             Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
                 pair.forEach { (kind, direction, label) ->
                     val value = formatMetric(kind, current.valueOf(kind, direction))
-                    GlassSurface(level = GlassLevel.Low, shape = RoundedCornerShape(VoxeraRadius.md), modifier = Modifier.weight(1f)) {
-                        Column {
-                            Text(stringResource(label), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(
-                                value ?: stringResource(R.string.voxera_metric_na),
-                                color = if (value == null) colors.foregroundSecondary else colors.foreground,
-                                style = VoxeraTheme.typography.title,
-                            )
-                            val series = history.series(kind, direction)
-                            if (kind in TrendKinds && series.size >= 2) {
-                                Sparkline(series, colors.primary, Modifier.fillMaxWidth().height(28.dp).padding(top = VoxeraSpacing.xxs))
-                            }
-                        }
-                    }
+                    val series = history.series(kind, direction)
+                    // 값이 바뀌면 바뀐 자리 숫자가 굴러가고, 최근 흐름은 카드 아래 꺾은선으로 보인다. 카드 하나를 한 번에 읽는다.
+                    KStatCard(
+                        title = stringResource(label),
+                        value = value ?: stringResource(R.string.voxera_metric_na),
+                        modifier = Modifier.weight(1f),
+                        trend = series.filter { it.isFinite() }.map { it.toFloat() }.takeIf { kind in TrendKinds && it.size >= 2 },
+                        surface = sheetCardSurface(),
+                    )
                 }
                 if (pair.size == 1) Spacer(Modifier.weight(1f))
             }
         }
         Text(stringResource(R.string.voxera_stats_rtt_note), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
     }
-}
-
-/** 최근 값의 꺾은선. 축은 그 구간의 최소~최대로 맞춘다. 장식이며 TalkBack은 위 숫자를 읽는다. */
-@Composable
-internal fun Sparkline(values: List<Double>, color: Color, modifier: Modifier = Modifier) {
-    val points = values.filter { it.isFinite() }.map { it.toFloat() }
-    if (points.size < 2) return
-    KSparkline(points, modifier.clearAndSetSemantics { }, color = color, lineWidth = 2.dp)
 }
 
 /** 효과 프리셋. 값은 [VideoEffect] 범위 안의 보수적인 값만 쓴다. */
