@@ -55,3 +55,11 @@ internal fun stageModel(participants: List<Participant>, pinnedId: String?, view
 /** 발표자 보기에서 지금 가장 크게 말하는 상대. 아무도 말하지 않으면 `null`. */
 internal fun loudestRemote(participants: List<Participant>): String? =
     participants.filter { !it.isLocal && it.isSpeaking }.maxByOrNull { it.audioLevel }?.id
+
+/** 격자 열 수: 2명은 위아래(가로 화면은 좌우), 3~4명 2열, 5~6명 2열(가로 화면 3열), 7명부터 3열. */
+internal fun stageColumns(count: Int, landscape: Boolean): Int = when {
+    count <= 2 -> if (landscape) 2 else 1
+    count <= 4 -> 2
+    count <= 6 -> if (landscape) 3 else 2
+    else -> 3
+}

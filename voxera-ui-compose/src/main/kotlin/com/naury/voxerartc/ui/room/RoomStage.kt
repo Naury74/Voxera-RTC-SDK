@@ -123,6 +123,8 @@ internal fun VideoStage(
         selfKey = model.selfKey,
         contentPadding = padding,
         spacing = VoxeraSpacing.xs,
+        // 열 수는 인원과 화면 방향만으로 정한다. 무대 높이로 정하면 조작 막대를 숨기고 꺼낼 때마다 배치가 바뀐다.
+        columns = { count, width, height -> stageColumns(count, landscape = width > height) },
         layer = layer,
     ) { item, role ->
         StageTile(

@@ -64,4 +64,10 @@ class StagePlanTest {
         val mine = people(3).mapIndexed { i, p -> if (i == 0) p.copy(screenShare = VideoTrackHandle("p0", "s", VideoSource.SCREEN_SHARE)) else p }
         assertThat(model(mine).focusKey).isNull()
     }
+
+    @Test
+    fun `격자 열 수는 인원과 화면 방향만 본다`() {
+        assertThat((1..9).map { stageColumns(it, landscape = false) }).containsExactly(1, 1, 2, 2, 2, 2, 3, 3, 3).inOrder()
+        assertThat((1..9).map { stageColumns(it, landscape = true) }).containsExactly(2, 2, 2, 2, 3, 3, 3, 3, 3).inOrder()
+    }
 }
