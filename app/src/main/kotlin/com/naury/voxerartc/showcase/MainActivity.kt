@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,6 +32,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.naury.kinetica.ui.KTransitionContent
+import com.naury.kinetica.ui.KTransitions
+import com.naury.kinetica.ui.PushNavigation
 import com.naury.voxerartc.android.VoxeraPictureInPicture
 import com.naury.voxerartc.api.RtcEngineKind
 import com.naury.voxerartc.ui.video.LocalVoxeraVideoRenderer
@@ -74,30 +76,14 @@ class MainActivity : ComponentActivity() {
             // 진행 중 통화 알림용(Android 13+). 실제 통화에 들어갈 때 한 번 묻는다.
             val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-            val screen = when {
-                active != null -> Screen.CALL
-                showPrejoin -> Screen.PREJOIN
-                showSetup -> Screen.SETUP
-                else -> Screen.HOME
-            }
-            // 앞으로 가면 오른쪽에서 들어오고, 뒤로 가면 왼쪽에서 돌아온다. 통화는 아래에서 떠오른다.
-            AnimatedContent(
-                targetState = screen,
-                transitionSpec = {
-                    val forward = targetState.ordinal > initialState.ordinal
-                    val enter = if (targetState == Screen.CALL) {
-                        fadeIn(tween(260)) + slideInVertically(tween(320)) { it / 12 }
-                    } else {
-                        fadeIn(tween(240)) + slideInHorizontally(tween(320)) { if (forward) it / 5 else -it / 5 }
-                    }
-                    val exit = fadeOut(tween(180)) + slideOutHorizontally(tween(320)) { if (forward) -it / 8 else it / 8 }
-                    enter togetherWith exit
-                },
-                label = "screen",
-            ) { target ->
-            when (target) {
-                Screen.CALL -> {
-                    val call = active ?: return@AnimatedContent
+            // 통화에 들어가면 시스템 앱 전환처럼 커지며 나타나고, 끝나면 설정 화면으로 돌아온다.
+            KTransitionContent(
+                targetState = active != null,
+                transition = KTransitions.Zoom,
+                isForward = { _, inCall -> inCall },
+            ) { inCall ->
+                if (inCall) {
+                    val call = active ?: return@KTransitionContent
                     BackHandler(onBack = viewModel::exit)
                     val renderer = if (call.session.engineKind == RtcEngineKind.LIVE) viewModel.liveVideoRenderer else null
                     val coordinator = call.coordinator
@@ -121,72 +107,84 @@ class MainActivity : ComponentActivity() {
                                 onEnterPictureInPicture = enterPip,
                             )
                         } else {
-                            val live = call.session.engineKind == RtcEngineKind.LIVE
-                            val liveShare = if (live) rememberScreenShareLauncher(call.session) else null
-                            val scope = rememberCoroutineScope()
-                            VoxeraRoomScreen(
-                                session = call.session,
-                                onExit = viewModel::exit,
+                                val live = call.session.engineKind == RtcEngineKind.LIVE
+                                val liveShare = if (live) rememberScreenShareLauncher(call.session) else null
+                                val scope = rememberCoroutineScope()
+                                VoxeraRoomScreen(
+                                    session = call.session,
+                                    onExit = viewModel::exit,
+                                    theme = theme,
+                                    onRejoin = viewModel::rejoin,
+                                    pictureInPicture = inPip,
+                                    onEnterPictureInPicture = enterPip,
+                                    onShareScreen = liveShare?.let { share ->
+                                        {
+                                            // 승인 화면으로 넘어갈 때 Android 11 이하가 통화를 PiP로 줄이지 않게 한다.
+                                            pip.ignoreNextUserLeave()
+                                            share()
+                                        }
+                                    } ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) } },
+                                    onSaveReport = {
+                                        val file = viewModel.saveReport()
+                                        val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)
+                                        Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
+                                    },
+                                )
+                            }
+                        }
+                
+                } else {
+                    // 홈 → 연결 설정 → 입장 전은 밀어 넣는 화면 이동이다. 가장자리에서 밀거나 뒤로 가기 제스처를 하면 손을 따라 되감긴다.
+                    val stack = buildList {
+                        add(Screen.HOME)
+                        if (showSetup) add(Screen.SETUP)
+                        if (showSetup && showPrejoin) add(Screen.PREJOIN)
+                    }
+                    PushNavigation(
+                        stack = stack,
+                        onBack = { if (showPrejoin) showPrejoin = false else showSetup = false },
+                        transition = KTransitions.Push,
+                    ) { target ->
+                        when (target) {
+                            Screen.PREJOIN -> {
+                                // 권한은 이 화면에서 마이크·카메라를 켜거나 입장할 때만 묻는다. 거부해도 해당 미디어 없이 입장한다.
+                                VoxeraPrejoinScreen(
+                                    roomName = form.roomName.trim(),
+                                    displayName = form.displayName.trim(),
+                                    initialMode = form.mode,
+                                    onJoin = { choice ->
+                                        showPrejoin = false
+                                        showSetup = false
+                                        viewModel.startLive(choice)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    },
+                                    onBack = { showPrejoin = false },
+                                    theme = theme,
+                                    preview = { modifier -> LiveKitCameraPreviewContent(modifier) },
+                                )
+                            }
+                            Screen.SETUP -> ConnectScreen(
                                 theme = theme,
-                                onRejoin = viewModel::rejoin,
-                                pictureInPicture = inPip,
-                                onEnterPictureInPicture = enterPip,
-                                onShareScreen = liveShare?.let { share ->
-                                    {
-                                        // 승인 화면으로 넘어갈 때 Android 11 이하가 통화를 PiP로 줄이지 않게 한다.
-                                        pip.ignoreNextUserLeave()
-                                        share()
-                                    }
-                                } ?: { scope.launch { call.session.startScreenShare(DemoScreenShareConsent) } },
-                                onSaveReport = {
-                                    val file = viewModel.saveReport()
-                                    val text = if (file != null) getString(R.string.report_saved, file.name) else getString(R.string.report_failed)
-                                    Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
-                                },
+                                form = form,
+                                onFormChange = viewModel::updateForm,
+                                onBack = { showSetup = false },
+                                onConnect = { showPrejoin = true },
                             )
+                            Screen.HOME -> HomeScreen(
+                                theme = theme,
+                                onThemeChange = { themeMode = it },
+                                onStart = viewModel::startDemo,
+                                onDemoCall = viewModel::startDemoCall,
+                                onConnectLiveKit = { showSetup = true },
+                            )
+                            Screen.CALL -> Unit
                         }
                     }
                 }
-                Screen.PREJOIN -> {
-                    BackHandler { showPrejoin = false }
-                    // 권한은 이 화면에서 마이크·카메라를 켜거나 입장할 때만 묻는다. 거부해도 해당 미디어 없이 입장한다.
-                    VoxeraPrejoinScreen(
-                        roomName = form.roomName.trim(),
-                        displayName = form.displayName.trim(),
-                        initialMode = form.mode,
-                        onJoin = { choice ->
-                            showPrejoin = false
-                            showSetup = false
-                            viewModel.startLive(choice)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        },
-                        onBack = { showPrejoin = false },
-                        theme = theme,
-                        preview = { modifier -> LiveKitCameraPreviewContent(modifier) },
-                    )
-                }
-                Screen.SETUP -> {
-                    BackHandler { showSetup = false }
-                    ConnectScreen(
-                        theme = theme,
-                        form = form,
-                        onFormChange = viewModel::updateForm,
-                        onBack = { showSetup = false },
-                        onConnect = { showPrejoin = true },
-                    )
-                }
-                Screen.HOME -> HomeScreen(
-                    theme = theme,
-                    onThemeChange = { themeMode = it },
-                    onStart = viewModel::startDemo,
-                    onDemoCall = viewModel::startDemoCall,
-                    onConnectLiveKit = { showSetup = true },
-                )
-            }
             }
         }
     }
 }
 
-/** 쇼케이스 화면. 순서는 앞으로 가는 방향이다(전환 방향을 정한다). */
+/** 쇼케이스 화면. 통화는 따로 전환하고, 나머지는 홈부터 쌓이는 화면 이동이다. */
 private enum class Screen { HOME, SETUP, PREJOIN, CALL }
