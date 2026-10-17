@@ -384,3 +384,42 @@ Kinetica 참가자 타일·격자 적용(c51dfff 판, 에뮬레이터): 영상 �
 - Pass: 1:1 상대 전체 화면과 내 작은 창, 작은 창 끌기와 가까운 모서리 붙기, 작은 창 탭으로 서로 바꾸기, 9명 3×3, 격자 탭으로 고정(큰 화면과 아래 띠, 고정 표시), 띠 칸 탭으로 고정 바꾸기, 막대가 숨었을 때 탭하면 막대만 꺼내기, 화면 공유 크게 보기와 띠, 위층 글로우, 손 배지, 아바타 물결, 다크 모드, 글꼴 1.5배, PiP 창.
 - Fail → Pass(089cba4 판): 고정 시 아래 띠를 손가락으로 넘겨도 움직이지 않던 것은 Kinetica 격자의 터치 상자 크기 문제였고, 고친 판에서 띠가 넘어가고 넘긴 뒤 접근성 좌표도 따라간다. 막대를 숨기면 무대가 세로로 늘어 4명이 1열 4단, 9명이 2열 5단으로 바뀌던 것은 Kinetica가 연 columns로 Voxera가 인원과 화면 방향만 보고 열 수를 정해(stageColumns), 막대를 숨겨도 4명 2×2·9명 3×3 그대로다.
 - TalkBack 실제 음성은 NOT RUN. Fold7 성능 비교는 NOT RUN.
+
+## TalkBack 실제 음성과 무대 성능 (에뮬레이터 API 36, Kinetica 818f8cc 판) — 2026-10-18
+
+TalkBack 16에서 실제로 읽는 문장을 확인했다. 방법:
+- 읽는 문장 받기: TalkBack 설정 > 고급 > 개발자 설정에서 로그 수준을 VERBOSE로 두면, logcat `talkback: SpeechControllerImpl: Speaking fragment text="..."`에 읽는 문장이 그대로 나온다.
+- 항목 넘기기: adb input 키와 터치는 TalkBack이 받지 않는다. 대신 `adb shell hid -`로 uhid USB 키보드를 등록하고(셸이 uhid 그룹), TalkBack 키보드 단축키를 보낸다. Alt+→는 다음, Alt+←는 이전, Alt+Enter는 누르기다.
+- 대상 AVD는 voxera_verify이고, 키보드 단축키를 쓰려고 hw.keyboard=yes로 켰다.
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 4명 격자 읽는 순서 | 상단 → 타일 → 조작 막대 | "Excellent connection" → "0:14" → "4 people in call" → Speaker view·PiP·People·Quality → You·Alex·Taylor·Jamie(말하는 중·손 든 상태 포함) → "On, Mic"·"On, Camera"·Flip·"2 new, More"·End | Pass |
+| 통화 시간 | "1:47"만 | "1:47" 다음에 "Colon"을 한 번 더 읽음. Kinetica RollingText가 ":" 글자를 묶음에 남기던 것을 6f9b6a5에서 고쳤고, 이제 "0:08"만 읽는다. 음성 통화 무대 시간도 같은 부품이다 | Fail → Pass |
+| 격자 타일 안내 | 누르면 크게, 동작 메뉴 | "Alex, Speaking, Button, Press Alt + ENTER to Show large, … Actions available". Alt+Enter로 고정하면 "Alex, Pinned"를 알리고 큰 화면 → 띠(You·Taylor·Jamie) → 조작 막대 순서다 | Pass |
+| 1:1 타일 | 상대는 막대 보이기·숨기기, 내 창은 바꾸기 | "Alex Morgan, Speaking … Show or hide controls", "You … Swap views". Alt+Enter로 서로 바뀐다(화면으로 확인) | Pass |
+| 9명 격자 | 9명 모두, 상태 함께 | "Taylor, Hand raised", "Morgan, Mic off", "Sam, Mic off" 등 9명 모두 | Pass |
+| 화면 공유 | 공유 화면 → 띠 | "Taylor (screen), Speaking"으로 공유 화면에 말하는 중이 붙었다. 공유 화면 타일은 말하는 중·마이크·손 상태를 빼고 카메라 타일에만 둔다. 이제 "Taylor (screen)" → You → "Taylor, Speaking" → "Alex, Speaking"으로 읽는다 | Fail → Pass |
+| 채팅 미리보기 알림 | "Alex, Loud and clear 👍" | 앞에 "Button, capital A"를 붙여 읽었다. "capital A"는 Voxera 아바타 이니셜이 읽히던 것이라, 이니셜은 장식으로 TalkBack에서 뺐다. "Button"은 Kinetica KIsland의 역할 이름이라 818f8cc에서 고쳤다. 이제 알림은 "Alex, Loud and clear 👍"로 읽고, 초점을 옮기면 한 번만 멈춘다 | Fail → Pass |
+| 알림에 초점을 둘 때 누르기 안내 | "두 번 탭하여 열기" 같은 안내 | 알림이 4초 만에 닫히고 반응 알림이 끼어들어 안내 문장까지 듣지 못함 | NOT RUN |
+| 더보기 시트 | 시트 안에서만 초점이 돌고 상태 함께 | Close에서 시작해 "Chat, 2 unread messages"·"Share, Off"·"Effects, Off"·React·Audio를 읽고, 다시 Close로 돈다 | Pass |
+| 음성 통화 | 이름·시간·조작 | Alex Morgan, 통화 시간, "Good connection", "On, Mic"·Chat·React·Audio·End | Pass |
+| 이어폰 알림 말풍선 | 뜨면 알림 | 말풍선이 뜨면 초점이 말풍선으로 가서 "Galaxy Buds (demo) disconnected"와 Undo를 읽음 | Pass |
+| 손가락 제스처(스와이프·두 번 탭) | 위와 같음 | 키보드로 같은 동작을 확인했다. 손가락 제스처 자체는 adb로 넣을 수 없음 | NOT RUN |
+
+무대 성능은 타일·격자를 바꾸기 전 판(d675c03)과 지금 판을 같은 에뮬레이터에서 비교했다. 조건은 다음과 같다.
+- release 빌드에 `cmd package compile -m speed`를 했고, 시나리오마다 15초씩 두 번 번갈아 쟀다.
+- 에뮬레이터를 `-gpu host`로 띄웠다. 그래야 GPU 시간이 실제 값으로 나온다. 예전에 4950ms만 나온 것은 소프트웨어 GPU 때문이었다.
+
+| 시나리오 | 이전 판 프레임 p50/p90, 끊김, GPU p50/p90 | 지금 판 |
+| --- | --- | --- |
+| 9명 3×3 | 26~28/30~31ms, 0.8%, 19~20/22ms | 24~25/29~30ms, 0.6~0.8%, 19/21~22ms |
+| 4명 2×2 | 23/28~29ms, 0.3~0.6%, 18~19/21ms | 23~24/27~29ms, 0.6~0.9%, 19/21ms |
+| 1:1 | 25~26/34~36ms, 1.0%, 20/22ms | 26/34ms, 0.8~1.0%, 20/22ms |
+
+결과는 이렇다.
+- 두 판 모두 15초에 약 900프레임으로, 거의 60fps다.
+- 프레임 시간·끊김·GPU 시간 차이는 반복 측정 사이의 차이 안에 든다.
+- 따라서 두 층 무대(영상 층 + 장식 층)로 바꾼 뒤에도 느려지지 않았다(Pass).
+
+절대값은 Mac GPU 기준이라 Fold7 값은 아니다. Fold7 실측은 NOT RUN.
