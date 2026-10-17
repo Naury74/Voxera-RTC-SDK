@@ -5,81 +5,56 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.naury.kinetica.ui.glowBorder
+import com.naury.kinetica.ui.KAvatarData
+import com.naury.kinetica.ui.KCallLayer
+import com.naury.kinetica.ui.KNetworkQuality
+import com.naury.kinetica.ui.KParticipantTile
 import com.naury.voxerartc.api.ConnectionQuality
 import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
-import com.naury.voxerartc.ui.glass.GlassPill
-import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.theme.VoxeraRadius
-import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 
 /**
- * 참가자 타일. 카메라가 켜져 있고 [renderer]가 있으면 영상, 아니면 이니셜 아바타를 보여 준다. 카메라를 끄면
- * 마지막 프레임을 남기지 않고 아바타로 바뀐다. 이름표는 가장자리에서 12dp 안쪽에 고정한다.
+ * 참가자 타일. 카메라가 켜져 있고 [renderer]가 있으면 영상, 아니면 이니셜 아바타와 말하는 동안 퍼지는 물결을 보여 준다. 카메라를
+ * 끄면 마지막 프레임을 남기지 않고 아바타로 바뀐다. 이름표에는 마이크 꺼짐이나 소리 막대, 약한 연결 표시가 붙고, 손을 들면 손 배지가 튀어나온다.
  *
  * 누르면 [onTap](예: 이 사람 크게 보기, 조작 막대 보이기/숨기기)을, 길게 누르면 [onTogglePin]을 부른다. 누르는 동안 살짝 작아진다.
- * 고정된 타일은 오른쪽 위에 고정 해제 버튼이 생긴다. TalkBack에서는 두 번 탭하면 [onTap]을 부르고 [tapLabel]로 읽으며, [onTap]이 없으면 고정/해제한다.
+ * 고정된 타일은 위쪽 끝에 고정 표시가 붙는다. TalkBack은 타일 하나로 모든 상태를 읽고, 두 번 탭하면 [onTap]을 [tapLabel] 이름으로 부르며,
+ * 고정과 해제는 사용자 지정 동작으로 한다. [onTap]이 없으면 두 번 탭으로 고정/해제한다.
  *
  * @param onTogglePin `null`이 아니면 길게 눌러 고정/해제한다. [onTap]이 없으면 짧게 눌러도 고정/해제한다.
  * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대나 시스템 막대를 피할 때 쓴다.
- * @param showScreenShare `true`면 카메라 대신 화면 공유 트랙을 그리고 이름표에 "화면"을 붙인다.
- * @param tapLabel [onTogglePin]이 없을 때 TalkBack 두 번 탭으로 [onTap]을 부르게 하고 그 동작 이름으로 읽는다.
+ * @param showScreenShare `true`면 카메라 대신 화면 공유 트랙을 그리고 이름표에 화면 공유임을 붙인다.
+ * @param tapLabel TalkBack이 [onTap]을 읽을 동작 이름.
  * @param shape 타일 모서리. 기본은 24dp.
  * @param speakingOutline 말하는 동안 테두리를 그린다. 화면을 꽉 채운 타일에서는 끄고 이름표의 막대만 남긴다.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 public fun ParticipantTile(
     participant: Participant,
@@ -94,128 +69,82 @@ public fun ParticipantTile(
     shape: RoundedCornerShape = RoundedCornerShape(VoxeraRadius.xl),
     speakingOutline: Boolean = true,
 ) {
+    VoxeraTile(
+        participant,
+        renderer,
+        modifier,
+        layer = KCallLayer.All,
+        pinned = pinned,
+        onTogglePin = onTogglePin,
+        labelPadding = labelPadding,
+        screenShare = showScreenShare,
+        onTap = onTap,
+        tapLabel = tapLabel,
+        shape = shape,
+        speakingOutline = speakingOutline,
+    )
+}
+
+/**
+ * [ParticipantTile]의 구현. 통화 무대는 같은 타일을 [KCallLayer.Video](영상과 아바타, 유리 바가 비추는 배경)와
+ * [KCallLayer.Overlay](이름표, 글로우 테두리, 물결, 누르기, TalkBack) 두 층으로 그려, 테두리가 돌아도 유리 블러를 다시 하지 않게 한다.
+ */
+@Composable
+internal fun VoxeraTile(
+    participant: Participant,
+    renderer: VoxeraVideoRenderer?,
+    modifier: Modifier = Modifier,
+    layer: KCallLayer = KCallLayer.All,
+    pinned: Boolean = false,
+    onTogglePin: (() -> Unit)? = null,
+    labelPadding: PaddingValues = PaddingValues(0.dp),
+    screenShare: Boolean = false,
+    onTap: (() -> Unit)? = null,
+    tapLabel: String? = null,
+    shape: Shape = RoundedCornerShape(VoxeraRadius.xl),
+    speakingOutline: Boolean = true,
+) {
     val colors = VoxeraTheme.colors
-    val haptics = LocalHapticFeedback.current
-    val baseName = if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName
-    val name = if (showScreenShare) stringResource(R.string.voxera_share_label, baseName) else baseName
-    val weak = !participant.isLocal && (participant.connectionQuality == ConnectionQuality.POOR || participant.connectionQuality == ConnectionQuality.LOST)
-    val description = buildList {
-        add(name)
-        if (pinned) add(stringResource(R.string.voxera_tile_pinned))
-        if (participant.isHandRaised) add(stringResource(R.string.voxera_hand_raised))
-        if (participant.isSpeaking) add(stringResource(R.string.voxera_speaking))
-        if (!participant.isMicrophoneEnabled) add(stringResource(R.string.voxera_mic_off))
-        if (participant.camera == null) add(stringResource(R.string.voxera_camera_off))
-        if (weak) add(stringResource(R.string.voxera_weak_connection))
-    }.joinToString(", ")
-    val pinLabel = stringResource(if (pinned) R.string.voxera_tile_unpin else R.string.voxera_tile_pin)
-    val track = if (showScreenShare) participant.screenShare else participant.camera
-    val speakingGlowState = animateFloatAsState(if (participant.isSpeaking) 1f else 0f, tween(220), label = "speaking")
-    val tap = onTap ?: onTogglePin
-    val interaction = remember { MutableInteractionSource() }
-    // 말하는 동안 타일 둘레를 따라 강조색 빛이 천천히 돌며 바깥으로 살짝 번진다. 움직임 줄이기 설정이면 돌지 않고 머문다.
-    val glowColors = remember(colors.primary, colors.secondary) { listOf(colors.primary, colors.secondary, colors.primary.copy(alpha = 0.5f)) }
-    // 통화 화면에서는 자리만 알리고 테두리는 무대 위층이 그린다(SpeakingGlows 참고). 그 밖에서는 타일이 직접 그린다.
-    val glows = LocalSpeakingGlows.current?.takeIf { speakingOutline }
-    val glowId = remember { Any() }
-    val glowLevel = remember(speakingGlowState) { { speakingGlowState.value } }
-    if (glows != null) DisposableEffect(glows) { onDispose { glows.spots.remove(glowId) } }
-    BoxWithConstraints(
-        modifier = modifier
-            .pressScale(interaction, pressed = 0.97f)
-            // 세기는 그릴 때 읽으므로 켜지고 꺼지는 동안 다시 구성하지 않는다. 0이면 그리지도 돌지도 않는다.
-            .then(
-                when {
-                    glows != null -> Modifier.onGloballyPositioned { coordinates ->
-                        val spot = GlowSpot(Rect(coordinates.positionInRoot(), coordinates.size.toSize()), coordinates.boundsInRoot(), shape, glowLevel)
-                        if (glows.spots[glowId] != spot) glows.spots[glowId] = spot
-                    }
-                    speakingOutline -> Modifier.glowBorder(glowLevel, shape, glowColors, width = 3.dp, glow = 6.dp, periodMs = GLOW_PERIOD_MS)
-                    else -> Modifier
-                },
-            )
-            .clip(shape)
-            .background(colors.surfaceElevated)
-            .then(
-                if (tap != null || onTogglePin != null) {
-                    Modifier.combinedClickable(
-                        interactionSource = interaction,
-                        indication = LocalIndication.current,
-                        role = Role.Button,
-                        onClick = { tap?.invoke() },
-                        onLongClickLabel = pinLabel.takeIf { onTap != null && onTogglePin != null },
-                        onLongClick = if (onTap != null && onTogglePin != null) {
-                            {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onTogglePin()
-                            }
-                        } else null,
-                    )
-                } else Modifier,
-            )
-            .clearAndSetSemantics {
-                contentDescription = description
-                if (onTap != null && tapLabel != null) {
-                    role = Role.Button
-                    onClick(label = tapLabel) { onTap(); true }
-                } else if (onTogglePin != null) {
-                    role = Role.Button
-                    onClick(label = pinLabel) { onTogglePin(); true }
-                }
-                if (onTogglePin != null && onTap != null && tapLabel != null) {
-                    customActions = listOf(CustomAccessibilityAction(pinLabel) { onTogglePin(); true })
-                }
-            },
-    ) {
-        val compact = maxWidth < 140.dp
-        if (track != null && renderer != null) {
-            renderer.Render(track, mirror = participant.isLocal && !showScreenShare, modifier = Modifier.fillMaxSize())
+    val name = if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName
+    val track = if (screenShare) participant.screenShare else participant.camera
+    // 아바타는 같은 사람이 늘 같은 색이다. 흰 이니셜이 읽히도록 섞지 않은 기본 색을 쓴다.
+    val avatar = remember(participant.id, name, colors) { KAvatarData(name, color = avatarColors(participant.id, colors).second) }
+    // 내 연결 상태는 상단 바가 알리므로 약한 연결 표시는 상대 타일에만 붙인다.
+    val quality = if (participant.isLocal) KNetworkQuality.Unknown else participant.connectionQuality.networkQuality()
+    val level = participant.audioLevel
+    KParticipantTile(
+        name = name,
+        modifier = modifier,
+        video = if (track != null && renderer != null) {
+            // 내 카메라는 렌더러가 뒤집는다(SurfaceView는 Compose 변환을 따르지 않는다).
+            { renderer.Render(track, mirror = participant.isLocal && !screenShare, modifier = Modifier.fillMaxSize()) }
         } else {
-            val avatar = (minOf(maxWidth, maxHeight) * 0.42f).coerceIn(40.dp, 120.dp)
-            VoxeraAvatar(
-                id = participant.id,
-                name = baseName,
-                size = avatar,
-                speaking = participant.isSpeaking,
-                audioLevel = participant.audioLevel,
-                modifier = Modifier.align(Alignment.Center),
-            )
-        }
-        GlassPill(Modifier.align(Alignment.BottomStart).padding(labelPadding).padding(if (compact) VoxeraSpacing.xs else VoxeraSpacing.sm)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs), verticalAlignment = Alignment.CenterVertically) {
-                if (!participant.isMicrophoneEnabled) {
-                    Icon(VoxeraIcons.MicOff, contentDescription = null, tint = colors.onScrim, modifier = Modifier.size(14.dp))
-                } else if (participant.isSpeaking) {
-                    AudioLevelBars(participant.audioLevel, colors.primary)
-                }
-                Text(name, color = colors.onScrim, style = VoxeraTheme.typography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (weak) SignalBars(participant.connectionQuality, Modifier.size(width = 14.dp, height = 12.dp))
-            }
-        }
-        // 손을 든 사람은 왼쪽 위에 손 배지가 통 튀어나온다.
-        PoppingHandBadge(
-            participant.isHandRaised,
-            Modifier.align(Alignment.TopStart).padding(if (compact) VoxeraSpacing.xs else VoxeraSpacing.sm),
-            size = if (compact) 24.dp else 32.dp,
-        )
-        // 고정된 타일은 오른쪽 위 버튼으로 바로 풀 수 있다(48dp 터치 영역).
-        if (pinned && onTogglePin != null) {
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(VoxeraSpacing.xxs)
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button, onClickLabel = pinLabel, onClick = onTogglePin)
-                    .clearAndSetSemantics { },
-                contentAlignment = Alignment.Center,
-            ) {
-                GlassPill(Modifier) {
-                    Icon(VoxeraIcons.PushPin, contentDescription = null, tint = colors.onScrim, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
-    }
+            null
+        },
+        avatar = avatar,
+        muted = !participant.isMicrophoneEnabled,
+        speaking = participant.isSpeaking,
+        audioLevel = { level },
+        handRaised = participant.isHandRaised,
+        quality = quality,
+        pinned = pinned,
+        screenShare = screenShare,
+        onClick = onTap,
+        onClickLabel = tapLabel,
+        onTogglePin = onTogglePin,
+        speakingBorder = speakingOutline,
+        layer = layer,
+        shape = shape,
+        labelPadding = labelPadding,
+    )
+}
+
+private fun ConnectionQuality.networkQuality(): KNetworkQuality = when (this) {
+    ConnectionQuality.EXCELLENT -> KNetworkQuality.Excellent
+    ConnectionQuality.GOOD -> KNetworkQuality.Good
+    ConnectionQuality.POOR -> KNetworkQuality.Poor
+    ConnectionQuality.LOST -> KNetworkQuality.Lost
+    ConnectionQuality.UNKNOWN -> KNetworkQuality.Unknown
 }
 
 /** 말하는 중 표시. 세 막대 높이가 [level](0~1)에 따라 바뀐다. 장식이라 읽지 않는다. */

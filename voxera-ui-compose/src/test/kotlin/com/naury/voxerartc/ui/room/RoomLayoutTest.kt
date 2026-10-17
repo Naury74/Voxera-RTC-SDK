@@ -13,18 +13,6 @@ class RoomLayoutTest {
     }
 
     @Test
-    fun `참가자 수에 따른 격자`() {
-        assertThat(gridFor(1, landscape = false)).isEqualTo(GridSpec(1, 1))
-        assertThat(gridFor(2, landscape = false)).isEqualTo(GridSpec(1, 2))
-        assertThat(gridFor(2, landscape = true)).isEqualTo(GridSpec(2, 1))
-        assertThat(gridFor(4, landscape = false)).isEqualTo(GridSpec(2, 2))
-        assertThat(gridFor(5, landscape = false)).isEqualTo(GridSpec(2, 3))
-        assertThat(gridFor(6, landscape = true)).isEqualTo(GridSpec(3, 2))
-        assertThat(gridFor(9, landscape = false)).isEqualTo(GridSpec(3, 3))
-        assertThat(gridFor(20, landscape = false)).isEqualTo(GridSpec(3, 3))
-    }
-
-    @Test
     fun `통화 시간과 측정값 문구`() {
         assertThat(formatDuration(0)).isEqualTo("0:00")
         assertThat(formatDuration(65_400)).isEqualTo("1:05")

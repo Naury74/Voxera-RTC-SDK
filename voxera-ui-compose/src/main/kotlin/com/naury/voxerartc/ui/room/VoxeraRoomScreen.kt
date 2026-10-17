@@ -57,7 +57,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
@@ -75,17 +74,17 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.naury.kinetica.ui.KCallLayer
 import com.naury.kinetica.ui.KCallTopBar
 import com.naury.kinetica.ui.KIslandHost
 import com.naury.kinetica.ui.KNetworkQuality
-import com.naury.voxerartc.ui.component.SpeakingGlows
-import com.naury.voxerartc.ui.component.SpeakingGlowLayer
-import com.naury.voxerartc.ui.component.LocalSpeakingGlows
 import com.naury.kinetica.ui.KSheet
 import com.naury.kinetica.ui.KSystemBarIcons
 import com.naury.kinetica.ui.KineticaScaffold
 import com.naury.kinetica.ui.SurfaceStyle
 import com.naury.kinetica.ui.rememberKIslandState
+import com.naury.kinetica.ui.rememberKParticipantGridState
+import com.naury.kinetica.ui.rememberKStableSpeaker
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.LocalMediaState
 import com.naury.voxerartc.api.MonotonicClock
@@ -361,230 +360,240 @@ private fun CallContent(
             },
     ) {
         // 무대(영상·음성 화면)를 배경으로 기록해, 그 위에 뜨는 상단 바·조작 막대·시트의 유리가 뒤 영상을 실제로 흐리게 비추게 한다.
-        // 말하는 사람 빛 테두리는 무대(배경 기록) 밖 위층에 그려, 테두리가 돌아도 유리 블러를 매 프레임 다시 하지 않게 한다.
-        val speakingGlows = remember { SpeakingGlows() }
-        CompositionLocalProvider(LocalSpeakingGlows provides speakingGlows) {
-            KineticaScaffold(
-                modifier = Modifier.fillMaxSize(),
-                surface = roomGlass,
-                background = {
+        // 영상 통화 무대는 같은 격자를 두 층으로 그린다. 배경 기록에는 영상과 아바타만 두고, 이름표·말하는 사람 테두리·누르기·TalkBack은
+        // 위층에 둬서 테두리가 돌아도 유리 블러를 매 프레임 다시 하지 않게 한다.
+        val grid = rememberKParticipantGridState()
+        // 발표자 보기: 말하는 사람이 바뀌어도 잠깐(1.5초) 그대로 말해야 크게 보는 사람을 바꾼다.
+        val stableSpeaker = rememberKStableSpeaker(loudestRemote(participants))
+        val model = stageModel(participants, pinnedId, stageView, stableSpeaker)
+        val togglePin: (String) -> Unit = { id -> pinnedId = if (pinnedId == id) null else id }
+        val stageTap = if (autoHideControls) toggleChrome else null
+        KineticaScaffold(
+            modifier = Modifier.fillMaxSize(),
+            surface = roomGlass,
+            background = {
+                if (mode == CallMode.VIDEO) {
+                    VideoStage(model, renderer, pinnedId, KCallLayer.Video, grid, togglePin, Modifier.fillMaxSize(), overlayHeight, stageTap, chromeVisible)
+                } else {
                     // 각 영역을 하나의 묶음으로 만들어, 안쪽 타일·버튼끼리만 순서를 매기고 영역 사이 순서는 traversalIndex로 고정한다.
-                    val stageModifier = Modifier.fillMaxSize().semantics { isTraversalGroup = true; traversalIndex = 1f }
-                    if (mode == CallMode.VIDEO) {
-                        VideoStage(
-                            participants,
-                            renderer,
-                            pinnedId,
-                            landscape,
-                            onTogglePin = { id -> pinnedId = if (pinnedId == id) null else id },
-                            topReserve = overlayHeight,
-                            onTap = if (autoHideControls) toggleChrome else null,
-                            chromeVisible = chromeVisible,
-                            view = stageView,
-                            modifier = stageModifier,
-                        )
-                    } else {
-                        VoiceStage(participants, elapsed, health?.let { stringResource(it.statusRes()) }, modifier = stageModifier)
-                    }
-                },
-                // 시트가 열려 무대가 물러날 때 드러나는 바탕. 상태 표시줄 글자가 그대로 읽히도록 화면 바탕색을 쓴다.
-                backdropColor = VoxeraTheme.colors.canvas,
-                edgeFade = false,
-                systemBarIcons = false,
-            ) {
-                Box(Modifier.fillMaxSize()) {
-                    SpeakingGlowLayer(speakingGlows)
-                    AnimatedVisibility(
+                    VoiceStage(
+                        participants,
+                        elapsed,
+                        health?.let { stringResource(it.statusRes()) },
+                        modifier = Modifier.fillMaxSize().semantics { isTraversalGroup = true; traversalIndex = 1f },
+                    )
+                }
+            },
+            // 시트가 열려 무대가 물러날 때 드러나는 바탕. 상태 표시줄 글자가 그대로 읽히도록 화면 바탕색을 쓴다.
+            backdropColor = VoxeraTheme.colors.canvas,
+            edgeFade = false,
+            systemBarIcons = false,
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                if (mode == CallMode.VIDEO) {
+                    VideoStage(
+                        model,
+                        renderer,
+                        pinnedId,
+                        KCallLayer.Overlay,
+                        grid,
+                        togglePin,
+                        Modifier.fillMaxSize().semantics { isTraversalGroup = true; traversalIndex = 1f },
+                        overlayHeight,
+                        stageTap,
                         chromeVisible,
-                        enter = fadeIn() + slideInVertically { -it / 2 },
-                        exit = fadeOut() + slideOutVertically { -it / 2 },
-                        modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0f },
-                    ) {
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .windowInsetsPadding(WindowInsets.safeDrawing)
-                                .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.xs)
-                                .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } },
-                            verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
-                        ) {
-                            TopBar(
-                                modifier = Modifier.enterOnAppear(0),
-                                count = participants.size,
-                                connectedAtMs = connectedAtMs,
-                                clock = session.clock,
-                                simulated = simulated,
-                                health = health,
-                                onPeople = { sheet = RoomSheet.PEOPLE },
-                                onQuality = { sheet = RoomSheet.QUALITY },
-                                onPictureInPicture = onEnterPictureInPicture,
-                                // 3명 이상 영상 통화에서 갤러리 ↔ 발표자 보기를 바꾼다. 고정한 사람이 있으면 먼저 푼다.
-                                stageView = stageView.takeIf { mode == CallMode.VIDEO && participants.size >= 3 },
-                                onToggleView = {
-                                    pinnedId = null
-                                    stageView = if (stageView == StageView.GALLERY) StageView.SPEAKER else StageView.GALLERY
-                                },
-                            )
-                            // 공유 중에는 화면의 모든 내용(알림 포함)이 보인다는 것을 계속 알리고, 바로 멈출 수 있게 한다(G-09).
-                            AnimatedVisibility(media.screenShare.actual, enter = BannerEnter, exit = BannerExit) {
-                                GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth()) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                                        Box(Modifier.size(10.dp).clip(CircleShape).background(VoxeraTheme.colors.danger))
-                                        Text(
-                                            stringResource(R.string.voxera_share_active),
-                                            color = VoxeraTheme.colors.danger,
-                                            style = VoxeraTheme.typography.label,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                        VoxeraButton(
-                                            stringResource(R.string.voxera_share_stop),
-                                            onClick = { scope.launch { session.stopScreenShare() } },
-                                            tone = VoxeraButtonTone.Danger,
-                                        )
-                                    }
-                                }
-                            }
-                            // 마이크·카메라 조작이 실패하면(권한 없음, 장치 점유) 이유와 할 일을 알린다. 다음 조작이 성공하면 사라진다.
-                            AnimatedVisibility(mediaError != null, enter = BannerEnter, exit = BannerExit) {
-                                if (mediaError != null) {
-                                    GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
-                                        Text(stringResource(mediaError.messageRes()), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
-                                    }
-                                }
-                            }
-                            // 휴대전화 통화 같은 다른 통화가 오디오를 가져가면 내 소리가 가지 않는다는 것을 알린다(E14).
-                            AnimatedVisibility(media.audioInterrupted, enter = BannerEnter, exit = BannerExit) {
-                                GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
-                                    Column {
-                                        Text(stringResource(R.string.voxera_interrupted_title), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
-                                        Text(stringResource(R.string.voxera_interrupted_body), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
-                                    }
-                                }
-                            }
-                            AnimatedVisibility(reconnecting != null, enter = BannerEnter, exit = BannerExit) {
-                                GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Assertive }) {
-                                    Column {
-                                        Text(stringResource(R.string.voxera_state_reconnecting), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
-                                        Text(stringResource(R.string.voxera_reconnecting_hint), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // 입퇴장·채팅 알림은 상태 표시줄 바로 아래 아일랜드에 차례로 뜬다. 조작 막대를 숨겨도 보인다.
-                    ParticipantNotices(participants, island)
-                    if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, island = island, onOpen = { sheet = RoomSheet.CHAT })
-                    // 손을 든 동안의 알약은 상단 줄이 있으면 그 아래에 둔다.
-                    val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
-                    // 아일랜드는 상태 표시줄 바로 아래에 뜨므로, 상단 줄이 보이는 동안에는 그 아래로 내려 버튼을 가리지 않게 한다.
-                    KIslandHost(island, Modifier.offset { IntOffset(0, noticeTop.roundToPx()) })
+                    )
+                }
+                AnimatedVisibility(
+                    chromeVisible,
+                    enter = fadeIn() + slideInVertically { -it / 2 },
+                    exit = fadeOut() + slideOutVertically { -it / 2 },
+                    modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0f },
+                ) {
                     Column(
                         Modifier
-                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
                             .windowInsetsPadding(WindowInsets.safeDrawing)
-                            .padding(top = noticeTop + VoxeraSpacing.xs, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                            .padding(horizontal = VoxeraSpacing.md, vertical = VoxeraSpacing.xs)
+                            .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } },
                         verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
                     ) {
-                        if (handRaiseEnabled) RaisedHandChip(myHand, onLower = { scope.launch { session.setHandRaised(false) } })
-                    }
-
-                    AnimatedVisibility(
-                        chromeVisible,
-                        enter = fadeIn() + slideInVertically { it / 2 },
-                        exit = fadeOut() + slideOutVertically { it / 2 },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .semantics { isTraversalGroup = true; traversalIndex = 2f },
-                    ) {
-                        CallDock(
-                            mode = mode,
-                            media = media,
-                            onMic = { scope.launch { session.setMicrophoneEnabled(!media.microphone.desired) } },
-                            onCamera = { scope.launch { session.setCameraEnabled(!media.camera.desired) } },
-                            onFlip = { scope.launch { session.switchCamera() } },
-                            onAudio = { sheet = RoomSheet.AUDIO },
-                            onEffects = { sheet = RoomSheet.EFFECTS },
-                            onReact = if (reactionsEnabled) ({ sheet = RoomSheet.REACTIONS }) else null,
-                            onChat = if (chatEnabled) ({ sheet = RoomSheet.CHAT }) else null,
-                            chatUnread = unread,
-                            onShare = onShareScreen?.let { share ->
-                                { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
+                        TopBar(
+                            modifier = Modifier.enterOnAppear(0),
+                            count = participants.size,
+                            connectedAtMs = connectedAtMs,
+                            clock = session.clock,
+                            simulated = simulated,
+                            health = health,
+                            onPeople = { sheet = RoomSheet.PEOPLE },
+                            onQuality = { sheet = RoomSheet.QUALITY },
+                            onPictureInPicture = onEnterPictureInPicture,
+                            // 3명 이상 영상 통화에서 갤러리 ↔ 발표자 보기를 바꾼다. 고정한 사람이 있으면 먼저 푼다.
+                            stageView = stageView.takeIf { mode == CallMode.VIDEO && participants.size >= 3 },
+                            onToggleView = {
+                                pinnedId = null
+                                stageView = if (stageView == StageView.GALLERY) StageView.SPEAKER else StageView.GALLERY
                             },
-                            onEnd = onLeave,
-                            onMore = { overflow ->
-                                overflowControls = overflow
-                                sheet = RoomSheet.MORE
-                            },
-                            modifier = Modifier
-                                .windowInsetsPadding(WindowInsets.safeDrawing)
-                                .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
-                                .enterOnAppear(3, scale = true),
-                            onItemPositioned = { key, bounds -> if (key == AUDIO_CONTROL) audioButtonBounds = bounds },
                         )
+                        // 공유 중에는 화면의 모든 내용(알림 포함)이 보인다는 것을 계속 알리고, 바로 멈출 수 있게 한다(G-09).
+                        AnimatedVisibility(media.screenShare.actual, enter = BannerEnter, exit = BannerExit) {
+                            GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth()) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
+                                    Box(Modifier.size(10.dp).clip(CircleShape).background(VoxeraTheme.colors.danger))
+                                    Text(
+                                        stringResource(R.string.voxera_share_active),
+                                        color = VoxeraTheme.colors.danger,
+                                        style = VoxeraTheme.typography.label,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    VoxeraButton(
+                                        stringResource(R.string.voxera_share_stop),
+                                        onClick = { scope.launch { session.stopScreenShare() } },
+                                        tone = VoxeraButtonTone.Danger,
+                                    )
+                                }
+                            }
+                        }
+                        // 마이크·카메라 조작이 실패하면(권한 없음, 장치 점유) 이유와 할 일을 알린다. 다음 조작이 성공하면 사라진다.
+                        AnimatedVisibility(mediaError != null, enter = BannerEnter, exit = BannerExit) {
+                            if (mediaError != null) {
+                                GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+                                    Text(stringResource(mediaError.messageRes()), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                                }
+                            }
+                        }
+                        // 휴대전화 통화 같은 다른 통화가 오디오를 가져가면 내 소리가 가지 않는다는 것을 알린다(E14).
+                        AnimatedVisibility(media.audioInterrupted, enter = BannerEnter, exit = BannerExit) {
+                            GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+                                Column {
+                                    Text(stringResource(R.string.voxera_interrupted_title), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                                    Text(stringResource(R.string.voxera_interrupted_body), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+                                }
+                            }
+                        }
+                        AnimatedVisibility(reconnecting != null, enter = BannerEnter, exit = BannerExit) {
+                            GlassSurface(level = GlassLevel.Medium, modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Assertive }) {
+                                Column {
+                                    Text(stringResource(R.string.voxera_state_reconnecting), color = VoxeraTheme.colors.warning, style = VoxeraTheme.typography.label)
+                                    Text(stringResource(R.string.voxera_reconnecting_hint), color = VoxeraTheme.colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+                                }
+                            }
+                        }
                     }
+                }
+                // 입퇴장·채팅 알림은 상태 표시줄 바로 아래 아일랜드에 차례로 뜬다. 조작 막대를 숨겨도 보인다.
+                ParticipantNotices(participants, island)
+                if (chatEnabled) ChatNotices(chat, participants, suppressed = sheet == RoomSheet.CHAT, island = island, onOpen = { sheet = RoomSheet.CHAT })
+                // 손을 든 동안의 알약은 상단 줄이 있으면 그 아래에 둔다.
+                val noticeTop by animateDpAsState(if (chromeVisible) overlayHeight else 0.dp, label = "notice")
+                // 아일랜드는 상태 표시줄 바로 아래에 뜨므로, 상단 줄이 보이는 동안에는 그 아래로 내려 버튼을 가리지 않게 한다.
+                KIslandHost(island, Modifier.offset { IntOffset(0, noticeTop.roundToPx()) })
+                Column(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(top = noticeTop + VoxeraSpacing.xs, start = VoxeraSpacing.md, end = VoxeraSpacing.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs),
+                ) {
+                    if (handRaiseEnabled) RaisedHandChip(myHand, onLower = { scope.launch { session.setHandRaised(false) } })
+                }
 
-                    // 이어폰이 연결·해제되면 오디오 버튼 위 말풍선으로 어디로 소리가 가는지 알리고, 되돌리거나 옮길 수 있게 한다.
-                    val audioAnchor = audioButtonBounds?.takeIf { chromeVisible }?.translate(-screenOrigin)
-                    AudioRouteNotices(
-                        media,
-                        lastRouteSelectionMs,
-                        onSelect = { id ->
+                AnimatedVisibility(
+                    chromeVisible,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut() + slideOutVertically { it / 2 },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .semantics { isTraversalGroup = true; traversalIndex = 2f },
+                ) {
+                    CallDock(
+                        mode = mode,
+                        media = media,
+                        onMic = { scope.launch { session.setMicrophoneEnabled(!media.microphone.desired) } },
+                        onCamera = { scope.launch { session.setCameraEnabled(!media.camera.desired) } },
+                        onFlip = { scope.launch { session.switchCamera() } },
+                        onAudio = { sheet = RoomSheet.AUDIO },
+                        onEffects = { sheet = RoomSheet.EFFECTS },
+                        onReact = if (reactionsEnabled) ({ sheet = RoomSheet.REACTIONS }) else null,
+                        onChat = if (chatEnabled) ({ sheet = RoomSheet.CHAT }) else null,
+                        chatUnread = unread,
+                        onShare = onShareScreen?.let { share ->
+                            { if (media.screenShare.actual) scope.launch { session.stopScreenShare() } else share() }
+                        },
+                        onEnd = onLeave,
+                        onMore = { overflow ->
+                            overflowControls = overflow
+                            sheet = RoomSheet.MORE
+                        },
+                        modifier = Modifier
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
+                            .enterOnAppear(3, scale = true),
+                        onItemPositioned = { key, bounds -> if (key == AUDIO_CONTROL) audioButtonBounds = bounds },
+                    )
+                }
+
+                // 이어폰이 연결·해제되면 오디오 버튼 위 말풍선으로 어디로 소리가 가는지 알리고, 되돌리거나 옮길 수 있게 한다.
+                val audioAnchor = audioButtonBounds?.takeIf { chromeVisible }?.translate(-screenOrigin)
+                AudioRouteNotices(
+                    media,
+                    lastRouteSelectionMs,
+                    onSelect = { id ->
+                        lastRouteSelectionMs = System.nanoTime() / 1_000_000
+                        scope.launch { session.selectAudioRoute(id) }
+                    },
+                    anchor = audioAnchor,
+                    onVisibleChange = { routeNoticeVisible = it },
+                    modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0.5f },
+                )
+
+                if (reactionsEnabled) {
+                    // 반응은 조작 막대를 숨겨도 보인다. 막대가 있으면 그 위에서 떠오른다.
+                    ReactionOverlay(
+                        session,
+                        participants,
+                        Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                        bottomInset = if (chromeVisible) BottomReserve else VoxeraSpacing.xl,
+                    )
+                }
+
+                // 닫히며 내려가는 동안에도 마지막 시트 내용을 그대로 보여 준다.
+                var shownSheet by remember { mutableStateOf(sheet) }
+                if (sheet != RoomSheet.NONE) shownSheet = sheet
+                RoomSheetHost(
+                    visible = sheet != RoomSheet.NONE,
+                    onDismiss = { sheet = RoomSheet.NONE },
+                ) {
+                    when (shownSheet) {
+                        RoomSheet.AUDIO -> AudioRouteSheet(media, onSelect = { id ->
                             lastRouteSelectionMs = System.nanoTime() / 1_000_000
                             scope.launch { session.selectAudioRoute(id) }
-                        },
-                        anchor = audioAnchor,
-                        onVisibleChange = { routeNoticeVisible = it },
-                        modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 0.5f },
-                    )
-
-                    if (reactionsEnabled) {
-                        // 반응은 조작 막대를 숨겨도 보인다. 막대가 있으면 그 위에서 떠오른다.
-                        ReactionOverlay(
-                            session,
-                            participants,
-                            Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
-                            bottomInset = if (chromeVisible) BottomReserve else VoxeraSpacing.xl,
-                        )
-                    }
-
-                    // 닫히며 내려가는 동안에도 마지막 시트 내용을 그대로 보여 준다.
-                    var shownSheet by remember { mutableStateOf(sheet) }
-                    if (sheet != RoomSheet.NONE) shownSheet = sheet
-                    RoomSheetHost(
-                        visible = sheet != RoomSheet.NONE,
-                        onDismiss = { sheet = RoomSheet.NONE },
-                    ) {
-                        when (shownSheet) {
-                            RoomSheet.AUDIO -> AudioRouteSheet(media, onSelect = { id ->
-                                lastRouteSelectionMs = System.nanoTime() / 1_000_000
-                                scope.launch { session.selectAudioRoute(id) }
+                            sheet = RoomSheet.NONE
+                        })
+                        RoomSheet.PEOPLE -> {
+                            val togglePin: (String) -> Unit = { id ->
+                                pinnedId = if (pinnedId == id) null else id
                                 sheet = RoomSheet.NONE
-                            })
-                            RoomSheet.PEOPLE -> {
-                                val togglePin: (String) -> Unit = { id ->
-                                    pinnedId = if (pinnedId == id) null else id
-                                    sheet = RoomSheet.NONE
-                                }
-                                PeopleSheet(participants, pinnedId, onTogglePin = togglePin.takeIf { mode == CallMode.VIDEO })
                             }
-                            RoomSheet.QUALITY -> QualitySheet(history)
-                            RoomSheet.EFFECTS -> EffectsSheet(media, onSelect = { effect -> scope.launch { session.setVideoEffect(effect) } })
-                            RoomSheet.REACTIONS -> ReactionPicker(
-                                onPick = { reaction ->
-                                    scope.launch { session.sendReaction(reaction) }
-                                    sheet = RoomSheet.NONE
-                                },
-                                handRaised = myHand.takeIf { handRaiseEnabled },
-                                onToggleHand = {
-                                    scope.launch { session.setHandRaised(!myHand) }
-                                    sheet = RoomSheet.NONE
-                                },
-                            )
-                            RoomSheet.CHAT -> ChatSheet(chat, participants, onSend = { text -> scope.launch { session.sendChatMessage(text) } })
-                            RoomSheet.MORE -> MoreControlsSheet(overflowControls, onDone = { if (sheet == RoomSheet.MORE) sheet = RoomSheet.NONE })
-                            RoomSheet.NONE -> Unit
+                            PeopleSheet(participants, pinnedId, onTogglePin = togglePin.takeIf { mode == CallMode.VIDEO })
                         }
+                        RoomSheet.QUALITY -> QualitySheet(history)
+                        RoomSheet.EFFECTS -> EffectsSheet(media, onSelect = { effect -> scope.launch { session.setVideoEffect(effect) } })
+                        RoomSheet.REACTIONS -> ReactionPicker(
+                            onPick = { reaction ->
+                                scope.launch { session.sendReaction(reaction) }
+                                sheet = RoomSheet.NONE
+                            },
+                            handRaised = myHand.takeIf { handRaiseEnabled },
+                            onToggleHand = {
+                                scope.launch { session.setHandRaised(!myHand) }
+                                sheet = RoomSheet.NONE
+                            },
+                        )
+                        RoomSheet.CHAT -> ChatSheet(chat, participants, onSend = { text -> scope.launch { session.sendChatMessage(text) } })
+                        RoomSheet.MORE -> MoreControlsSheet(overflowControls, onDone = { if (sheet == RoomSheet.MORE) sheet = RoomSheet.NONE })
+                        RoomSheet.NONE -> Unit
                     }
                 }
             }

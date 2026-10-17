@@ -73,12 +73,12 @@ class RoomLogicTest {
     }
 
     @Test
-    fun `영상 격자는 9명씩 쪽을 나누고 첫 쪽 맨 앞은 나다`() {
+    fun `영상 무대는 맨 앞에 나를 두고 나머지는 들어온 순서를 지킨다`() {
         val people = (1..20).map { person("p$it") } + person("me", local = true)
-        val pages = gridPages(people)
-        assertThat(pages.map { it.size }).containsExactly(9, 9, 3).inOrder()
-        assertThat(pages.first().first().isLocal).isTrue()
-        assertThat(gridPages(emptyList())).containsExactly(emptyList<Participant>())
+        val model = stageModel(people, pinnedId = null, view = StageView.GALLERY, lastSpeakerId = null)
+        assertThat(model.items.map { it.key }).isEqualTo(listOf("me") + (1..20).map { "p$it" })
+        assertThat(model.focusKey).isNull()
+        assertThat(stageModel(emptyList(), null, StageView.GALLERY, null).items).isEmpty()
     }
 
     @Test
