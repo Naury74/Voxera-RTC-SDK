@@ -521,7 +521,7 @@ private fun CallContent(
                                 .windowInsetsPadding(WindowInsets.safeDrawing)
                                 .padding(bottom = VoxeraSpacing.md, start = VoxeraSpacing.md, end = VoxeraSpacing.md)
                                 .enterOnAppear(3, scale = true),
-                            onAudioAnchor = { audioButtonBounds = if (it.isAttached) it.boundsInRoot() else null },
+                            onItemPositioned = { key, bounds -> if (key == AUDIO_CONTROL) audioButtonBounds = bounds },
                         )
                     }
 

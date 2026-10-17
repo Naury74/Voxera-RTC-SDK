@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.naury.kinetica.ui.GlassStyle
+import com.naury.kinetica.ui.SurfaceStyle
 import com.naury.kinetica.ui.glass
 import com.naury.voxerartc.ui.theme.VoxeraColors
 import com.naury.voxerartc.ui.theme.VoxeraGlassQuality
@@ -105,6 +106,30 @@ internal fun VoxeraColors.glassStyle(level: GlassLevel): GlassStyle = GlassStyle
     fallback = glassFill(this, level, VoxeraGlassQuality.FULL),
     onGlass = foreground,
 )
+
+/**
+ * Kinetica 부품에 넘기는 Voxera 유리 표면. [voxeraGlass]와 같은 규칙으로, 품질이 줄임(REDUCED)이나 불투명(OFF)이면 블러 없이
+ * [glassFill]로 칠하고 외곽선을 두른다.
+ */
+@Composable
+internal fun voxeraSurface(level: GlassLevel): SurfaceStyle {
+    val colors = VoxeraTheme.colors
+    val quality = VoxeraTheme.glassQuality
+    return remember(colors, level, quality) {
+        if (quality == VoxeraGlassQuality.FULL || quality == VoxeraGlassQuality.AUTO) {
+            SurfaceStyle.Glass(colors.glassStyle(level))
+        } else {
+            SurfaceStyle.Solid(
+                color = glassFill(colors, level, quality),
+                contentColor = colors.foreground,
+                background = colors.canvas,
+                border = colors.glassStroke,
+                borderWidth = 1.dp,
+                elevation = level.shadow,
+            )
+        }
+    }
+}
 
 /** 블러 위에 덮는 색의 불투명도. 시트는 글자가 많아 진하게 둔다. */
 private val GlassLevel.blurTintAlpha: Float
