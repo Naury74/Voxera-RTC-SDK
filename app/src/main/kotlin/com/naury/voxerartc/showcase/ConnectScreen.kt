@@ -34,6 +34,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.naury.kinetica.ui.KAlert
+import com.naury.kinetica.ui.KListSection
+import com.naury.kinetica.ui.KStatus
+import com.naury.kinetica.ui.KSwitchRow
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.ui.component.VoxeraButton
 import com.naury.voxerartc.ui.component.VoxeraSegmentedControl
@@ -120,15 +124,12 @@ fun ConnectScreen(
                 )
 
                 if (form.method == CredentialMethod.DEV_TOKEN_SERVER) {
-                    GlassSurface(level = GlassLevel.Low, modifier = Modifier.fillMaxWidth()) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.sm)) {
-                            Icon(Icons.Filled.Warning, contentDescription = null, tint = colors.warning, modifier = Modifier.size(20.dp))
-                            Column {
-                                Text(stringResource(R.string.byo_dev_warning_title), color = colors.warning, style = VoxeraTheme.typography.label)
-                                Text(stringResource(R.string.byo_dev_warning_body), color = colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
-                            }
-                        }
-                    }
+                    KAlert(
+                        stringResource(R.string.byo_dev_warning_body),
+                        Modifier.fillMaxWidth(),
+                        status = KStatus.Warning,
+                        title = stringResource(R.string.byo_dev_warning_title),
+                    )
                 }
 
                 form.fields.forEach { field ->
@@ -196,12 +197,16 @@ fun ConnectScreen(
                     onSelect = { onFormChange(form.copy(mode = it)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                VoxeraToggleRow(
-                    label = stringResource(R.string.byo_local_dev),
-                    description = stringResource(R.string.byo_local_dev_body),
-                    checked = form.allowLocalDev,
-                    onCheckedChange = { onFormChange(form.copy(allowLocalDev = it)) },
-                )
+                KListSection(Modifier.fillMaxWidth()) {
+                    item {
+                        KSwitchRow(
+                            stringResource(R.string.byo_local_dev),
+                            checked = form.allowLocalDev,
+                            onCheckedChange = { onFormChange(form.copy(allowLocalDev = it)) },
+                            subtitle = stringResource(R.string.byo_local_dev_body),
+                        )
+                    }
+                }
                 VoxeraButton(
                     text = stringResource(R.string.byo_connect),
                     onClick = {
