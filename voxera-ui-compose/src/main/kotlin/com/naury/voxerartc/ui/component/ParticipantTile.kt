@@ -112,6 +112,8 @@ internal fun VoxeraTile(
     // 내 연결 상태는 상단 바가 알리므로 약한 연결 표시는 상대 타일에만 붙인다.
     val quality = if (participant.isLocal) KNetworkQuality.Unknown else participant.connectionQuality.networkQuality()
     val level = participant.audioLevel
+    // 공유 화면 타일은 화면이 주인공이다. 말하는 중·마이크·손 상태는 같은 사람의 카메라 타일이 보여 주고 읽는다.
+    val person = !screenShare
     KParticipantTile(
         name = name,
         modifier = modifier,
@@ -122,10 +124,10 @@ internal fun VoxeraTile(
             null
         },
         avatar = avatar,
-        muted = !participant.isMicrophoneEnabled,
-        speaking = participant.isSpeaking,
+        muted = person && !participant.isMicrophoneEnabled,
+        speaking = person && participant.isSpeaking,
         audioLevel = { level },
-        handRaised = participant.isHandRaised,
+        handRaised = person && participant.isHandRaised,
         quality = quality,
         pinned = pinned,
         screenShare = screenShare,

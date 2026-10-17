@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +60,7 @@ internal fun avatarColors(id: String, colors: VoxeraColors): Pair<Color, Color> 
 
 /**
  * 이니셜 아바타. [speaking]이면 [audioLevel](0~1)에 따라 두께가 바뀌는 강조 고리를 그린다.
+ * 늘 이름 옆에 놓는 장식이라 TalkBack은 이니셜을 읽지 않는다. 읽을 이름은 옆 글자나 감싸는 요소가 맡는다.
  */
 @Composable
 public fun VoxeraAvatar(
@@ -81,6 +83,6 @@ public fun VoxeraAvatar(
             .background(start),
         contentAlignment = Alignment.Center,
     ) {
-        Text(initialsOf(name), color = readableOn(start), fontSize = (size.value * 0.34f).sp, style = VoxeraTheme.typography.title)
+        Text(initialsOf(name), color = readableOn(start), fontSize = (size.value * 0.34f).sp, style = VoxeraTheme.typography.title, modifier = Modifier.clearAndSetSemantics {})
     }
 }
