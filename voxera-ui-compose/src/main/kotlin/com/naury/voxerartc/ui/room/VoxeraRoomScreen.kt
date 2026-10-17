@@ -65,28 +65,25 @@ import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.naury.kinetica.ui.KCallTopBar
 import com.naury.kinetica.ui.KIslandHost
+import com.naury.kinetica.ui.KNetworkQuality
 import com.naury.voxerartc.ui.component.SpeakingGlows
 import com.naury.voxerartc.ui.component.SpeakingGlowLayer
 import com.naury.voxerartc.ui.component.LocalSpeakingGlows
 import com.naury.kinetica.ui.KSheet
 import com.naury.kinetica.ui.KSystemBarIcons
 import com.naury.kinetica.ui.KineticaScaffold
-import com.naury.kinetica.ui.RollingText
 import com.naury.kinetica.ui.SurfaceStyle
 import com.naury.kinetica.ui.rememberKIslandState
 import com.naury.voxerartc.api.CallMode
@@ -106,6 +103,7 @@ import com.naury.voxerartc.ui.glass.GlassSurface
 import com.naury.voxerartc.ui.glass.glassStyle
 import com.naury.voxerartc.ui.glass.pressScale
 import com.naury.voxerartc.ui.glass.voxeraBackdrop
+import com.naury.voxerartc.ui.glass.voxeraSurface
 import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.VoxeraThemeConfig
@@ -413,7 +411,8 @@ private fun CallContent(
                             TopBar(
                                 modifier = Modifier.enterOnAppear(0),
                                 count = participants.size,
-                                elapsed = elapsed,
+                                connectedAtMs = connectedAtMs,
+                                clock = session.clock,
                                 simulated = simulated,
                                 health = health,
                                 onPeople = { sheet = RoomSheet.PEOPLE },
@@ -597,7 +596,8 @@ private fun CallContent(
 private fun TopBar(
     modifier: Modifier,
     count: Int,
-    elapsed: String,
+    connectedAtMs: Long,
+    clock: MonotonicClock,
     simulated: Boolean,
     health: CallHealth?,
     onPeople: () -> Unit,
@@ -606,61 +606,36 @@ private fun TopBar(
     stageView: StageView?,
     onToggleView: () -> Unit,
 ) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-        // 상태 알약과 데모 표시는 이 칸 안에서만 자리를 나눠, 글꼴이 커져도 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
-        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xs)) {
-            GlassSurface(
-                level = GlassLevel.Medium,
-                shape = CircleShape,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = VoxeraSpacing.xs),
-            ) {
-                // 휴대폰 폭에서 버튼 네 개와 데모 표시가 함께 있으면 알약 자리가 90dp 남짓이라 간격을 좁게 둔다.
-                // 넓게 두면 상태 점이 나타날 때 내용이 넘쳐 마지막 칸인 인원수가 밀려난다.
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
-                    if (health != null) {
-                        val label = stringResource(health.labelRes())
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(health.color()).semantics { contentDescription = label })
-                    }
-                    // 바뀐 자리 숫자만 위로 굴러 올라간다.
-                    RollingText(elapsed, style = VoxeraTheme.typography.label.copy(color = VoxeraTheme.colors.foreground))
-                    // 좁은 상단 줄에서도 잘리지 않게 숫자만 보이고, 전체 문구는 읽어 준다.
-                    val countLabel = pluralStringResource(R.plurals.voxera_participant_count, count, count)
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics { contentDescription = countLabel }) {
-                        Icon(VoxeraIcons.Person, contentDescription = null, tint = VoxeraTheme.colors.foregroundSecondary, modifier = Modifier.size(14.dp))
-                        RollingText("$count", style = VoxeraTheme.typography.caption.copy(color = VoxeraTheme.colors.foregroundSecondary))
-                    }
-                }
+    // 상태 캡슐(연결 품질 막대, 굴러가는 통화 시간, 인원)은 남는 폭 안에서만 줄어, 글꼴이 커져도 오른쪽 버튼이 화면 밖으로 밀리지 않는다.
+    // 데모 표시는 다 들어갈 때만 보인다(글자가 잘린 칩은 두지 않는다).
+    KCallTopBar(
+        modifier = modifier.fillMaxWidth(),
+        startedAtMillis = connectedAtMs,
+        participantCount = count,
+        quality = health?.networkQuality(),
+        chips = if (simulated) ({ DemoChip() }) else null,
+        actions = {
+            if (stageView != null) {
+                val toSpeaker = stageView == StageView.GALLERY
+                RoundIconButton(
+                    if (toSpeaker) VoxeraIcons.Person else VoxeraIcons.GridView,
+                    stringResource(if (toSpeaker) R.string.voxera_view_speaker else R.string.voxera_view_gallery),
+                    onToggleView,
+                )
             }
-            // 자리가 모자라면 시간·인원 알약이 먼저 자리를 잡고, 데모 표시는 다 들어갈 때만 보인다(글자가 잘린 칩은 두지 않는다).
-            if (simulated) ShowIfFits(Modifier.weight(1f, fill = false)) { DemoChip() }
-        }
-        if (stageView != null) {
-            val toSpeaker = stageView == StageView.GALLERY
-            RoundIconButton(
-                if (toSpeaker) VoxeraIcons.Person else VoxeraIcons.GridView,
-                stringResource(if (toSpeaker) R.string.voxera_view_speaker else R.string.voxera_view_gallery),
-                onToggleView,
-            )
-        }
-        if (onPictureInPicture != null) RoundIconButton(VoxeraIcons.PictureInPicture, stringResource(R.string.voxera_control_pip), onPictureInPicture)
-        RoundIconButton(VoxeraIcons.Group, stringResource(R.string.voxera_control_people), onPeople)
-        RoundIconButton(VoxeraIcons.Insights, stringResource(R.string.voxera_control_stats), onQuality)
-    }
+            if (onPictureInPicture != null) RoundIconButton(VoxeraIcons.PictureInPicture, stringResource(R.string.voxera_control_pip), onPictureInPicture)
+            RoundIconButton(VoxeraIcons.Group, stringResource(R.string.voxera_control_people), onPeople)
+            RoundIconButton(VoxeraIcons.Insights, stringResource(R.string.voxera_control_stats), onQuality)
+        },
+        surface = voxeraSurface(GlassLevel.Medium),
+        now = clock::nowMs,
+    )
 }
 
-/** [content]가 받은 폭 안에 다 들어갈 때만 그린다. 들어가지 않으면 자리를 차지하지 않고 숨긴다. */
-@Composable
-private fun ShowIfFits(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Layout(content, modifier) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity)) }
-        val width = placeables.maxOfOrNull { it.width } ?: 0
-        val height = placeables.maxOfOrNull { it.height } ?: 0
-        if (width > constraints.maxWidth) {
-            layout(0, 0) {}
-        } else {
-            layout(width, height) { placeables.forEach { it.placeRelative(0, (height - it.height) / 2) } }
-        }
-    }
+private fun CallHealth.networkQuality(): KNetworkQuality = when (this) {
+    CallHealth.STABLE -> KNetworkQuality.Excellent
+    CallHealth.FAIR -> KNetworkQuality.Good
+    CallHealth.POOR -> KNetworkQuality.Poor
 }
 
 @Composable
