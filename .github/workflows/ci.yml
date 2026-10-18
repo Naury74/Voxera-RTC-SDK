@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: 테스트·lint·API 검사·빌드
         run: ./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease --stacktrace
       - name: 배포 artifact만 받는 바깥 앱 빌드
@@ -32,14 +32,14 @@ jobs:
       - name: API 문서 만들기
         run: ./gradlew :dokkaGenerate
       - name: API 문서 올리기
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-docs
           path: build/dokka/html
           retention-days: 14
       - name: 실패 보고서 올리기
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports
           path: "**/build/reports/"
