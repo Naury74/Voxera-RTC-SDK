@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voxera_demo_badge">DEMO</string>
-    <string name="voxera_demo_notice">This is a simulated call, not a real connection</string>
 
     <string name="voxera_state_preparing">Getting ready…</string>
     <string name="voxera_state_connecting">Connecting…</string>
@@ -9,10 +8,6 @@
     <string name="voxera_state_ending">Ending call…</string>
     <string name="voxera_reconnecting_hint">The call continues when the network recovers.</string>
     <string name="voxera_waiting_others">Waiting for others to join</string>
-    <plurals name="voxera_participant_count">
-        <item quantity="one">%d participant</item>
-        <item quantity="other">%d participants</item>
-    </plurals>
 
     <string name="voxera_control_mic">Mic</string>
     <string name="voxera_control_camera">Camera</string>
@@ -20,7 +15,6 @@
     <string name="voxera_control_audio">Audio</string>
     <string name="voxera_control_people">People</string>
     <string name="voxera_control_stats">Quality</string>
-    <string name="voxera_control_more">More</string>
     <string name="voxera_control_end">End</string>
     <string name="voxera_control_on">On</string>
     <string name="voxera_control_off">Off</string>
@@ -33,7 +27,6 @@
     <string name="voxera_action_save_report">Save diagnostic report</string>
 
     <string name="voxera_end_title">Call ended</string>
-    <string name="voxera_end_duration">Duration %1$s</string>
     <string name="voxera_end_reason_user">You left the call.</string>
     <string name="voxera_end_reason_host">The app ended the call.</string>
     <string name="voxera_end_reason_cancelled">Cancelled before connecting.</string>
@@ -58,7 +51,7 @@
     <string name="voxera_error_not_connected">The call isn\'t connected yet.</string>
     <string name="voxera_error_cancelled">Joining was cancelled.</string>
     <string name="voxera_error_remote_ended">The call was ended by the other side.</string>
-    <string name="voxera_error_duplicate_identity">Someone joined with the same identity on another device.</string>
+    <string name="voxera_error_duplicate_identity">Someone joined with the same user ID on another device, so this one was disconnected.</string>
     <string name="voxera_error_internal">Something went wrong.</string>
 
     <string name="voxera_routes_title">Audio output</string>
@@ -68,7 +61,6 @@
     <string name="voxera_route_bluetooth">Bluetooth</string>
     <string name="voxera_route_usb">USB audio</string>
     <string name="voxera_route_unknown">Other output</string>
-    <string name="voxera_route_selected">Selected</string>
     <string name="voxera_route_unavailable">Not available now</string>
 
     <string name="voxera_stats_title">Call quality</string>
@@ -114,11 +106,9 @@
     <string name="voxera_call_end_failed">The call couldn\'t be connected.</string>
 
     <string name="voxera_prejoin_title">Before you join</string>
-    <string name="voxera_prejoin_subtitle">Check your camera and microphone</string>
     <string name="voxera_prejoin_join">Join room</string>
     <string name="voxera_prejoin_mode_voice">Voice</string>
     <string name="voxera_prejoin_mode_video">Video</string>
-    <string name="voxera_prejoin_camera_unavailable">Camera unavailable</string>
     <string name="voxera_prejoin_mic_denied">You\'ll join with your microphone off.</string>
     <string name="voxera_prejoin_camera_denied">You\'ll join with your camera off.</string>
     <string name="voxera_prejoin_mic_blocked">Microphone access is off. Allow it in Settings to talk.</string>
@@ -128,7 +118,6 @@
     <string name="voxera_control_share">Share</string>
     <string name="voxera_share_active">You\'re sharing your screen. Everything on it is visible, including notifications.</string>
     <string name="voxera_share_stop">Stop sharing</string>
-    <string name="voxera_share_label">%1$s\'s screen</string>
 
     <string name="voxera_control_effects">Effects</string>
     <string name="voxera_effects_title">Camera effects</string>
@@ -140,10 +129,8 @@
     <string name="voxera_effects_unsupported">Camera effects aren\'t available here.</string>
     <string name="voxera_effects_throttled">Effects were turned off because this device couldn\'t keep up. Your call continues with the original video.</string>
     <string name="voxera_effects_note">Applied to the video others see and to your preview. Nothing is uploaded for processing.</string>
-    <string name="voxera_tile_pinned">Pinned</string>
     <string name="voxera_weak_connection">Weak connection</string>
     <string name="voxera_tile_swap">Swap views</string>
-    <string name="voxera_page_of">Page %1$d of %2$d</string>
     <string name="voxera_end_quality">Call quality</string>
     <string name="voxera_health_stable">Stable</string>
     <string name="voxera_health_fair">Fair</string>
@@ -177,7 +164,7 @@
     <string name="voxera_route_notice_available">%1$s connected</string>
     <string name="voxera_route_notice_available_body">Use it for this call?</string>
     <string name="voxera_route_notice_lost">%1$s disconnected</string>
-    <string name="voxera_route_notice_now">Now playing on: %1$s</string>
+    <string name="voxera_route_notice_now">Playing on %1$s</string>
     <string name="voxera_route_notice_undo">Undo</string>
     <string name="voxera_route_notice_switch">Switch</string>
     <string name="voxera_notice_hand">%1$s raised a hand</string>
@@ -189,11 +176,9 @@
     <string name="voxera_chat_title">Chat</string>
     <string name="voxera_chat_empty">No messages yet. Say hello.</string>
     <string name="voxera_chat_placeholder">Message</string>
-    <string name="voxera_chat_send">Send</string>
     <string name="voxera_chat_someone">Former participant</string>
     <string name="voxera_chat_from">%1$s: %2$s</string>
     <string name="voxera_chat_copy">Copy</string>
-    <string name="voxera_chat_open">Open chat</string>
     <plurals name="voxera_chat_unread">
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>
