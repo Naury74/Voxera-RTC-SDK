@@ -37,15 +37,15 @@ Voxera SDK 모듈 8개를 `com.naurylab:<모듈>:<버전>` 좌표로 Maven Centr
 
    ```bash
    ./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease
-   ./gradlew publishToMavenLocal && ./gradlew -p samples/consumer :app:assembleRelease
-   ./gradlew cleanCentralStaging publishToCentral --no-configuration-cache
+   ./gradlew publishToMavenLocal --max-workers=1 && ./gradlew -p samples/consumer :app:assembleRelease
+   ./gradlew cleanCentralStaging publishToCentral --no-configuration-cache --max-workers=1
    ```
 
    - `publishToCentral`은 8개 모듈에 서명해 `build/central-bundle.zip`으로 묶고 Central Portal에 올립니다. 서명되지 않은 파일이 하나라도 있으면 올리지 않고 멈춥니다.
    - 기본은 검증 후 대기(`USER_MANAGED`)입니다. https://central.sonatype.com/publishing/deployments 에서 Validated 상태를 확인하고 **Publish**를 눌러야 공개됩니다. 문제가 있으면 **Drop**하고 고쳐서 다시 올립니다.
    - 확인 없이 바로 공개하려면 `-PcentralAutoPublish=true`를 붙입니다. 공개는 되돌릴 수 없습니다.
    - 공개한 뒤 search.maven.org에서 검색되기까지 보통 10~30분 걸립니다.
-   - gpg가 병렬 서명에서 실패하면 `--max-workers=1`을 붙여 다시 실행합니다.
+   - `--max-workers=1`은 gpg가 여러 파일에 동시에 서명하다 실패하지 않게 합니다. 서명 키가 없는 컴퓨터에서는 빼도 됩니다.
 
 3. 배포한 커밋에 태그를 달고 push합니다. README의 내려받기 링크가 `releases/latest/download/voxera-showcase.apk`를 가리키므로, 쇼케이스 APK를 이 이름으로 GitHub Release에 함께 올립니다.
 
@@ -57,7 +57,7 @@ Voxera SDK 모듈 8개를 `com.naurylab:<모듈>:<버전>` 좌표로 Maven Centr
      --notes-file <(awk '/^## /{if (p) exit; if ($0 == "## 0.1.0-alpha01") {p = 1; next}} p' CHANGELOG.md)
    ```
 
-올리지 않고 번들만 만들어 내용을 보려면 `./gradlew cleanCentralStaging centralBundle --no-configuration-cache`를 실행합니다.
+올리지 않고 번들만 만들어 내용을 보려면 `./gradlew cleanCentralStaging centralBundle --no-configuration-cache --max-workers=1`을 실행합니다.
 
 ### 의존성 확인
 
