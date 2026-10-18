@@ -215,14 +215,17 @@ class VoxeraRoomScreenTest {
     @Config(qualifiers = "w411dp-h891dp")
     fun `음성 그룹이 화면보다 많으면 위아래로 넘겨 마지막 사람까지 본다`() {
         val session = connectedSession(CallMode.VOICE)
-        (1..19).forEach { factory.last.upsertRemote(Participant(id = "p$it", displayName = "Person $it", isLocal = false)) }
+        (1..19).forEach { factory.last.upsertRemote(Participant(id = "p$it", displayName = "Person $it", isLocal = false, isMicrophoneEnabled = it != 19)) }
         compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
         compose.waitForIdle()
 
         // 20명이면 3열 7줄이라 마지막 줄은 화면 아래로 넘친다. 넘기면 보이고, TalkBack도 스크롤 동작으로 닿는다.
-        compose.onNodeWithText("Person 19").assertIsNotDisplayed()
-        compose.onNodeWithText("Person 19").performScrollTo().assertIsDisplayed()
-        compose.onNode(hasScrollAction().and(hasAnyDescendant(hasText("Person 19")))).assertExists()
+        // 칸 하나는 이름과 상태를 한 번에 읽고, 마이크 아이콘에 따로 멈추지 않는다.
+        val last = "Person 19, Microphone off"
+        compose.onNodeWithContentDescription(last).assertIsNotDisplayed()
+        compose.onNodeWithContentDescription(last).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription(last).onChildren().assertCountEquals(0)
+        compose.onNode(hasScrollAction().and(hasAnyDescendant(hasContentDescription(last)))).assertExists()
         session.close()
     }
 

@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -301,7 +302,12 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(VoxeraSpacing.md, Alignment.CenterHorizontally)) {
                     row.forEachIndexed { colIndex, participant ->
                         key(participant.id) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(cellWidth).enterOnAppear(rowIndex * columns + colIndex, scale = true)) {
+                        val spoken = voiceCellDescription(participant)
+                        // 사람 하나를 한 번에 읽는다(이름, 말하는 중, 마이크 꺼짐, 손 들었음). 아이콘을 따로 멈추지 않는다.
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.width(cellWidth).enterOnAppear(rowIndex * columns + colIndex, scale = true).clearAndSetSemantics { contentDescription = spoken },
+                        ) {
                             Box(contentAlignment = Alignment.Center) {
                                 SpeakingRipple(participant.isSpeaking, participant.audioLevel, avatar)
                                 VoxeraAvatar(participant.id, participant.displayName, size = avatar, speaking = participant.isSpeaking, audioLevel = participant.audioLevel)
@@ -309,7 +315,7 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
                             }
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = VoxeraSpacing.xs)) {
                                 if (!participant.isMicrophoneEnabled) {
-                                    Icon(VoxeraIcons.MicOff, contentDescription = stringResource(R.string.voxera_mic_off), tint = VoxeraTheme.colors.warning, modifier = Modifier.size(14.dp).padding(end = 2.dp))
+                                    Icon(VoxeraIcons.MicOff, contentDescription = null, tint = VoxeraTheme.colors.warning, modifier = Modifier.size(14.dp).padding(end = 2.dp))
                                 }
                                 Text(
                                     if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName,
@@ -326,3 +332,12 @@ internal fun VoiceGroupGrid(participants: List<Participant>, modifier: Modifier 
         }
     }
 }
+
+/** 음성 그룹 칸 하나를 TalkBack이 읽을 문장. 영상 타일과 같은 순서로 이름 뒤에 상태를 붙인다. */
+@Composable
+private fun voiceCellDescription(participant: Participant): String = listOfNotNull(
+    if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName,
+    stringResource(R.string.voxera_speaking).takeIf { participant.isSpeaking },
+    stringResource(R.string.voxera_mic_off).takeIf { !participant.isMicrophoneEnabled },
+    stringResource(R.string.voxera_hand_raised).takeIf { participant.isHandRaised },
+).joinToString(", ")
