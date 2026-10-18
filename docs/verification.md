@@ -510,3 +510,13 @@ Kinetica 402a375(입력란 이름을 안내 글로 내보냄): 전체 검사 통
 | 12명 3×3 두 쪽 | 1776 | 0.00% | 17 / 17ms | 16 / 17ms | Pass |
 
 1:1과 12명 장면은 GPU 시간이 격자의 두 배이지만, 프레임이 겹쳐 처리돼 끊김은 생기지 않았다. 덮개 화면 측정은 Kinetica 세션과 기기 사용이 겹쳐 값을 버렸다(NOT RUN). Kinetica 371c19b(알림 호스트가 여럿일 때 하나만 그림): 전체 검사 통과, Voxera는 호스트를 하나만 써서 영향 없음.
+
+## Kinetica를 Maven Central에서 받기 — 2026-10-18
+
+Kinetica `1.0.0-alpha01`이 Maven Central에 공개되어 `settings.gradle.kts`에서 로컬 Maven 블록을 지웠다. `samples/consumer`도 Voxera만 로컬 Maven에서, Kinetica는 Maven Central에서 받게 좁혔다.
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 받은 파일 | 지금까지 쓰던 판과 같음 | Central에서 받은 `kinetica-ui` aar의 SHA-256이 로컬 Maven 판(cc36678)과 같음 | Pass |
+| 전체 검사 | 통과 | test lint apiCheck assembleDebug assembleRelease 통과 | Pass |
+| 바깥 앱 예제 | release 빌드 | `publishToMavenLocal` 뒤 `-p samples/consumer :app:assembleRelease` 통과, Kinetica는 Central에서 옴 | Pass |
