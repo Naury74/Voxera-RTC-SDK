@@ -1,4 +1,4 @@
-# 푸시와 PR마다 단위 테스트, lint, 공개 API 검사, debug·release 빌드를 돌린다.
+# 푸시와 PR마다 단위 테스트, lint, 공개 API 검사, debug·release 빌드, 바깥 앱 빌드를 돌린다.
 # 실통화·기기 확인은 사람이 하고 결과를 docs/verification.md에 남긴다.
 name: CI
 
@@ -27,6 +27,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: 테스트·lint·API 검사·빌드
         run: ./gradlew test lint apiCheck :app:assembleDebug :app:assembleRelease --stacktrace
+      - name: 배포 artifact만 받는 바깥 앱 빌드
+        run: ./gradlew publishToMavenLocal && ./gradlew -p samples/consumer :app:assembleRelease --stacktrace
       - name: API 문서 만들기
         run: ./gradlew :dokkaGenerate
       - name: API 문서 올리기
