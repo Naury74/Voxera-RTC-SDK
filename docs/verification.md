@@ -423,3 +423,25 @@ TalkBack 16에서 실제로 읽는 문장을 확인했다. 방법:
 - 따라서 두 층 무대(영상 층 + 장식 층)로 바꾼 뒤에도 느려지지 않았다(Pass).
 
 절대값은 Mac GPU 기준이라 Fold7 값은 아니다. Fold7 실측은 NOT RUN.
+
+## 남은 NOT RUN 다시 확인 (에뮬레이터 API 36) — 2026-10-18
+
+손가락 제스처는 `adb shell hid -`로 등록한 HID 터치스크린으로 보냈다.
+- 장치 설정: Digitizer Touch Screen, Contact ID·Tip·X/Y 0..32767, feature report 2 = 최대 접촉 수.
+- 안드로이드가 이 장치를 DIRECT TOUCH_SCREEN으로 잡기 때문에, TalkBack은 쓸기와 두 번 탭을 사람 손가락처럼 받는다. adb input으로 넣은 터치는 TalkBack 제스처가 되지 않는다.
+- 읽는 문장은 앞 절처럼 VERBOSE 로그로 받았다.
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 손가락으로 항목 넘기기·두 번 탭 | 상단 → 영상 → 조작 막대, 두 번 탭으로 동작 | 오른쪽 쓸기로 상단 → 타일 → 조작 막대 순서. 안내는 "Double-tap to Show large…". 마이크에서 두 번 탭하면 "Applying…" → "Off"로 꺼짐(화면에 초점 테두리와 꺼진 마이크 확인) | Pass |
+| 고정 후 띠의 화면 밖 사람 | 쓸어 넘기면 띠가 따라 움직여 모두 닿음 | 처음에는 보이는 4명까지만 가고 조작 막대로 넘어갔다(화면 밖 타일이 트리에 없고 띠에 스크롤 정보 없음). Kinetica c93cad4 뒤로 오른쪽 쓸기는 Sam까지 닿는다. 왼쪽으로 돌아올 때는 띠는 되돌아오지만 초점이 큰 타일로 빠져 Morgan~Alex를 건너뛴다(Kinetica에 알림) | 오른쪽 Pass, 왼쪽 Fail |
+| 알림 섬 누르기 안내 | 누를 수 있다는 안내 | "Alex, Loud and clear 👍" 다음 "Double-tap to Open. Actions available". 두 번 탭하면 채팅 시트가 열림 | Pass |
+| 채팅 시트 | 메시지마다 한 번, 입력 칸 이름 | 메시지마다 "Jamie: …"와 말풍선 글자로 두 번 멈췄다. 고른 글자 노드를 지우고 한 칸으로 묶었으며, 길게 눌러 복사하는 대신 "Copy" 동작을 넣었다. 입력 칸은 "Edit box. Message. Message."로 이름을 두 번 읽었다(label과 placeholder가 같은 글). placeholder만 넘겨 "Edit box. Message"가 됐다 | Fail → Pass |
+| TalkBack이 실제로 읽는 문장(채팅 입력 칸) | "Message, 편집 상자"처럼 이름 | 위 칸과 같이 "Edit box. Message" | Pass |
+| 연결 설정 입력 칸 | 칸마다 한 번 | 칸마다 이름표 → 입력 칸 → "Required"로 세 번 멈췄다. 입력 칸이 이름과 오류를 함께 읽으므로 위아래 글자를 TalkBack에서 뺐다. 이제 "Edit box. Token server ID. Enter your own ID. Error: Required" 한 번 | Fail → Pass |
+| 입력 오류 흔들림 | 오류가 생길 때 입력란이 흔들림 | 화면 녹화(60fps)에서 입력 칸 왼쪽 끝이 64 → 76 → 46 → 76 → 53 → 70 → 61 → 64px로 약 0.45초 좌우로 흔들린 뒤 제자리 | Pass |
+| 반응 받기(실통화) | 원격 참가자 반응 표시 | 로컬 LiveKit 서버에 LiveKit Python SDK(1.1.21) 참가자를 넣어 `voxera.reaction`에 `1:heart`를 보냈다. Voxera 음성 통화에 하트와 "Py Bot" 이름표가 떴다 | Pass |
+| 다른 SDK와 채팅 호환 | 표준 텍스트 스트림으로 주고받음 | Python SDK가 `lk.chat`으로 보낸 글이 Voxera 알림 섬과 채팅 배지로 왔고, Voxera가 보낸 글을 Python이 `lk.chat`에서 같은 글로 받았다. LiveKit Meet 브라우저와 직접은 안 해 봄 | Pass (Meet는 NOT RUN) |
+| 음성 그룹 10명 이상 세로 넘기기 | 모두 표시 | 데모가 없어 단위 테스트로 확인. 20명이면 마지막 사람이 처음에는 화면 밖이고, 넘기면 보이며, 목록에 스크롤 동작이 있다 | Pass |
+| 입장 전 마이크 레벨 | 말하면 막대가 참 | 에뮬레이터에 Mac 마이크를 연결했지만, Mac 출력 음량이 0이라 시험 음성을 내지 못했다. 소리를 크게 틀어야 해서 하지 않았다 | NOT RUN |
+| 접은 바깥 화면 TalkBack | 입력 칸 이름을 읽음 | 휴대전화 크기 에뮬레이터에서 같은 화면 "Edit box. Message". 실제 Fold7 바깥 화면은 안 해 봄 | NOT RUN |
