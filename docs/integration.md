@@ -26,7 +26,9 @@ dependencyResolutionManagement {
 }
 ```
 
-통화 화면(`voxera-ui-compose`)은 같은 저자의 Kinetica UI 키트(`com.naurylab:kinetica-ui`, `kinetica-render-compose`, Apache 2.0)로 시트, 알림, 스위치, 움직임을 그립니다. 의존성으로 함께 들어오므로 따로 넣지 않아도 되고, Voxera 공개 API에는 Kinetica 타입이 나오지 않습니다. Kinetica(지금 쓰는 판은 `1.0.0-alpha02`)는 Maven Central에 있어서 `mavenCentral()`만 있으면 받아집니다.
+통화 화면(`voxera-ui-compose`)은 같은 저자의 Kinetica UI 키트(`com.naurylab:kinetica-ui`, `kinetica-render-compose`, Apache 2.0)로 시트, 알림, 스위치, 움직임을 그립니다. 의존성으로 함께 들어오므로 따로 넣지 않아도 되고, Voxera 공개 API에는 Kinetica 타입이 나오지 않습니다. Kinetica(지금 쓰는 판은 `1.0.0-alpha03`)는 Maven Central에 있어서 `mavenCentral()`만 있으면 받아집니다.
+
+Voxera 화면 문구는 영어와 한국어로 들어 있습니다. Kinetica는 그보다 많은 언어(일본어, 중국어, 스페인어 등)를 담고 있어서, 앱이 다른 언어를 지원하지 않는데 기기가 그 언어라면 Voxera 문구는 영어로, Kinetica가 그리는 일부 버튼 이름은 그 언어로 나올 수 있습니다. 앱이 지원하는 언어만 남기려면 `androidResources { localeFilters += listOf("en", "ko") }`처럼 앱에서 언어를 정해 두세요.
 
 최소 API는 26이고, 호스트는 Kotlin 2.2 이상이면 됩니다(SDK를 언어·API 버전 2.2로 맞춰 빌드합니다). 매니페스트에 합쳐지는 권한과 서비스는 [permissions.md](permissions.md)에 있습니다.
 

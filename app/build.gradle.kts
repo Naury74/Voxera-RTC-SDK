@@ -31,6 +31,11 @@ android {
     buildFeatures {
         compose = true
     }
+    // 쇼케이스 문구는 영어와 한국어뿐이다. Kinetica는 더 많은 언어를 담고 있어, 다른 언어 기기에서
+    // 한 화면에 두 언어가 섞여 읽히지 않도록 두 언어 리소스만 남긴다.
+    androidResources {
+        localeFilters += listOf("en", "ko")
+    }
 }
 
 dependencies {
