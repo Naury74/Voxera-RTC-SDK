@@ -190,6 +190,7 @@
     <string name="voxera_chat_send">보내기</string>
     <string name="voxera_chat_someone">나간 참가자</string>
     <string name="voxera_chat_from">%1$s: %2$s</string>
+    <string name="voxera_chat_copy">복사</string>
     <string name="voxera_chat_open">채팅 열기</string>
     <plurals name="voxera_chat_unread">
         <item quantity="other">읽지 않은 메시지 %d개</item>

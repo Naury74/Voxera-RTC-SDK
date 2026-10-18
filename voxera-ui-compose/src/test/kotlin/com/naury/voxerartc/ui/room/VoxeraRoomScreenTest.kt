@@ -1,28 +1,37 @@
 package com.naury.voxerartc.ui.room
 
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
-import com.naury.voxerartc.api.Participant
-import com.naury.voxerartc.api.Reaction
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import com.google.common.truth.Truth.assertThat
 import com.naury.voxerartc.api.CallMode
 import com.naury.voxerartc.api.JoinResult
+import com.naury.voxerartc.api.Participant
+import com.naury.voxerartc.api.Reaction
 import com.naury.voxerartc.api.RtcCredentials
 import com.naury.voxerartc.api.RtcCredentialsProvider
 import com.naury.voxerartc.api.SessionState
@@ -204,6 +213,21 @@ class VoxeraRoomScreenTest {
 
     @Test
     @Config(qualifiers = "w411dp-h891dp")
+    fun `음성 그룹이 화면보다 많으면 위아래로 넘겨 마지막 사람까지 본다`() {
+        val session = connectedSession(CallMode.VOICE)
+        (1..19).forEach { factory.last.upsertRemote(Participant(id = "p$it", displayName = "Person $it", isLocal = false)) }
+        compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
+        compose.waitForIdle()
+
+        // 20명이면 3열 7줄이라 마지막 줄은 화면 아래로 넘친다. 넘기면 보이고, TalkBack도 스크롤 동작으로 닿는다.
+        compose.onNodeWithText("Person 19").assertIsNotDisplayed()
+        compose.onNodeWithText("Person 19").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasScrollAction().and(hasAnyDescendant(hasText("Person 19")))).assertExists()
+        session.close()
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun `반응을 고르면 엔진으로 보낸다`() {
         val session = connectedSession(CallMode.VOICE)
         compose.setContent { VoxeraRoomScreen(session, onExit = {}) }
@@ -224,13 +248,16 @@ class VoxeraRoomScreenTest {
         compose.waitForIdle()
         compose.onNode(hasContentDescription("Chat").and(stateIs("1 unread message"))).assertExists()
         compose.onNodeWithContentDescription("Chat").performClick()
-        compose.onNodeWithText("hello there").assertIsDisplayed()
+        // TalkBack은 메시지 하나에서 한 번만 멈추고, 길게 눌러 복사하는 대신 복사 동작을 쓴다.
+        compose.onNodeWithContentDescription("Alex: hello there").assertIsDisplayed()
+            .assert(SemanticsMatcher("복사 동작") { node -> SemanticsActions.CustomActions in node.config && node.config[SemanticsActions.CustomActions].any { it.label == "Copy" } })
+        compose.onNodeWithContentDescription("Alex: hello there").onChildren().assertCountEquals(0)
         compose.onNode(hasSetTextAction()).performTextInput("hi Alex")
         compose.onNode(hasSetTextAction()).performImeAction()
         compose.waitUntil(5_000) { factory.last.sentChatMessages.isNotEmpty() }
         assertThat(factory.last.sentChatMessages.map { it.second }).containsExactly("hi Alex")
         compose.waitForIdle()
-        compose.onNodeWithText("hi Alex").assertIsDisplayed()
+        compose.onNodeWithContentDescription("You: hi Alex").assertIsDisplayed()
         session.close()
     }
 

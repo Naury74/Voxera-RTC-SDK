@@ -1,5 +1,6 @@
 package com.naury.voxerartc.ui.room
 
+import android.content.ClipData
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,9 +40,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -150,8 +156,21 @@ private fun ChatBubble(message: ChatMessage, name: String, showSender: Boolean, 
     val mine = message.isLocal
     val you = stringResource(R.string.voxera_you)
     val spoken = stringResource(R.string.voxera_chat_from, if (mine) you else name, message.text)
+    val copy = stringResource(R.string.voxera_chat_copy)
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     Row(
-        modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = spoken },
+        // TalkBack은 메시지 하나에서 한 번만 멈추고 "보낸 사람: 내용"을 읽는다. 고를 수 있는 글자가 따로 멈추지 않게 안쪽은 지우고,
+        // 길게 눌러 복사하는 대신 "복사" 동작을 둔다.
+        modifier.fillMaxWidth().clearAndSetSemantics {
+            contentDescription = spoken
+            customActions = listOf(
+                CustomAccessibilityAction(copy) {
+                    scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(copy, message.text))) }
+                    true
+                },
+            )
+        },
         verticalAlignment = Alignment.Top,
     ) {
         if (!mine) {
@@ -196,9 +215,8 @@ private fun ChatInput(onSend: (String) -> Unit) {
                 draft.clearText()
             }
         },
+        // 안내 글이 곧 입력 칸 이름이다. 같은 글을 label로도 주면 TalkBack이 이름과 힌트로 두 번 읽는다.
         placeholder = stringResource(R.string.voxera_chat_placeholder),
-        // 화면 판독기가 입력 칸 이름으로 읽는다.
-        label = stringResource(R.string.voxera_chat_placeholder),
         maxLines = 4,
         maxLength = ChatMessage.MAX_LENGTH,
         // 글자 수는 남은 글자가 얼마 안 될 때만 보여 준다.

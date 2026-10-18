@@ -192,6 +192,7 @@
     <string name="voxera_chat_send">Send</string>
     <string name="voxera_chat_someone">Former participant</string>
     <string name="voxera_chat_from">%1$s: %2$s</string>
+    <string name="voxera_chat_copy">Copy</string>
     <string name="voxera_chat_open">Open chat</string>
     <plurals name="voxera_chat_unread">
         <item quantity="one">%d unread message</item>
