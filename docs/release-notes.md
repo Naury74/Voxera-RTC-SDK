@@ -15,6 +15,7 @@
 
 - `VoxeraVideoRenderer`에 프레임 크기를 알리는 `Render(track, mirror, modifier, onFrameSize)`가 생겼습니다. 기본 구현이 있어 기존 렌더러는 그대로 동작합니다(늘 채움). `LiveKitVideoTracks.createView`에는 `onFrameSize`가 붙었습니다.
 - 영상 타일이 영상 비율을 보고 채울지 전체를 보여 줄지 정합니다(통화 화면 설명 참고).
+- 음성 그룹 통화에서 TalkBack이 사람 하나를 "이름, 마이크 꺼짐"처럼 한 번에 읽습니다. 전에는 마이크 아이콘에서 한 번 더 멈췄습니다.
 
 ### 검증
 
