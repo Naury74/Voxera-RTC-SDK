@@ -459,3 +459,12 @@ TalkBack 16에서 실제로 읽는 문장을 확인했다. 방법:
 | 덜 찬 마지막 쪽 칸 크기 | 1쪽과 같은 크기 | 처음에는 2쪽의 3명이 2열로 커졌다(Kinetica가 쪽마다 인원으로 줄 수를 정함). Kinetica 77cbb1a부터 여러 쪽이면 꽉 찬 쪽 기준으로 짜서, 2쪽의 3명이 1쪽과 같은 크기 칸 한 줄로 화면 가운데에 놓인다 | Fail → Pass |
 
 도중에 확인한 것: TalkBack을 꺼 둔 줄 알았는데 켜져 있었고, 그동안은 손가락 탭과 쓸기가 TalkBack 제스처로 바뀌어 동작하지 않는 것처럼 보였다. 시험 전에는 `settings get secure enabled_accessibility_services`로 꺼짐을 확인한다.
+
+## 접은 바깥 화면과 LiveKit Meet 채팅 (에뮬레이터) — 2026-10-18
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 통화 중 접고 펴기 | 통화가 이어지고 화면이 맞춰짐 | 전용 폴더블 AVD(voxera_fold, Pixel 9 Pro Fold, API 36.1)에서 4명 통화 중 `adb emu unfold`/`fold`를 했다. 안쪽 2076×2152에서는 2×2가 넓게, 바깥 1080×2424에서는 길게 바뀌고, 통화는 이어지며 앱이 죽지 않음 | Pass |
+| 접은 바깥 화면, TalkBack 음성 | 같은 화면, 입력 칸 이름을 읽음 | 바깥 화면에서 채팅은 더보기가 아니라 조작 막대에 있다("2 unread messages, Chat"). 시트에서는 "Chat, Heading" → 메시지마다 한 번 → "Edit box, Message" → "Send, Button, disabled"(uhid 키보드 + VERBOSE 로그) | Pass (실제 Fold7은 NOT RUN) |
+| LiveKit Meet와 채팅 | 서로 주고받음 | Meet가 쓰는 판과 같은 채팅 코드(@livekit/components-core 0.12.15 setupChat, livekit-client 2.22.4)를 headless Chrome에 띄워 로컬 서버에 넣었다. Meet 쪽이 보낸 글이 Voxera 알림 섬과 배지로 왔고, Voxera가 보낸 글을 Meet 쪽이 같은 글로 받았다. Meet 웹앱 화면 자체는 띄우지 않았다 | Pass |
+| Kinetica a95752d(채운 면 흰 글자 대비) | 화면이 깨지지 않음 | Voxera 강조색(청록)은 이미 4.5:1을 넘어 버튼 색이 그대로다. 전체 검사 통과 | Pass |
