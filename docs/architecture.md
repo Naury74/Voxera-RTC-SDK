@@ -2,14 +2,18 @@
 
 ## 모듈
 
-```
-                 app (Showcase)
-                   │        │
-        voxera-ui-compose   voxera-testkit (FakeRtcEngine, VoxeraDemo)
-                   │        │
-                   └── voxera-core ──► voxera-rtc-api
-                       (Kotlin JVM)    (Kotlin JVM)
-```
+아래 표의 "가져오는 모듈"은 그 모듈이 API로 노출하는 Voxera 모듈입니다. 쇼케이스 앱(`app`)은 배포하지 않습니다.
+
+| 모듈 | 하는 일 | 가져오는 모듈 |
+| --- | --- | --- |
+| `voxera-rtc-api` | 엔진에 매이지 않는 모델(`SessionState`, `Participant`, `VideoTrackHandle`, `QualitySnapshot`), `VoxeraError`, 엔진 포트 `RtcEngine`, 토큰 공급자 계약 | 없음 |
+| `voxera-core` | 진입점 `Voxera`, `VoxeraSession`, 상태 reducer, Java 진입점 `VoxeraJava`, 진단 리포트 | rtc-api |
+| `voxera-invitation` | 걸고 받기(Call Mode) 계약 `InvitationGateway`, `CallCoordinator`, 푸시 payload 파서 | core |
+| `voxera-livekit` | LiveKit Android로 만든 `RtcEngine`, 토큰 공급자, 영상 트랙, 화면 공유, 카메라 효과 | core |
+| `voxera-ui-compose` | 통화 화면, 입장 전 화면, 걸고 받기 화면, 테마 | core, invitation |
+| `voxera-livekit-compose` | LiveKit 영상을 통화 화면에 그리는 렌더러 | livekit, ui-compose |
+| `voxera-android` | foreground service와 통화 알림, PiP, 근접 화면 끄기, 시스템 통화 등록 | core |
+| `voxera-testkit` | `FakeRtcEngine`(가상 시간), 오프라인 데모 시나리오 | core, invitation |
 
 모듈 사이에는 다음 규칙을 지킵니다.
 
@@ -43,29 +47,34 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 조작은 mutex로 하나씩 처리하고 그때마다 가장 최근 의도만 엔진에 보내기 때문에, 버튼을 빠르게 연타해도 마지막 의도와 엔진 ack가
 어긋나지 않습니다. 실패하면 `actual`은 그대로 두고 `lastError`에 남깁니다. UI는 `actual`을 확정된 상태로 그리고, `isPending`이면 진행 중 표시를 합니다.
 
-## UI (Glass)
+## 통화 화면
 
-- `VoxeraTheme`은 호스트의 `MaterialTheme`를 건드리지 않고 `VoxeraTokens`를 CompositionLocal로 내려 줍니다. 테마를 바꾸면 UI만 다시
+- `VoxeraTheme`은 앱의 `MaterialTheme`를 건드리지 않고 `VoxeraTokens`를 CompositionLocal로 내려 줍니다. 테마를 바꾸면 화면만 다시
   그리고 세션과 트랙은 그대로 둡니다(Robolectric 테스트로 확인).
-- 유리 표면은 반투명 단색에 1dp 외곽선, 옅은 테두리 반사광, 그림자를 더한 것입니다. 면을 그라디언트로 칠하지 않고 배경 흐림도 쓰지 않습니다.
-- 영상이 없는 화면의 배경(`voxeraBackdrop`)은 `canvas` 단색입니다.
-- 영상 무대는 모든 타일을 한 부모 아래 두고, `planStage`가 정한 자리로 스프링 애니메이션으로 옮깁니다. 그래서 보기 방식을 바꿔도 타일(영상 View)을 새로 만들지 않습니다.
-- 말할 때와 연결 중에 나오는 물결 같은 반복 애니메이션과 튕김 효과는 시스템 애니메이션 배율이 0이면 끕니다.
-  `VoxeraGlassQuality.AUTO`는 배터리 절약 모드에서 `REDUCED`로, 고대비 모드에서 `OFF`(불투명)로 낮아집니다.
-- 호스트가 덮어쓴 색(`VoxeraPaletteOverride`)이 글자 4.5:1, 강조 그래픽 3:1 대비에 못 미치면 버리고 기본값을 씁니다.
+- 통화 화면은 Kinetica UI 키트의 `KineticaScaffold` 위에 그립니다. 영상 무대를 배경으로 기록해 두고, 그 위의 조작 막대, 상단 바,
+  시트가 뒤의 영상을 실제로 흐리게 비춥니다(Android 12 이상). 블러를 못 쓰는 기기에서는 반투명 단색에 외곽선을 두릅니다.
+- 유리 품질 `VoxeraGlassQuality.AUTO`는 배터리 절약 모드에서 `REDUCED`(블러 없이 거의 불투명), 고대비 모드에서 `OFF`(불투명)로 낮아집니다.
+- 영상 무대는 `stageModel`이 누구를 크게 볼지 정하고, 자리 계산과 쪽 나누기는 Kinetica 참가자 격자가 합니다. 모든 타일이 한 격자 안에 있어서
+  보기 방식을 바꿔도 타일(영상 View)을 새로 만들지 않고 자리만 옮깁니다.
+- 타일은 렌더러가 알려 준 프레임 크기로 채울지 전체를 보여 줄지 정합니다. 크게 보는 자리는 넓이 75%, 격자와 아래 줄은 50%보다 적게 보이면
+  전체를 보여 주고, 내 작은 창은 늘 채우며, 화면 공유는 늘 전체를 보여 줍니다.
+- 시스템 애니메이션 배율이 0이면 말할 때 퍼지는 물결 같은 반복 애니메이션과 튕김 효과를 끕니다.
+- 앱이 덮어쓴 색(`VoxeraPaletteOverride`)이 글자 4.5:1, 강조 그래픽 3:1 대비에 못 미치면 버리고 기본값을 씁니다.
+- 시트, 알림, 스위치, 선택 묶음, 말풍선, 추이 그래프, 움직임 효과는 Kinetica 부품을 `implementation`으로 씁니다. Voxera 공개 API에는
+  Kinetica 타입이 나오지 않아서, 나중에 다른 부품으로 바꾸어도 앱 코드는 그대로입니다.
 
-## 설계 문서와 다르게 정한 것
+## 처음 설계와 다르게 정한 것
 
-설계 문서의 Kotlin 코드는 목표로 삼은 계약이라, 실제로 구현하면서 아래처럼 바꾸거나 확정했습니다.
+처음 설계에서 목표로 삼은 계약을 실제로 구현하면서 아래처럼 바꾸거나 확정했습니다.
 
-| 항목 | 설계 문서 | 구현 | 이유 |
+| 항목 | 처음 설계 | 구현 | 이유 |
 | --- | --- | --- | --- |
 | 진입점 | `Voxera.create(context, factory)` | `Voxera.create(factory)` | core를 순수 JVM으로 두기 위해. Context가 필요한 LiveKit factory가 Context를 받는다 |
-| 모듈 | `voxera-call-state`, `voxera-ui-tokens` 분리 | core, ui-compose에 포함 | 아직 쓰는 곳이 하나뿐이라 모듈을 굳이 나누지 않음. View UI를 만들 때 tokens를 분리 |
+| 모듈 | `voxera-call-state`, `voxera-ui-tokens` 분리 | core, ui-compose에 포함 | 쓰는 곳이 하나뿐이라 모듈을 나누지 않음. View 화면을 만들게 되면 토큰을 나눔 |
 | 실패 후 | `Failed → Ending → Ended` | `Failed`에서 이미 자원 해제, `leave` 시 `Ended`, 다시 `join` 가능 | 사용자가 실패 화면을 보고 다시 시도할지 닫을지 고를 수 있게 |
 | 세션 API | `state`, `participants`, `diagnostics` | `localMedia`, `engineKind`, `clock`, `join(media)` 추가 | ack 대기 표시, DEMO 표시, 통화 시간 계산에 필요 |
 | 오류 | 10종 | `InvalidConfiguration`, `HostUnauthorized`, `NotConnected`, `DuplicateIdentity` 추가 | 입력 오류, 호스트 인증 실패, identity 충돌을 따로 안내하려고 |
-| 화면 공유·진단 정책 | `startScreenShare`, `DiagnosticsPolicy` | 아직 없음 | 해당 티켓(VOX-018, VOX-020)에서 동작과 함께 추가 |
+| 화면 공유·진단 | `startScreenShare`, `DiagnosticsPolicy` | `startScreenShare(consent)`, `SessionDiagnostics` | 화면 공유는 시스템 승인 결과를 받아 시작하고, 진단 리포트는 정책 객체 없이 민감한 값을 처음부터 넣지 않음 |
 | Light primary | `#008E78` | `#007D69` | 흰 글자 대비 4.09:1 → 5.08:1 (WCAG 4.5:1) |
 | 토큰 | 13종 | `onPrimary`, `onDanger`, `onScrim`, `warning` 추가 | 버튼 글자, 영상 위 글자, 테스트 전용 경고 문구에 필요 |
 | GlassLevel.High | alpha ≥ 0.88 | 0.96 | 바텀 시트 글자 뒤로 조작 막대가 비쳐 보임 |
@@ -76,7 +85,7 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 반응 | 없음 | `Reaction` 6종, `VoxeraSession.reactions/sendReaction`, LiveKit 데이터 메시지(주제 `voxera.reaction`) | 정해진 종류만 주고받아 네트워크에서 온 임의 문자열을 그리지 않음. 1초 5개 제한 |
 | 통화 알림 | 진행 알림 | CallStyle(경과 시간·종료 버튼) | 상태 표시줄 통화 칩, 앱을 열지 않고 끊기 |
 | 조작 막대 자동 숨김 | 숨김 컨트롤 | 영상 통화 4초, 터치 탐색 중에는 숨기지 않음 | TalkBack 사용자가 종료 버튼을 잃지 않게 |
-| 바탕·표면 색 | canvas #081322 / #F5FAFE 등 남색 계열 | 무채색 #0B0E14 / #F2F4F7, 강조색은 그대로 | 남색 바탕과 그라디언트 때문에 화면이 탁해 보인다는 피드백. 대비 테스트는 계속 통과 |
+| 바탕·표면 색 | canvas #081322 / #F5FAFE 등 남색 계열 | 무채색 #0B0E14 / #F2F4F7, 강조색은 그대로 | 남색 바탕과 그라디언트 때문에 화면이 탁해 보여서. 대비 테스트는 계속 통과 |
 | 크게 보기 | tap-to-pin | 격자 탭 = 크게 보기, 갤러리 ↔ 발표자 보기 전환, 발표자 전환 1.5초 지연 | 그룹 통화에서 한 사람에게 집중 |
 | 크게 보기 작은 줄 | 넘치는 인원은 "+N" | 모든 참가자를 한 줄에 두고 좌우(가로 화면은 위아래)로 넘김, 보이는 칸 근처만 그림 | 숨은 사람을 보려고 화면을 바꾸지 않아도 되게. 영상 렌더는 보이는 만큼만 |
 | 오디오 장치 목록 | 고정 목록 | 연결된 장치만 표시, 새 장치 연결·끊김을 화면 위 알림으로 안내(전환 시 되돌리기) | 없는 블루투스를 고르게 하지 않음. 이어폰을 끼면 바로 옮기되 사용자가 되돌릴 수 있게 |
@@ -84,4 +93,4 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 | 손들기 | 없음 | `Participant.handRaisedAtMs`, `setHandRaised`, 데이터 메시지(`voxera.hand`) + 새 참가자에게 다시 보냄 | 참가자 속성(attributes)은 토큰에 `canUpdateOwnMetadata` 권한이 있어야 해서, 기본 토큰으로도 되게 함 |
 | 그룹 통화 수신 | 기본값 | `adaptiveStream`·`dynacast` 켬 | 작은 타일·PiP·화면 밖 타일은 낮은 화질만 받고, 아무도 안 보는 화질 계층은 보내지 않음 |
 | 진행자 기능 | 없음 | 제공하지 않음 | 남의 마이크 끄기·내보내기는 LiveKit 서버 API(관리자 권한)가 필요해 클라이언트 SDK 몫이 아님 |
-| 화면 구성 요소 | Voxera 자체 Glass 컴포넌트 | 시트·아일랜드 알림·스위치·선택 묶음·채팅 말풍선·추이 그래프·블러·움직임 효과는 Kinetica UI 키트(`implementation`)로 그리고, Voxera 공개 컴포넌트 이름과 매개변수는 그대로 둠 | 영상 위 유리에 실제 블러, 뒤 화면이 물러나는 시트, 차례로 뜨는 알림 같은 완성도를 직접 만들지 않고 가져오기 위해. 공개 API에 Kinetica 타입을 내보내지 않아 나중에 바꾸거나 빼기 쉽다 |
+| 화면 구성 요소 | Voxera 자체 유리 컴포넌트 | 시트·아일랜드 알림·스위치·선택 묶음·채팅 말풍선·추이 그래프·블러·움직임 효과는 Kinetica UI 키트(`implementation`)로 그리고, Voxera 공개 컴포넌트 이름과 매개변수는 그대로 둠 | 영상 위 유리에 실제 블러, 뒤 화면이 물러나는 시트, 차례로 뜨는 알림 같은 완성도를 직접 만들지 않고 가져오기 위해. 공개 API에 Kinetica 타입을 내보내지 않아 나중에 바꾸거나 빼기 쉽다 |

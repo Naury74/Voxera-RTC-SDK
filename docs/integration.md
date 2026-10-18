@@ -13,7 +13,7 @@ dependencies {
 }
 ```
 
-LiveKit Android가 `audioswitch`를 JitPack에서 받기 때문에 JitPack 저장소가 필요합니다. 이때 그 그룹만 받도록 제한해 두세요.
+Voxera 모듈은 Maven Central에 있습니다. 다만 LiveKit Android가 쓰는 `audioswitch`는 JitPack에만 있어서 JitPack 저장소도 필요합니다. 이때 그 그룹만 받도록 제한해 두세요.
 
 ```kotlin
 // settings.gradle.kts
@@ -61,7 +61,7 @@ scope.launch {
 | 공급자 | 용도 |
 | --- | --- |
 | `RtcCredentialsProvider { ... }` | 운영용. 호스트 서버가 토큰을 발급 |
-| `LiveKitTokenSources.endpoint(url, name, headers)` | 호스트의 토큰 endpoint에 POST(`room_name`, `participant_name`) → `server_url`, `participant_token` |
+| `LiveKitTokenSources.endpoint(url, name, headers)` | 호스트의 토큰 엔드포인트에 POST(`room_name`, `participant_name`) → `server_url`, `participant_token` |
 | `LiveKitTokenSources.literal(serverUrl, token)` | 이미 받아 둔 토큰 하나로 입장 |
 | `LiveKitTokenSources.developmentTokenServer(id, name)` | LiveKit Cloud 개발 토큰 서버. **테스트 전용**이다. ID만 알면 누구나 토큰을 받을 수 있다 |
 
