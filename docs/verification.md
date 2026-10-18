@@ -445,3 +445,17 @@ TalkBack 16에서 실제로 읽는 문장을 확인했다. 방법:
 | 음성 그룹 10명 이상 세로 넘기기 | 모두 표시 | 데모가 없어 단위 테스트로 확인. 20명이면 마지막 사람이 처음에는 화면 밖이고, 넘기면 보이며, 목록에 스크롤 동작이 있다 | Pass |
 | 입장 전 마이크 레벨 | 말하면 막대가 참 | 에뮬레이터에 Mac 마이크를 연결했지만, Mac 출력 음량이 0이라 시험 음성을 내지 못했다. 소리를 크게 틀어야 해서 하지 않았다 | NOT RUN |
 | 접은 바깥 화면 TalkBack | 입력 칸 이름을 읽음 | 휴대전화 크기 에뮬레이터에서 같은 화면 "Edit box. Message". 실제 Fold7 바깥 화면은 안 해 봄 | NOT RUN |
+
+## 12인 그룹 쪽 넘기기와 Kinetica 띠·경고 상자 (에뮬레이터 API 36, Kinetica f8be4e6 판) — 2026-10-18
+
+쇼케이스에 12인 그룹(DemoScenario.GROUP_TWELVE) 시나리오를 넣었다. 한 쪽에 9명까지 놓으므로 격자가 두 쪽으로 나뉜다. TalkBack 확인은 앞 절과 같이 HID 터치스크린 손가락 쓸기와 VERBOSE 로그로 했다.
+
+| 항목 | 기대 | 실제 | Result |
+| --- | --- | --- | --- |
+| 손가락으로 쪽 넘기기 | 옆으로 넘기면 다음 쪽 | 1쪽 3×3(9명)에서 넘기면 2쪽 Avery·Quinn·Drew, 아래 점이 2쪽을 가리킴 | Pass |
+| TalkBack 쪽 넘기기 | 1쪽 끝에서 다음 쪽 사람에게, 거꾸로도 | 오른쪽 쓸기: You … Sam(1쪽) → Avery·Quinn·Drew(2쪽) → "Page 2 of 2" → Mic. 왼쪽 쓸기: Drew·Quinn·Avery → Sam … You(1쪽) → 상단 바 | Pass |
+| 띠 왼쪽 쓸기(d8f9bd7) | 띠 처음까지 되돌아옴 | 오른쪽: You, Pinned → Alex … Sam → Mic(큰 화면이 끼지 않음). 왼쪽: Sam … Alex → You, Pinned → 상단 바 | Fail → Pass |
+| 경고 상자(KAlert) | 한 번에 읽음 | "Warning, Test-only token source, 본문" 한 번 | Fail → Pass |
+| 덜 찬 마지막 쪽 칸 크기 | 1쪽과 같은 크기 | 2쪽의 3명이 2열로 커진다. Kinetica가 쪽마다 인원으로 줄 수를 정해서이고, Voxera의 columns로는 고칠 수 없어 Kinetica에 제안함 | 개선 제안 |
+
+도중에 확인한 것: TalkBack을 꺼 둔 줄 알았는데 켜져 있었고, 그동안은 손가락 탭과 쓸기가 TalkBack 제스처로 바뀌어 동작하지 않는 것처럼 보였다. 시험 전에는 `settings get secure enabled_accessibility_services`로 꺼짐을 확인한다.
