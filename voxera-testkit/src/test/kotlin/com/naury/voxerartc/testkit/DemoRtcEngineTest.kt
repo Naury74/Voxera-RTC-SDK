@@ -50,6 +50,7 @@ class DemoRtcEngineTest {
         assertThat(remoteCountAfterJoin(DemoScenario.VOICE_ONE_ON_ONE)).isEqualTo(1)
         assertThat(remoteCountAfterJoin(DemoScenario.GROUP_FOUR)).isEqualTo(3)
         assertThat(remoteCountAfterJoin(DemoScenario.GROUP_NINE)).isEqualTo(8)
+        assertThat(remoteCountAfterJoin(DemoScenario.GROUP_TWELVE)).isEqualTo(11)
     }
 
     @Test

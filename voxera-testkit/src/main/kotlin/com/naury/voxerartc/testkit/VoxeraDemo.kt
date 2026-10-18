@@ -48,6 +48,9 @@ public enum class DemoScenario(public val mode: CallMode, public val remoteNames
     GROUP_FOUR(CallMode.VIDEO, listOf("Alex", "Taylor", "Jamie")),
     GROUP_NINE(CallMode.VIDEO, listOf("Alex", "Taylor", "Jamie", "Morgan", "Riley", "Casey", "Jordan", "Sam")),
 
+    /** 12명 영상 그룹. 한 쪽에 9명까지 놓으므로 격자가 두 쪽으로 나뉘고 옆으로 넘겨 나머지를 본다. */
+    GROUP_TWELVE(CallMode.VIDEO, listOf("Alex", "Taylor", "Jamie", "Morgan", "Riley", "Casey", "Jordan", "Sam", "Avery", "Quinn", "Drew")),
+
     /** 연결 뒤 잠시 끊겼다가 복구되는 망. 재연결 화면을 보여 준다. */
     UNSTABLE_NETWORK(CallMode.VOICE, listOf("Alex Morgan")),
 
@@ -171,7 +174,7 @@ internal class DemoRtcEngine(
     /** 그룹 데모에서는 손을 들고 채팅을 주고받는다. 내가 채팅을 보내면 잠시 뒤 누군가 답한다. */
     private fun playSocial(tick: Int) {
         if (remotes.isEmpty()) return
-        val group = scenario == DemoScenario.GROUP_FOUR || scenario == DemoScenario.GROUP_NINE
+        val group = scenario == DemoScenario.GROUP_FOUR || scenario == DemoScenario.GROUP_NINE || scenario == DemoScenario.GROUP_TWELVE
         if (group && remotes.size >= 3) when (tick) {
             5 -> fake.simulateHandRaised(remotes[1].id, true)
             7 -> fake.simulateChat(remotes[2].id, "Can everyone hear me okay?")

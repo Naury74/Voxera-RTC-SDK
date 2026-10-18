@@ -1,6 +1,7 @@
 public final class com/naury/voxerartc/testkit/DemoScenario : java/lang/Enum {
 	public static final field GROUP_FOUR Lcom/naury/voxerartc/testkit/DemoScenario;
 	public static final field GROUP_NINE Lcom/naury/voxerartc/testkit/DemoScenario;
+	public static final field GROUP_TWELVE Lcom/naury/voxerartc/testkit/DemoScenario;
 	public static final field SCREEN_SHARE Lcom/naury/voxerartc/testkit/DemoScenario;
 	public static final field UNSTABLE_NETWORK Lcom/naury/voxerartc/testkit/DemoScenario;
 	public static final field VIDEO_ONE_ON_ONE Lcom/naury/voxerartc/testkit/DemoScenario;
