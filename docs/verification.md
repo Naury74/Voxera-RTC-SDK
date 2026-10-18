@@ -456,6 +456,6 @@ TalkBack 16에서 실제로 읽는 문장을 확인했다. 방법:
 | TalkBack 쪽 넘기기 | 1쪽 끝에서 다음 쪽 사람에게, 거꾸로도 | 오른쪽 쓸기: You … Sam(1쪽) → Avery·Quinn·Drew(2쪽) → "Page 2 of 2" → Mic. 왼쪽 쓸기: Drew·Quinn·Avery → Sam … You(1쪽) → 상단 바 | Pass |
 | 띠 왼쪽 쓸기(d8f9bd7) | 띠 처음까지 되돌아옴 | 오른쪽: You, Pinned → Alex … Sam → Mic(큰 화면이 끼지 않음). 왼쪽: Sam … Alex → You, Pinned → 상단 바 | Fail → Pass |
 | 경고 상자(KAlert) | 한 번에 읽음 | "Warning, Test-only token source, 본문" 한 번 | Fail → Pass |
-| 덜 찬 마지막 쪽 칸 크기 | 1쪽과 같은 크기 | 2쪽의 3명이 2열로 커진다. Kinetica가 쪽마다 인원으로 줄 수를 정해서이고, Voxera의 columns로는 고칠 수 없어 Kinetica에 제안함 | 개선 제안 |
+| 덜 찬 마지막 쪽 칸 크기 | 1쪽과 같은 크기 | 처음에는 2쪽의 3명이 2열로 커졌다(Kinetica가 쪽마다 인원으로 줄 수를 정함). Kinetica 77cbb1a부터 여러 쪽이면 꽉 찬 쪽 기준으로 짜서, 2쪽의 3명이 1쪽과 같은 크기 칸 한 줄로 화면 가운데에 놓인다 | Fail → Pass |
 
 도중에 확인한 것: TalkBack을 꺼 둔 줄 알았는데 켜져 있었고, 그동안은 손가락 탭과 쓸기가 TalkBack 제스처로 바뀌어 동작하지 않는 것처럼 보였다. 시험 전에는 `settings get secure enabled_accessibility_services`로 꺼짐을 확인한다.
