@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import com.naury.voxerartc.api.VideoTrackHandle
+import com.naury.voxerartc.ui.theme.VoxeraTheme
 import kotlin.math.min
 
 /** 타일 안에 영상을 놓는 방법. [Cover]는 타일을 채우고 넘치는 가장자리를 자르고, [Contain]은 영상 전체를 보여 주고 남는 곳을 비운다. */
@@ -68,6 +69,9 @@ internal fun FittedVideo(
     modifier: Modifier = Modifier,
 ) {
     var frame by remember(track) { mutableStateOf<IntSize?>(null) }
+    val colors = VoxeraTheme.colors
+    // 어두운 테마에서는 바탕과 같은 색이면 타일 경계가 사라지므로 바탕보다 한 단계 밝게 둔다.
+    val letterbox = if (colors.isDark) colors.surfaceElevated else Letterbox
     BoxWithConstraints(modifier.clipToBounds(), contentAlignment = Alignment.Center) {
         val boxAspect = maxWidth / maxHeight
         val aspect = frame?.let { it.width.toFloat() / it.height }
@@ -80,7 +84,7 @@ internal fun FittedVideo(
         val h by animateDpAsState(height, motion, label = "video-h")
         val bars by animateFloatAsState(if (fit == VideoFit.Contain && known) 1f else 0f, label = "video-bars")
         if (bars > 0f) {
-            Box(Modifier.matchParentSize().graphicsLayer { alpha = bars }.background(Letterbox))
+            Box(Modifier.matchParentSize().graphicsLayer { alpha = bars }.background(letterbox))
         }
         renderer.Render(track, mirror, Modifier.requiredSize(w, h)) { frame = it }
     }
@@ -96,5 +100,5 @@ internal fun videoBox(width: Dp, height: Dp, aspect: Float?, fit: VideoFit): Pai
     }
 }
 
-/** 전체를 보여 줄 때 남는 곳의 색. 영상 둘레는 테마와 상관없이 어둡게 둔다. */
+/** 밝은 테마에서 전체를 보여 줄 때 남는 곳의 색. 영상 둘레는 어둡게 둔다. */
 private val Letterbox = Color(0xFF0B0D10)
