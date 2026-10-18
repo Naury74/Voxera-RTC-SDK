@@ -10,17 +10,16 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.IntSize
 import com.naury.voxerartc.api.VideoEffect
 import com.naury.voxerartc.api.VideoSource
 import com.naury.voxerartc.api.VideoTrackHandle
-import com.naury.voxerartc.ui.component.avatarColors
 import com.naury.voxerartc.ui.room.applyEffect
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 
@@ -53,8 +52,8 @@ public val LocalVoxeraVideoRenderer: androidx.compose.runtime.ProvidableComposit
 internal val LocalSimulatedEffect = staticCompositionLocalOf { VideoEffect.None }
 
 /**
- * 오프라인 데모용 가짜 영상. 인물 사진 대신 참가자별 차분한 단색 위에 사람 윤곽(머리·어깨)을 그린다.
- * 말하는 것처럼 윤곽이 아주 조금 숨 쉬듯 움직인다. 내 영상(mirror)에는 [LocalSimulatedEffect]를 적용한다.
+ * 오프라인 데모용 가짜 영상. 실제 사람 사진 대신, 참가자마다 생김새와 방이 다른 일러스트([drawDemoPerson])를 그린다.
+ * 눈을 깜빡이고 고개를 살짝 움직인다. 내 영상(mirror)에는 [LocalSimulatedEffect]를 적용한다.
  */
 internal val SimulatedVideoRenderer: VoxeraVideoRenderer = object : VoxeraVideoRenderer {
     @Composable
@@ -86,31 +85,17 @@ private fun SimulatedVideo(track: VideoTrackHandle, mirror: Boolean, modifier: M
         SimulatedScreen(modifier)
         return
     }
-    val colors = VoxeraTheme.colors
-    val (fill, hue) = avatarColors(track.participantId, colors)
+    val look = remember(track.participantId) { demoLook(track.participantId) }
     val effect = if (mirror) LocalSimulatedEffect.current else VideoEffect.None
-    val breath by rememberInfiniteTransition(label = "demo-video").animateFloat(
+    val time by rememberInfiniteTransition(label = "demo-video").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(3_200, easing = LinearEasing), RepeatMode.Reverse),
-        label = "breath",
+        animationSpec = infiniteRepeatable(tween(12_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "time",
     )
-    val background = applyEffect(lerp(colors.canvas, fill, 0.7f), effect)
-    val figure = applyEffect(lerp(background, hue, 0.22f), effect)
     // 몸통은 아래 끝까지 그리므로 영상 영역 밖(전체를 보여 줄 때 생기는 띠)으로 넘치지 않게 자른다.
     Canvas(modifier.clipToBounds()) {
-        drawRect(background)
-        val unit = minOf(size.width, size.height)
-        val cx = size.width / 2f
-        val head = unit * 0.13f
-        val headY = size.height * 0.5f - unit * 0.12f - unit * 0.015f * breath
-        drawCircle(figure, radius = head, center = Offset(cx, headY))
-        // 어깨는 넓고 낮은 곡선, 그 아래 몸통은 타일 끝까지 곧게 내려 상반신처럼 보이게 한다.
-        val shoulderTop = headY + head * 1.3f
-        val shoulderW = unit * 0.66f
-        val shoulderH = unit * 0.28f
-        drawOval(figure, topLeft = Offset(cx - shoulderW / 2f, shoulderTop), size = Size(shoulderW, shoulderH))
-        drawRect(figure, topLeft = Offset(cx - shoulderW / 2f, shoulderTop + shoulderH / 2f), size = Size(shoulderW, size.height))
+        drawDemoPerson(look, time) { applyEffect(it, effect) }
     }
 }
 
