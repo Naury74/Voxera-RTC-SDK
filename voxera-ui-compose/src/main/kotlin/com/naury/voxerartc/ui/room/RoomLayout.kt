@@ -56,10 +56,19 @@ internal fun stageModel(participants: List<Participant>, pinnedId: String?, view
 internal fun loudestRemote(participants: List<Participant>): String? =
     participants.filter { !it.isLocal && it.isSpeaking }.maxByOrNull { it.audioLevel }?.id
 
-/** 격자 열 수: 2명은 위아래(가로 화면은 좌우), 3~4명 2열, 5~6명 2열(가로 화면 3열), 7명부터 3열. */
-internal fun stageColumns(count: Int, landscape: Boolean): Int = when {
+/**
+ * 격자 열 수: 2명은 위아래(가로 화면은 좌우), 3~4명 2열, 5~6명 2열(가로 화면 3열), 7명부터 3열.
+ *
+ * [shortScreen](가로로 눕힌 휴대전화처럼 높이가 낮은 창)에서는 줄을 쌓으면 칸이 납작해져 세로 영상이 가는 띠로 보이므로,
+ * 4명까지는 한 줄에, 그보다 많으면 두 줄에 나눠 놓는다.
+ */
+internal fun stageColumns(count: Int, landscape: Boolean, shortScreen: Boolean = false): Int = when {
+    landscape && shortScreen -> if (count <= 4) count.coerceAtLeast(1) else (count + 1) / 2
     count <= 2 -> if (landscape) 2 else 1
     count <= 4 -> 2
     count <= 6 -> if (landscape) 3 else 2
     else -> 3
 }
+
+/** [stageColumns]의 낮은 창 기준. 창 높이가 이보다 낮으면(가로로 눕힌 휴대전화) 줄 수를 줄인다. */
+internal const val SHORT_SCREEN_DP = 480

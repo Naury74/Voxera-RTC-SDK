@@ -69,5 +69,7 @@ class StagePlanTest {
     fun `격자 열 수는 인원과 화면 방향만 본다`() {
         assertThat((1..9).map { stageColumns(it, landscape = false) }).containsExactly(1, 1, 2, 2, 2, 2, 3, 3, 3).inOrder()
         assertThat((1..9).map { stageColumns(it, landscape = true) }).containsExactly(2, 2, 2, 2, 3, 3, 3, 3, 3).inOrder()
+        // 가로로 눕힌 휴대전화: 4명까지 한 줄, 그 뒤로 두 줄
+        assertThat((1..9).map { stageColumns(it, landscape = true, shortScreen = true) }).containsExactly(1, 2, 3, 4, 3, 3, 4, 4, 5).inOrder()
     }
 }

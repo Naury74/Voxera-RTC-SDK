@@ -43,6 +43,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -66,6 +67,7 @@ import com.naury.voxerartc.ui.theme.VoxeraSpacing
 import com.naury.voxerartc.ui.theme.VoxeraTheme
 import com.naury.voxerartc.ui.theme.enterOnAppear
 import com.naury.voxerartc.ui.theme.rememberReducedMotion
+import com.naury.voxerartc.ui.video.VideoSpot
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 
 /** 상단 상태 줄과 하단 조작 막대가 가리지 않도록 비워 두는 높이. */
@@ -102,6 +104,7 @@ internal fun VideoStage(
     onTap: (() -> Unit)? = null,
     chromeVisible: Boolean = true,
 ) {
+    val shortScreen = LocalConfiguration.current.screenHeightDp < SHORT_SCREEN_DP
     val top by animateDpAsState(if (chromeVisible) maxOf(topReserve, TopReserve) else HiddenBottomReserve, label = "top")
     val bottom by animateDpAsState(if (chromeVisible) BottomReserve else HiddenBottomReserve, label = "bottom")
     val insets = WindowInsets.safeDrawing.asPaddingValues()
@@ -123,8 +126,8 @@ internal fun VideoStage(
         selfKey = model.selfKey,
         contentPadding = padding,
         spacing = VoxeraSpacing.xs,
-        // 열 수는 인원과 화면 방향만으로 정한다. 무대 높이로 정하면 조작 막대를 숨기고 꺼낼 때마다 배치가 바뀐다.
-        columns = { count, width, height -> stageColumns(count, landscape = width > height) },
+        // 열 수는 인원과 화면 방향, 창 높이로만 정한다. 무대 높이로 정하면 조작 막대를 숨기고 꺼낼 때마다 배치가 바뀐다.
+        columns = { count, width, height -> stageColumns(count, landscape = width > height, shortScreen = shortScreen) },
         layer = layer,
     ) { item, role ->
         StageTile(
@@ -179,6 +182,11 @@ private fun StageTile(
         renderer,
         Modifier.fillMaxSize(),
         layer = layer,
+        spot = when (role) {
+            KTileRole.Full, KTileRole.Focus -> VideoSpot.Large
+            KTileRole.Grid, KTileRole.Strip -> VideoSpot.Small
+            KTileRole.Floating -> VideoSpot.Self
+        },
         pinned = role == KTileRole.Focus && person.id == pinnedId,
         onTogglePin = if (item.screenShare || role == KTileRole.Full || role == KTileRole.Floating) null else ({ onTogglePin(person.id) }),
         labelPadding = if (role == KTileRole.Full) fullLabel else PaddingValues(0.dp),

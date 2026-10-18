@@ -38,6 +38,8 @@ import com.naury.voxerartc.api.Participant
 import com.naury.voxerartc.ui.R
 import com.naury.voxerartc.ui.theme.VoxeraRadius
 import com.naury.voxerartc.ui.theme.VoxeraTheme
+import com.naury.voxerartc.ui.video.FittedVideo
+import com.naury.voxerartc.ui.video.VideoSpot
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
 
 /**
@@ -47,6 +49,9 @@ import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
  * 누르면 [onTap](예: 이 사람 크게 보기, 조작 막대 보이기/숨기기)을, 길게 누르면 [onTogglePin]을 부른다. 누르는 동안 살짝 작아진다.
  * 고정된 타일은 위쪽 끝에 고정 표시가 붙는다. TalkBack은 타일 하나로 모든 상태를 읽고, 두 번 탭하면 [onTap]을 [tapLabel] 이름으로 부르며,
  * 고정과 해제는 사용자 지정 동작으로 한다. [onTap]이 없으면 두 번 탭으로 고정/해제한다.
+ *
+ * 영상 비율이 타일과 달라도(세로 휴대전화, 가로 노트북 카메라) 조금만 잘리면 타일을 채우고, 많이 잘리면 영상 전체를 보여 준다.
+ * 화면 공유는 늘 전체를 보여 준다. 이 판단에는 [VoxeraVideoRenderer]가 알려 주는 프레임 크기를 쓴다.
  *
  * @param onTogglePin `null`이 아니면 길게 눌러 고정/해제한다. [onTap]이 없으면 짧게 눌러도 고정/해제한다.
  * @param labelPadding 이름표를 더 안쪽으로 옮길 여백. 전체 화면 타일에서 조작 막대나 시스템 막대를 피할 때 쓴다.
@@ -103,6 +108,7 @@ internal fun VoxeraTile(
     tapLabel: String? = null,
     shape: Shape = RoundedCornerShape(VoxeraRadius.xl),
     speakingOutline: Boolean = true,
+    spot: VideoSpot = VideoSpot.Large,
 ) {
     val colors = VoxeraTheme.colors
     val name = if (participant.isLocal) stringResource(R.string.voxera_you) else participant.displayName
@@ -119,7 +125,7 @@ internal fun VoxeraTile(
         modifier = modifier,
         video = if (track != null && renderer != null) {
             // 내 카메라는 렌더러가 뒤집는다(SurfaceView는 Compose 변환을 따르지 않는다).
-            { renderer.Render(track, mirror = participant.isLocal && !screenShare, modifier = Modifier.fillMaxSize()) }
+            { FittedVideo(renderer, track, mirror = participant.isLocal && !screenShare, spot = spot, screenShare = screenShare, modifier = Modifier.fillMaxSize()) }
         } else {
             null
         },
