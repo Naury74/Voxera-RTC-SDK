@@ -50,7 +50,10 @@ subprojects {
         from(tasks.named("dokkaGeneratePublicationHtml"))
         archiveClassifier.set("javadoc")
     }
-    pluginManager.withPlugin("com.android.library") { configureConsumerKotlin() }
+    pluginManager.withPlugin("com.android.library") {
+        configureConsumerKotlin()
+        configureAndroidDokka()
+    }
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") { configureConsumerKotlin() }
     group = providers.gradleProperty("VOXERA_GROUP").get()
     version = providers.gradleProperty(if (publishingDev) "VOXERA_DEV_VERSION" else "VOXERA_VERSION").get()
@@ -143,6 +146,29 @@ fun Project.configureSigning() {
             useGpgCmd()
         }
         sign(extensions.getByType<PublishingExtension>().publications)
+    }
+}
+
+/**
+ * Dokka 2.1은 AGP 9 내장 Kotlin의 Android 설정을 읽지 못해 Android 모듈 문서를 비워 둔다.
+ * 그래서 소스 폴더와 컴파일 클래스패스(Android SDK, release 의존성의 jar)를 직접 넘긴다.
+ */
+fun Project.configureAndroidDokka() {
+    val android = extensions.getByType<com.android.build.api.variant.LibraryAndroidComponentsExtension>()
+    // AGP는 평가가 끝난 뒤에 이 구성을 만들므로, 문서를 만들 때 찾는다.
+    val compileJars = provider {
+        configurations.getByName("releaseCompileClasspath").incoming.artifactView {
+            attributes { attribute(org.gradle.api.attributes.Attribute.of("artifactType", String::class.java), "android-classes-jar") }
+            lenient(true)
+        }.files
+    }
+    extensions.configure<org.jetbrains.dokka.gradle.DokkaExtension> {
+        dokkaSourceSets.register("main") {
+            sourceRoots.from(file("src/main/kotlin"))
+            analysisPlatform.set(org.jetbrains.dokka.gradle.engine.parameters.KotlinPlatform.AndroidJVM)
+            classpath.from(android.sdkComponents.bootClasspath)
+            classpath.from(compileJars)
+        }
     }
 }
 
