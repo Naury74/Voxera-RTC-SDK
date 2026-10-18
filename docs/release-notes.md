@@ -11,6 +11,11 @@
 - `voxera-invitation`: Call Mode(`InvitationGateway`, `CallCoordinator`, 푸시 payload 파서)
 - `voxera-testkit`: 가짜 엔진과 오프라인 데모 시나리오
 
+### 바뀐 점
+
+- `VoxeraVideoRenderer`에 프레임 크기를 알리는 `Render(track, mirror, modifier, onFrameSize)`가 생겼습니다. 기본 구현이 있어 기존 렌더러는 그대로 동작합니다(늘 채움). `LiveKitVideoTracks.createView`에는 `onFrameSize`가 붙었습니다.
+- 영상 타일이 영상 비율을 보고 채울지 전체를 보여 줄지 정합니다(통화 화면 설명 참고).
+
 ### 검증
 
 에뮬레이터(API 26, 36)와 Galaxy Z Fold7에서 확인했습니다. 무엇을 확인했고 무엇을 못 했는지는 [verification.md](verification.md)에 있습니다.
