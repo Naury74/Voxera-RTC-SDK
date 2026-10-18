@@ -497,3 +497,16 @@ Python LiveKit SDK로 트랙 없는 참가자 11명, 이어서 8명을 더 넣�
 
 Kinetica 402a375(입력란 이름을 안내 글로 내보냄): 전체 검사 통과. 채팅 입력란은 비었을 때 "Edit box. Message", 글을 쓴 뒤 "Editing. hello. Edit box. Message"로 읽음(Pass).
 
+
+## Fold7 안쪽 화면 통화 성능 (release, Kinetica 402a375) — 2026-10-18
+
+펼친 Galaxy Z Fold7 안쪽 화면(1968×2184, 120Hz)에서 release 빌드를 `compile -m speed` 한 뒤 데모 장면마다 15초 동안 `dumpsys gfxinfo`를 쟀다. 15초에 약 1776프레임이라 120Hz를 유지한다.
+
+| 장면 | 프레임 | 끊김 | 프레임 p50/p90 | GPU p50/p90 | Result |
+| --- | --- | --- | --- | --- | --- |
+| 9명 3×3 격자 | 1776 | 0.00% | 8 / 9ms | 8 / 8ms | Pass |
+| 4명 2×2 격자 | 1775 | 0.00% | 9 / 9ms | 8 / 9ms | Pass |
+| 1:1 상대 전체 화면 | 1773 | 0.06% | 16 / 17ms | 16 / 16ms | Pass |
+| 12명 3×3 두 쪽 | 1776 | 0.00% | 17 / 17ms | 16 / 17ms | Pass |
+
+1:1과 12명 장면은 GPU 시간이 격자의 두 배이지만, 프레임이 겹쳐 처리돼 끊김은 생기지 않았다. 덮개 화면 측정은 Kinetica 세션과 기기 사용이 겹쳐 값을 버렸다(NOT RUN). Kinetica 371c19b(알림 호스트가 여럿일 때 하나만 그림): 전체 검사 통과, Voxera는 호스트를 하나만 써서 영향 없음.
