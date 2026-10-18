@@ -4,32 +4,42 @@ import android.app.Activity
 import android.media.projection.MediaProjectionManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.rememberCoroutineScope
-import com.naury.voxerartc.core.VoxeraSession
-import com.naury.voxerartc.livekit.MediaProjectionConsent
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.viewinterop.AndroidView
+import com.naury.voxerartc.api.VideoTrackHandle
+import com.naury.voxerartc.core.VoxeraSession
 import com.naury.voxerartc.livekit.LiveKitCameraPreview
 import com.naury.voxerartc.livekit.LiveKitVideoTracks
+import com.naury.voxerartc.livekit.MediaProjectionConsent
 import com.naury.voxerartc.ui.video.VoxeraVideoRenderer
+import kotlinx.coroutines.launch
 
 /**
  * LiveKit 영상 트랙을 그리는 [VoxeraVideoRenderer]. `LocalVoxeraVideoRenderer`로 넘기면 `VoxeraRoomScreen`이 실제 영상을 그린다.
  *
  * 트랙이 다시 게시되어 핸들이 바뀌면 이전 렌더러를 떼고 새로 붙인다. 타일이 화면에서 사라지면 렌더러와 EGL 자원을 해제한다.
  */
-public fun LiveKitVideoTracks.asComposeRenderer(): VoxeraVideoRenderer {
-    val tracks = this
-    return VoxeraVideoRenderer { track, mirror, modifier ->
+public fun LiveKitVideoTracks.asComposeRenderer(): VoxeraVideoRenderer = LiveKitComposeRenderer(this)
+
+private class LiveKitComposeRenderer(private val tracks: LiveKitVideoTracks) : VoxeraVideoRenderer {
+    @Composable
+    override fun Render(track: VideoTrackHandle, mirror: Boolean, modifier: Modifier) = Render(track, mirror, modifier) {}
+
+    @Composable
+    override fun Render(track: VideoTrackHandle, mirror: Boolean, modifier: Modifier, onFrameSize: (IntSize) -> Unit) {
+        val report by rememberUpdatedState(onFrameSize)
         key(track, mirror) {
             val context = LocalContext.current
-            val video = remember { tracks.createView(context, track, mirror) }
+            val video = remember { tracks.createView(context, track, mirror) { width, height -> report(IntSize(width, height)) } }
             DisposableEffect(Unit) { onDispose { video?.close() } }
             if (video != null) AndroidView(factory = { video.view }, modifier = modifier)
         }
