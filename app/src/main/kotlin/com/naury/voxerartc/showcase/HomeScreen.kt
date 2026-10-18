@@ -83,6 +83,7 @@ fun HomeScreen(
         HomeItem(R.string.scenario_video, R.string.scenario_video_body, VoxeraIcons.Videocam, { it.secondary }) { onStart(DemoScenario.VIDEO_ONE_ON_ONE) },
         HomeItem(R.string.scenario_group_four, R.string.scenario_group_four_body, VoxeraIcons.Group, { it.primary }) { onStart(DemoScenario.GROUP_FOUR) },
         HomeItem(R.string.scenario_group_nine, R.string.scenario_group_nine_body, VoxeraIcons.GridView, { it.secondary }) { onStart(DemoScenario.GROUP_NINE) },
+        HomeItem(R.string.scenario_group_twelve, R.string.scenario_group_twelve_body, VoxeraIcons.GridView, { it.primary }) { onStart(DemoScenario.GROUP_TWELVE) },
         HomeItem(R.string.scenario_screen_share, R.string.scenario_screen_share_body, VoxeraIcons.ScreenShare, { it.primary }) { onStart(DemoScenario.SCREEN_SHARE) },
         HomeItem(R.string.scenario_unstable, R.string.scenario_unstable_body, VoxeraIcons.Wifi, { it.warning }) { onStart(DemoScenario.UNSTABLE_NETWORK) },
     )

@@ -19,6 +19,8 @@
     <string name="scenario_group_four_body">2×2 grid, active speaker, pin</string>
     <string name="scenario_group_nine">Group of 9</string>
     <string name="scenario_group_nine_body">3×3 grid with 48dp controls</string>
+    <string name="scenario_group_twelve">Group of 12</string>
+    <string name="scenario_group_twelve_body">Two pages of 3×3, swipe for the rest</string>
     <string name="scenario_unstable">Unstable network</string>
     <string name="scenario_unstable_body">Drops and reconnects</string>
     <string name="byo_card_title">Connect your LiveKit</string>

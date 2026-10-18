@@ -19,6 +19,8 @@
     <string name="scenario_group_four_body">2×2 격자, 발화자 강조, 고정</string>
     <string name="scenario_group_nine">9인 그룹</string>
     <string name="scenario_group_nine_body">3×3 격자와 48dp 조작 버튼</string>
+    <string name="scenario_group_twelve">12인 그룹</string>
+    <string name="scenario_group_twelve_body">3×3 두 쪽, 옆으로 넘겨 나머지 보기</string>
     <string name="scenario_unstable">불안정한 네트워크</string>
     <string name="scenario_unstable_body">끊겼다가 다시 연결되는 과정</string>
     <string name="byo_card_title">내 LiveKit 연결</string>
