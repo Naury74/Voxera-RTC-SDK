@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.password
@@ -79,7 +80,8 @@ public fun VoxeraTextField(
     var errorShakes by remember { mutableStateOf(0) }
     LaunchedEffect(error) { if (error != null) errorShakes++ }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(VoxeraSpacing.xxs)) {
-        Text(label, color = colors.foregroundSecondary, style = VoxeraTheme.typography.label)
+        // 이름과 오류는 입력 칸이 읽으므로("편집 상자, 이름, 오류: …") 위아래 글자는 TalkBack이 따로 멈추지 않게 한다.
+        Text(label, color = colors.foregroundSecondary, style = VoxeraTheme.typography.label, modifier = Modifier.clearAndSetSemantics {})
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -123,7 +125,12 @@ public fun VoxeraTextField(
         )
         val help = error ?: supportingText
         if (help != null) {
-            Text(help, color = if (error != null) colors.danger else colors.foregroundSecondary, style = VoxeraTheme.typography.caption)
+            Text(
+                help,
+                color = if (error != null) colors.danger else colors.foregroundSecondary,
+                style = VoxeraTheme.typography.caption,
+                modifier = if (error != null) Modifier.clearAndSetSemantics {} else Modifier,
+            )
         }
     }
 }
