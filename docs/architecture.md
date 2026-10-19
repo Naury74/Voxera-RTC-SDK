@@ -63,11 +63,11 @@ Idle ─join─► Preparing ─토큰 준비─► Connecting ─연결─► C
 - 시트, 알림, 스위치, 선택 묶음, 말풍선, 추이 그래프, 움직임 효과는 Kinetica 부품을 `implementation`으로 씁니다. Voxera 공개 API에는
   Kinetica 타입이 나오지 않아서, 나중에 다른 부품으로 바꾸어도 앱 코드는 그대로입니다.
 
-## 처음 설계와 다르게 정한 것
+## 설계 결정
 
-처음 설계에서 목표로 삼은 계약을 실제로 구현하면서 아래처럼 바꾸거나 확정했습니다.
+처음 계획한 계약을 구현하면서 바꾸거나 확정한 것과 그 이유입니다.
 
-| 항목 | 처음 설계 | 구현 | 이유 |
+| 항목 | 처음 계획 | 구현 | 이유 |
 | --- | --- | --- | --- |
 | 진입점 | `Voxera.create(context, factory)` | `Voxera.create(factory)` | core를 순수 JVM으로 두기 위해. Context가 필요한 LiveKit factory가 Context를 받는다 |
 | 모듈 | `voxera-call-state`, `voxera-ui-tokens` 분리 | core, ui-compose에 포함 | 쓰는 곳이 하나뿐이라 모듈을 나누지 않음. View 화면을 만들게 되면 토큰을 나눔 |
